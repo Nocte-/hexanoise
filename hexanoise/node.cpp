@@ -215,7 +215,7 @@ node::node (function* in, const generator_context& ctx)
             else
                 input.emplace_back(node(entry_point, false, xy));
 
-            input.emplace_back(node((*in->args)[0]));
+            input.emplace_back(node((*in->args)[0], ctx));
 
             if (input.back().return_type != var)
                 throw std::runtime_error("lambda function must return a scalar");
