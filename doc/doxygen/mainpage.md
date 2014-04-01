@@ -1,0 +1,3 @@
+Hexanoise documentation {#mainpage}
+=======================
+
