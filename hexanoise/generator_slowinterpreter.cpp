@@ -13,6 +13,8 @@
 namespace hexa {
 namespace noise {
 
+const double pi = 3.14159265358979323846;
+
 generator_slowinterpreter::generator_slowinterpreter
                                 (const generator_context& context,
                                  const node& n)
@@ -56,7 +58,7 @@ generator_slowinterpreter::eval_v (const node& n)
     case node::angle:
     {
         auto p (eval_xy(in));
-        return std::atan2(p.y, p.x) / M_PI;
+        return std::atan2(p.y, p.x) / pi;
     }
     case node::chebyshev:
     {
@@ -124,7 +126,7 @@ generator_slowinterpreter::eval_v (const node& n)
     }
 
     case node::cos:
-        return std::cos(eval_v(in) * M_PI);
+        return std::cos(eval_v(in) * pi);
 
     case node::div:
         return eval_v(in) / eval_v(n.input[1]);
@@ -151,7 +153,7 @@ generator_slowinterpreter::eval_v (const node& n)
     }
 
     case node::sin:
-        return std::sin(eval_v(in) * M_PI);
+        return std::sin(eval_v(in) * pi);
 
     case node::sqrt:
         return std::sqrt(eval_v(in));
@@ -160,7 +162,7 @@ generator_slowinterpreter::eval_v (const node& n)
         return eval_v(in) - eval_v(n.input[1]);
 
     case node::tan:
-        return std::tan(eval_v(in) * M_PI);
+        return std::tan(eval_v(in) * pi);
 
     case node::then_else:
         return (eval_bool(n.input[0])) ?
@@ -182,7 +184,7 @@ generator_slowinterpreter::eval_xy (const node& n)
     case node::rotate:
     {
         auto p (eval_xy(n.input[0]));
-        auto t (eval_v(n.input[1]) * M_PI);
+        auto t (eval_v(n.input[1]) * pi);
         auto ct (std::cos(t));
         auto st (std::sin(t));
         return glm::dvec2(p.x*ct-p.y*st, p.x*st+p.y*ct);
