@@ -1,0 +1,4 @@
+hexanoise
+=========
+
+Coherent noise library
