@@ -10,8 +10,7 @@ find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS chrono program_
 find_package(PNG)
 
 include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${EXE} ${Boost_LIBRARIES} ${PNG_LIBRARIES} hexanoise OpenCL)
+target_link_libraries(${EXE} ${Boost_LIBRARIES} ${PNG_LIBRARIES} OpenCL hexanoise)
 
 # Installation
 #install(TARGETS ${EXE} DESTINATION "${BINDIR}")
-

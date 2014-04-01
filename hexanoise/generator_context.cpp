@@ -6,6 +6,7 @@
 
 #include "generator_context.hpp"
 
+#include <stdexcept>
 #include <boost/property_tree/ptree.hpp>
 #include "ast.hpp"
 #include "parser.hpp"

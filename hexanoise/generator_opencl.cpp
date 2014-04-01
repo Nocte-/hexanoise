@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <fstream>
+#include <stdexcept>
 #include "node.hpp"
 
 namespace hexa {

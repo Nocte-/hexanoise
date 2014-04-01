@@ -7,6 +7,7 @@
 #include "generator_slowinterpreter.hpp"
 
 #include <cmath>
+#include <stdexcept>
 #include "node.hpp"
 
 namespace hexa {

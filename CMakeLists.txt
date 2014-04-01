@@ -7,6 +7,7 @@ set(VERSION_MINOR "1")
 set(VERSION_PATCH "0")
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
+set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 set(CPACK_PACKAGE_NAME "lib${CMAKE_PROJECT_NAME}${VERSION_SO}")
 set(WEBPAGE "http://github.com/Nocte-/hexanoise")
 
@@ -36,7 +37,7 @@ else() # Most likely gcc or clang
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
     endif()
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wno-deprecated-declarations")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG   "-g")
     set(CMAKE_LIB_LINKER_FLAGS  "-s")

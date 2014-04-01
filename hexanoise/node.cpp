@@ -6,6 +6,7 @@
 
 #include "node.hpp"
 
+#include <stdexcept>
 #include <unordered_map>
 #include "ast.hpp"
 #include "generator_context.hpp"
