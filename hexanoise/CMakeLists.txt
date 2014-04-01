@@ -29,8 +29,6 @@ set(HEADER_FILES
     generator_opencl.hpp
     generator_slowinterpreter.hpp
     node.hpp
-    parser.hpp
-    tokens.hpp
     version.hpp)
 
 set (LIBNAME_S "${LIBNAME}-s")
