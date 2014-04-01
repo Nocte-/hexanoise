@@ -8,6 +8,7 @@ before_install:
  - sudo apt-get install -qq g++-4.7 libboost1.50-all-dev flex bison opencl-headers libglm-dev
  - export CXX=g++-4.7 
  - export CC=gcc-4.7
+ - wget http://www.khronos.org/registry/cl/api/1.1/cl.hpp -O /usr/include/CL/cl.hpp
 
 script: mkdir build && cd build && cmake -DBUILD_UNITTESTS=ON .. && make && cd unit_tests && ./unit_tests
 

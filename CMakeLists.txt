@@ -22,11 +22,11 @@ set(BUILD_DOCUMENTATION 0 CACHE BOOL "Generate Doxygen documentation")
 #
 if(MSVC)
     add_definitions(/D_WIN32_WINNT=0x0501 /D_CRT_SECURE_NO_WARNINGS /DSFML_STATIC)
-	set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} /MP /EHsc /wd4244 /wd4996 ")
+    set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} /MP /EHsc /wd4244 /wd4996 ")
     set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG} /MTd")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /DNDEBUG /MT /MP /GS- /Ox /Ob2 /Oi /Oy /arch:SSE /fp:fast /Zi")
     set(CMAKE_LIB_LINKER_FLAGS  "${CMAKE_LIB_LINKER_FLAGS} /OPT:REF /SUBSYSTEM:WINDOWS")
-    
+
 else() # Most likely gcc or clang
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -39,7 +39,7 @@ else() # Most likely gcc or clang
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall")
     set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
     set(CMAKE_CXX_FLAGS_DEBUG   "-g")
-    set(CMAKE_LIB_LINKER_FLAGS  "-s")    
+    set(CMAKE_LIB_LINKER_FLAGS  "-s")
 endif()
 
 add_subdirectory(hexanoise)
@@ -73,11 +73,11 @@ set(CPACK_PACKAGE_CONTACT "Nocte <nocte@hippie.nu>")
 set(CPACK_SOURCE_IGNORE_FILES "CMakefiles;Makefile;CMakeCache.txt;_CPack_Packages;/.git/;.gitignore;.travis.yml")
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}_${VERSION}")
- 
+
 if(UNIX)
     set(CPACK_GENERATOR "DEB")
     add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
-    
+
     set(PKGCONFIG_FILE ${CMAKE_CURRENT_SOURCE_DIR}/install/hexanoise.pc)
     configure_file(${PKGCONFIG_FILE}.in ${PKGCONFIG_FILE})
     install(FILES ${PKGCONFIG_FILE} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/pkgconfig)
