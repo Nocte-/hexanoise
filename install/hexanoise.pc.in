@@ -1,0 +1,9 @@
+includedir=@CMAKE_INSTALL_PREFIX@/include
+libdir=@CMAKE_INSTALL_PREFIX@/lib
+
+Name: @PROJECT_NAME@
+Description: @CPACK_PACKAGE_DESCRIPTION_SUMMARY@
+Url: @WEBPAGE@
+Version: @VERSION@
+Libs: -l@PROJECT_NAME@
+

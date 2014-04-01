@@ -21,7 +21,7 @@ hexanoise/tokens.cpp
 hexanoise/tokens.hpp
 hexanoise/parser.cpp
 hexanoise/parser.hpp
-install/hexahedra-server.rc
+install/hexanoise.pc
 
 hexanoise.json
 manifest.json
