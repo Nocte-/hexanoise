@@ -21,7 +21,7 @@
 <COMMENT>"*/"         { BEGIN(INITIAL); }
 <COMMENT>.            { }
 
-[ \t\n]             ;
+[ \t\n\r]           ;
 [a-z_]+             SAVE_TOKEN; return TIDENTIFIER;
 -?[0-9]+\.?[0-9]*   SAVE_TOKEN; return TVALUE;
 \"[a-zA-Z0-9/_.]*\" SAVE_TOKEN; return TSTRING;
