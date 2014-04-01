@@ -14,12 +14,47 @@
 namespace hexa {
 namespace noise {
 
+/** Intermediate representation of an HNDL script.
+ *  This class is only used by the Bison parser.  The library itself
+ *  uses the node class to represent the syntax tree.  The compiler
+ *  recurses down the function objects, looks up function definitions,
+ *  checks all types, looks up external functions and global variables,
+ *  and builds a hexa::noise::node object. */
 class function
 {
 public:
+    /** Function type. */
     typedef enum
     {
-        func, const_v, const_s, const_bool, global, lambda, external
+        /** Normal function.
+         *  'name' is the identifier, 'input' has the curry arguments. */
+        func,
+
+        /** Const variable.
+         *  'name' and 'input' are empty, 'value' holds the variable. */
+        const_v,
+
+        /** Const string.
+         *  'name' and 'input' are empty, 'text' holds the variable. */
+        const_s,
+
+        /** Const boolean.
+         *  'name' and 'input' are empty, 'value' holds the variable. */
+        const_bool,
+
+        /** Global variable.
+         *  'name' holds the name of the variable, 'value' is still empty. */
+        global,
+
+        /** Lambda function.
+         *  Works like a normal function, but 'name' is empty.  The first
+         *  argument is the lambda function itself. */
+        lambda,
+
+        /** External function.
+         *  'name' holds the name of the external function.  The input
+         *  parameters are empty. */
+        external
     }
     types;
 
