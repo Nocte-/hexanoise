@@ -118,8 +118,8 @@ static const std::unordered_map<std::string, funcdef> functions
     { "is_lessthan",  { node::is_lessthan, boolean, false, {{ var }, {"c", var} }} },
     { "is_lte",  { node::is_lte, boolean, false, {{ var }, {"c", var} }} },
 
-    { "is_in_circle",  { node::is_in_circle, boolean, false, {{ var }, {"radius", var} }} },
-    { "is_in_rectangle",  { node::is_in_rectangle, boolean, false, {{ var },
+    { "is_in_circle",  { node::is_in_circle, boolean, false, {{ xy }, {"radius", var} }} },
+    { "is_in_rectangle",  { node::is_in_rectangle, boolean, false, {{ xy },
                                 {"x1", var}, {"y1", var}, {"x2", var}, {"y2", var} }} },
 
     { "then_else",  { node::then_else, var, false, {{ boolean }, {"a", var}, {"b", var} }} }
