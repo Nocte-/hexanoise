@@ -15,6 +15,6 @@ script:
  - cmake -DBUILD_UNITTESTS=ON .. 
  - make
  - cd unit_tests 
- - cp ../hexanoise/hexanoise/opencl.cl .
+ - cp ../../hexanoise/hexanoise/opencl.cl .
  - ./unit_tests
 
