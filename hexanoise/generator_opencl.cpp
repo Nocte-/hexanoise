@@ -118,7 +118,36 @@ std::string generator_opencl::co (const node& n)
     case node::scale:           return "("+co(n.input[0])+"/"+co(n.input[1])+")";
     case node::shift:           return "("+co(n.input[0])+"+"+co(n.input[1])+")";
     case node::swap:            return "p_swap" + pl(n);
-    case node::turbulence:      return "";
+
+    case node::map:
+    {
+        std::string func_name ("p_map" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body
+        << "inline double2 " << func_name << " (const double2 p) { return (double2)("
+        << co(n.input[1]) << ", "
+        << co(n.input[2]) << "); }" << std::endl;
+
+        functions_[func_name] = func_body.str();
+
+        return func_name + "("+ co(n.input[0]) + ")";
+    }
+
+    case node::turbulence:
+    {
+        std::string func_name ("p_map" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body
+        << "inline double2 " << func_name << " (const double2 p) { return (double2)("
+        << "p.x+(" << co(n.input[1]) << "), "
+        << "p.y+(" << co(n.input[2]) << ")); }" << std::endl;
+
+        functions_[func_name] = func_body.str();
+
+        return func_name + "("+ co(n.input[0]) + ")";
+    }
 
     case node::angle:           return "p_angle" + pl(n);
     case node::chebyshev:       return "p_chebyshev" + pl(n);
@@ -126,7 +155,6 @@ std::string generator_opencl::co (const node& n)
     case node::distance:        return "length" + pl(n);
     case node::manhattan:       return "p_manhattan" + pl(n);
     case node::perlin:          return "p_perlin" + pl(n);
-    case node::png_lookup:      return "p_png_lookup" + pl(n);
     case node::simplex:         return "p_simplex" + pl(n);
     case node::worley:          return "p_worley" + pl(n);
     case node::x:               return co(n.input[0])+".x";
@@ -170,6 +198,9 @@ std::string generator_opencl::co (const node& n)
     case node::is_gte:          return co(n.input[0])+">="+co(n.input[1]);
     case node::is_lessthan:     return co(n.input[0])+"<"+co(n.input[1]);
     case node::is_lte:          return co(n.input[0])+"<="+co(n.input[1]);
+
+    case node::is_in_circle:    return "p_is_in_circle" + pl(n);
+    case node::is_in_rectangle: return "p_is_in_rectangle" + pl(n);
 
     case node::then_else:
         return "("+co(n.input[0])+")?("+co(n.input[1])+"):("+co(n.input[2])+")";
@@ -219,11 +250,20 @@ std::string generator_opencl::co (const node& n)
         return func_name +"("+ co(n.input[0])+")";
     }
 
+    case node::curve_linear:
+        throw std::runtime_error("OpenCL curve_linear not implemented");
+
+    case node::curve_spline:
+        throw std::runtime_error("OpenCL curve_spline not implemented");
+
+    case node::png_lookup:
+        throw std::runtime_error("OpenCL png_lookup not implemented");
+
     default:
-        assert(false);
+        throw std::runtime_error("function not implemented in OpenCL yet");
     }
 
     return std::string();
 }
 
-}}
+}} // namespace hexa::noise

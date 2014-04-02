@@ -39,6 +39,7 @@ public:
         scale,
         shift,
         swap,
+        map,
         turbulence,
 
         funcdef_xy_v,

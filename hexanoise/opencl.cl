@@ -84,7 +84,8 @@ inline double2 lerp2d (const double x, const double2 a, const double2 b)
 
 inline double gradient_noise2d (double2 xy, int2 ixy, uint seed)
 {
-    ixy.y += seed;
+    ixy.x += seed * 1013;
+    ixy.y += seed * 1619;
     ixy &= P_MASK;
 
     int index = (P[ixy.x+P[ixy.y]] & G_MASK) * G_VECSIZE;
@@ -173,4 +174,13 @@ inline double p_blend (double x, double a, double b)
     return lerp(x, a, b);
 }
 
+inline bool p_is_in_circle (double2 p, double r)
+{
+    return length(p) <= r;
+}
+
+inline bool p_is_in_rectangle (double2 p, double x1, double x2, double y1, double y2)
+{
+    return p.x >= x1 && p.y >= y1 && p.x <= x2 && p.y <= y2;
+}
 

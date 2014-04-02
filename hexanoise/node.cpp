@@ -66,8 +66,8 @@ static const std::unordered_map<std::string, funcdef> functions
                                             { "add_x", var },
                                             { "add_y", var }}} },
     { "swap",   { node::swap,   xy, false, {{ xy }}} },
-    { "turbulence", { node::turbulence, xy, false, {{ "", xy },
-                                                    { "dist", var, 0.5 }}} },
+    { "turbulence", { node::turbulence, xy, false, {{ xy }, { "x", var }, { "y", var } }} },
+    { "map", { node::map, xy, false, {{ xy }, { "x", var }, { "y", var } }} },
 
     { "angle", { node::angle,   var, false, {{ xy } }} },
     { "chebyshev", { node::chebyshev,   var, false, {{ xy } }} },

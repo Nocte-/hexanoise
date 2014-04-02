@@ -10,7 +10,7 @@ find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS program_options
 find_package(PNG)
 
 include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${EXE} ${Boost_LIBRARIES} ${PNG_LIBRARIES} OpenCL hexanoise)
+target_link_libraries(${EXE} ${Boost_LIBRARIES} ${PNG_LIBRARIES} OpenCL hexanoise-s)
 
 # Installation
 #install(TARGETS ${EXE} DESTINATION "${BINDIR}")
