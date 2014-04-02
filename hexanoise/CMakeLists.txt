@@ -6,7 +6,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/version.hpp.in
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..
                     ${CMAKE_CURRENT_BINARY_DIR})
 
-find_package(Boost 1.50 REQUIRED)
+find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
 
 find_package(BISON)

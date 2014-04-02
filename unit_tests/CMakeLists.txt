@@ -9,7 +9,7 @@ add_executable(${EXE} ${SOURCE_FILES})
 
 include_directories(..)
 
-find_package(Boost 1.50 REQUIRED COMPONENTS unit_test_framework)
+find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS unit_test_framework)
 
 include_directories(${Boost_INCLUDE_DIRS})
 target_link_libraries(${EXE} hexanoise ${Boost_LIBRARIES} OpenCL)
