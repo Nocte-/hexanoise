@@ -58,12 +58,6 @@ __constant float G[16*4] = {
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
 };  
   
-inline int2 floor2di (double2 p)
-{
-    double2 t = floor(p);
-    int2 xy0 = (int2)((int)t.x, (int)t.y);
-}
-
 inline double lerp (double x, double a, double b)
 {
     return mad(x, b - a, a);
@@ -87,20 +81,6 @@ inline double2 lerp2d (const double x, const double2 a, const double2 b)
 {
     return mad(x, b - a, a);
 }
-
-inline uint poisson_dist9 (const uint v)
-{
-    if(v< 393325350) return 1;
-    if(v< 1022645910) return 2;
-    if(v< 1861739990) return 3;
-    if(v< 2700834071) return 4;
-    if(v< 3372109335) return 5;
-    if(v< 3819626178) return 6;
-    if(v< 4075350088) return 7;
-    if(v< 4203212043) return 8;
-    return 9;
-}
-
 
 inline double gradient_noise2d (double2 xy, int2 ixy, uint seed)
 {
@@ -147,21 +127,6 @@ double p_perlin (double2 xy, uint seed)
     const double2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
     return lerp(blend5(xyf.y), n2.x, n2.y);
-}
-
-double2 p_worley (double2 xy, uint seed)
-{
-    double2 f = (double2)(3.0, 3.0);
-
-    for (int i = -1; i < 2; ++i)
-    {
-        for (int j = -1; j < 2; ++j)
-        {
-
-        }
-    }
-
-    return f;
 }
 
 inline double2 p_rotate (double2 p, double a)

@@ -154,10 +154,8 @@
 #endif
 
 #if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenGL/OpenGL.h>
 #include <OpenCL/opencl.h>
 #else
-#include <GL/gl.h>
 #include <CL/opencl.h>
 #endif // !__APPLE__
 
@@ -308,14 +306,9 @@ public:
 #define __ENQUEUE_NDRANGE_KERNEL_ERR        __ERR_STR(clEnqueueNDRangeKernel)
 #define __ENQUEUE_TASK_ERR                  __ERR_STR(clEnqueueTask)
 #define __ENQUEUE_NATIVE_KERNEL             __ERR_STR(clEnqueueNativeKernel)
-#define __ENQUEUE_MARKER_ERR                __ERR_STR(clEnqueueMarker)
-#define __ENQUEUE_WAIT_FOR_EVENTS_ERR       __ERR_STR(clEnqueueWaitForEvents)
-#define __ENQUEUE_BARRIER_ERR               __ERR_STR(clEnqueueBarrier)
 
 #define __ENQUEUE_ACQUIRE_GL_ERR            __ERR_STR(clEnqueueAcquireGLObjects)
 #define __ENQUEUE_RELEASE_GL_ERR            __ERR_STR(clEnqueueReleaseGLObjects)
-
-#define __UNLOAD_COMPILER_ERR               __ERR_STR(clUnloadCompiler)
 
 #define __FLUSH_ERR                         __ERR_STR(clFlush)
 #define __FINISH_ERR                        __ERR_STR(clFinish)
@@ -1408,12 +1401,6 @@ public:
     }
 };
 
-static inline cl_int
-UnloadCompiler()
-{
-    return ::clUnloadCompiler();
-}
-
 class Context : public detail::Wrapper<cl_context>
 {
 public:
@@ -1839,99 +1826,6 @@ public:
 };
 #endif
 
-/*! \class BufferGL
- * \brief Memory buffer interface for GL interop.
- */
-class BufferGL : public Buffer
-{
-public:
-    BufferGL(
-        const Context& context,
-        cl_mem_flags flags,
-        GLuint bufobj,
-        cl_int * err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateFromGLBuffer(
-            context(),
-            flags,
-            bufobj,
-            &error);
-
-        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    BufferGL() : Buffer() { }
-
-    BufferGL(const BufferGL& buffer) : Buffer(buffer) { }
-
-    BufferGL& operator = (const BufferGL& rhs)
-    {
-        if (this != &rhs) {
-            Buffer::operator=(rhs);
-        }
-        return *this;
-    }
-
-    cl_int getObjectInfo(
-        cl_gl_object_type *type,
-        GLuint * gl_object_name)
-    {
-        return detail::errHandler(
-            ::clGetGLObjectInfo(object_,type,gl_object_name),
-            __GET_GL_OBJECT_INFO_ERR);
-    }
-};
-
-/*! \class BufferRenderGL
- * \brief Memory buffer interface for GL interop with renderbuffer.
- */
-class BufferRenderGL : public Buffer
-{
-public:
-    BufferRenderGL(
-        const Context& context,
-        cl_mem_flags flags,
-        GLuint bufobj,
-        cl_int * err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateFromGLRenderbuffer(
-            context(),
-            flags,
-            bufobj,
-            &error);
-
-        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    BufferRenderGL() : Buffer() { }
-
-    BufferRenderGL(const BufferGL& buffer) : Buffer(buffer) { }
-
-    BufferRenderGL& operator = (const BufferRenderGL& rhs)
-    {
-        if (this != &rhs) {
-            Buffer::operator=(rhs);
-        }
-        return *this;
-    }
-
-    cl_int getObjectInfo(
-        cl_gl_object_type *type,
-        GLuint * gl_object_name)
-    {
-        return detail::errHandler(
-            ::clGetGLObjectInfo(object_,type,gl_object_name),
-            __GET_GL_OBJECT_INFO_ERR);
-    }
-};
 
 /*! \class Image
  * \brief Base class  interface for all images.
@@ -1970,171 +1864,6 @@ public:
             *err = result;
         }
         return param;
-    }
-};
-
-/*! \class Image2D
- * \brief Image interface for 2D images.
- */
-class Image2D : public Image
-{
-public:
-    Image2D(
-        const Context& context,
-        cl_mem_flags flags,
-        ImageFormat format,
-        ::size_t width,
-        ::size_t height,
-        ::size_t row_pitch = 0,
-        void* host_ptr = NULL,
-        cl_int* err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateImage2D(
-            context(), flags,&format, width, height, row_pitch, host_ptr, &error);
-
-        detail::errHandler(error, __CREATE_IMAGE2D_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    Image2D() { }
-
-    Image2D(const Image2D& image2D) : Image(image2D) { }
-
-    Image2D& operator = (const Image2D& rhs)
-    {
-        if (this != &rhs) {
-            Image::operator=(rhs);
-        }
-        return *this;
-    }
-};
-
-/*! \class Image2DGL
- * \brief 2D image interface for GL interop.
- */
-class Image2DGL : public Image2D
-{
-public:
-    Image2DGL(
-        const Context& context,
-        cl_mem_flags flags,
-        GLenum target,
-        GLint  miplevel,
-        GLuint texobj,
-        cl_int * err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateFromGLTexture2D(
-            context(),
-            flags,
-            target,
-            miplevel,
-            texobj,
-            &error);
-
-        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    Image2DGL() : Image2D() { }
-
-    Image2DGL(const Image2DGL& image) : Image2D(image) { }
-
-    Image2DGL& operator = (const Image2DGL& rhs)
-    {
-        if (this != &rhs) {
-            Image2D::operator=(rhs);
-        }
-        return *this;
-    }
-};
-
-/*! \class Image3D
- * \brief Image interface for 3D images.
- */
-class Image3D : public Image
-{
-public:
-    Image3D(
-        const Context& context,
-        cl_mem_flags flags,
-        ImageFormat format,
-        ::size_t width,
-        ::size_t height,
-        ::size_t depth,
-        ::size_t row_pitch = 0,
-        ::size_t slice_pitch = 0,
-        void* host_ptr = NULL,
-        cl_int* err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateImage3D(
-            context(), flags, &format, width, height, depth, row_pitch,
-            slice_pitch, host_ptr, &error);
-
-        detail::errHandler(error, __CREATE_IMAGE3D_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    Image3D() { }
-
-    Image3D(const Image3D& image3D) : Image(image3D) { }
-
-    Image3D& operator = (const Image3D& rhs)
-    {
-        if (this != &rhs) {
-            Image::operator=(rhs);
-        }
-        return *this;
-    }
-};
-
-/*! \class Image2DGL
- * \brief 2D image interface for GL interop.
- */
-class Image3DGL : public Image3D
-{
-public:
-    Image3DGL(
-        const Context& context,
-        cl_mem_flags flags,
-        GLenum target,
-        GLint  miplevel,
-        GLuint texobj,
-        cl_int * err = NULL)
-    {
-        cl_int error;
-        object_ = ::clCreateFromGLTexture3D(
-            context(),
-            flags,
-            target,
-            miplevel,
-            texobj,
-            &error);
-
-        detail::errHandler(error, __CREATE_GL_BUFFER_ERR);
-        if (err != NULL) {
-            *err = error;
-        }
-    }
-
-    Image3DGL() : Image3D() { }
-
-    Image3DGL(const Image3DGL& image) : Image3D(image) { }
-
-    Image3DGL& operator = (const Image3DGL& rhs)
-    {
-        if (this != &rhs) {
-            Image3D::operator=(rhs);
-        }
-        return *this;
     }
 };
 
@@ -2997,23 +2726,6 @@ public:
             __ENQUEUE_NATIVE_KERNEL);
     }
 
-    cl_int enqueueMarker(Event* event = NULL) const
-    {
-        return detail::errHandler(
-            ::clEnqueueMarker(object_, (cl_event*) event),
-            __ENQUEUE_MARKER_ERR);
-    }
-
-    cl_int enqueueWaitForEvents(const VECTOR_CLASS<Event>& events) const
-    {
-        return detail::errHandler(
-            ::clEnqueueWaitForEvents(
-                object_,
-                (cl_uint) events.size(),
-                (const cl_event*) &events.front()),
-            __ENQUEUE_WAIT_FOR_EVENTS_ERR);
-    }
-
     cl_int enqueueAcquireGLObjects(
          const VECTOR_CLASS<Memory>* mem_objects = NULL,
          const VECTOR_CLASS<Event>* events = NULL,
@@ -3094,13 +2806,6 @@ typedef CL_API_ENTRY cl_int (CL_API_CALL *PFN_clEnqueueReleaseD3D10ObjectsKHR)(
             __ENQUEUE_RELEASE_GL_ERR);
     }
 #endif
-
-    cl_int enqueueBarrier() const
-    {
-        return detail::errHandler(
-            ::clEnqueueBarrier(object_),
-            __ENQUEUE_BARRIER_ERR);
-    }
 
     cl_int flush() const
     {

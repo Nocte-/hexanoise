@@ -1,5 +1,6 @@
 %{
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -9,7 +10,7 @@
 
 void yyerror(hexa::noise::function** func, yyscan_t scanner, const char* s) 
 { 
-    std::cout << "error: " << s << std::endl; 
+    throw std::runtime_error(s);
 }
 
 using namespace hexa::noise;

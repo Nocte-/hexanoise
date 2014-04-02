@@ -20,7 +20,12 @@
 
 void write_png_file(const std::vector<uint8_t>& buf, int width, int height, const std::string& file_name)
 {
-    FILE *fp = fopen(file_name.c_str(), "wb");
+    FILE *fp = 0;
+    if (file_name.empty())
+        fp = stdout;
+    else
+        fp = fopen(file_name.c_str(), "wb");
+
     if (!fp)
          return;
 
@@ -79,13 +84,13 @@ int main (int argc, char** argv)
             ("version,v", "print version string")
             ("help", "show help message")
 
-            ("output,o", po::value<std::string>()->default_value("out.png"),
-             "output file")
+            ("output,o", po::value<std::string>()->default_value(""),
+             "output file (default to stdout)")
 
-            ("width,w", po::value<unsigned int>()->default_value(800),
+            ("width,w", po::value<unsigned int>()->default_value(500),
             "output width")
 
-            ("height,h", po::value<unsigned int>()->default_value(800),
+            ("height,h", po::value<unsigned int>()->default_value(500),
             "output height")
 
             ("input,i", po::value<std::string>()->default_value("-"),
@@ -117,6 +122,8 @@ int main (int argc, char** argv)
         return -1;
     }
 
+    try
+    {
     generator_context context;
     context.set_script("main", script);
     auto& n (context.get_script("main"));
@@ -156,6 +163,12 @@ int main (int argc, char** argv)
                    [](double i){ return static_cast<uint8_t>(127.0 + 127.0 * std::min(1.0, std::max(-1.0, i))); });
 
     write_png_file(pixmap, width, height, vm["output"].as<std::string>());
+    }
+    catch (std::runtime_error& e)
+    {
+        std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
 
     return EXIT_SUCCESS;
 }

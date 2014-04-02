@@ -2,12 +2,13 @@ HexaNoise
 =========
 
 This is a library for generating 2D coherent noise.  It compiles a noise
-definition script to either OpenCL or a simple interpreter.  A compiled
-script can then generate noise for a given area and resolution.
+definition script to OpenCL, or it can run it through a simple interpreter in
+case no OpenCL device is available.  A compiled script can then generate noise
+for a given area and resolution.
 
 The Hexahedra Noise Definition Language is a functional language that
 supports higher-order functions, lambdas, global variables, and named
-functions.  Here are a some examples:
+functions.  Here are some quick examples:
 
     scale(100):fractal(perlin:abs,2)
 

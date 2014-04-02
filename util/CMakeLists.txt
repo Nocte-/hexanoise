@@ -6,7 +6,7 @@ link_directories(..)
 
 add_executable(${EXE} hndl2png.cpp)
 
-find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS chrono program_options filesystem)
+find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS program_options)
 find_package(PNG)
 
 include_directories(${Boost_INCLUDE_DIRS})

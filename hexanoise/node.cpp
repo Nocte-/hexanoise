@@ -69,7 +69,7 @@ static const std::unordered_map<std::string, funcdef> functions
     { "turbulence", { node::turbulence, xy, false, {{ "", xy },
                                                     { "dist", var, 0.5 }}} },
 
-    { "angle", { node::angle,   var, false, {{ xy }, {"angle", var} }} },
+    { "angle", { node::angle,   var, false, {{ xy } }} },
     { "chebyshev", { node::chebyshev,   var, false, {{ xy } }} },
     { "checkerboard", { node::checkerboard, var, false, {{ xy } }} },
     { "distance", { node::distance, var, false, {{ xy } }} },
