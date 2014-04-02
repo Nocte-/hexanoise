@@ -9,5 +9,12 @@ before_install:
  - export CXX=g++-4.7 
  - export CC=gcc-4.7
 
-script: mkdir build && cd build && cmake -DBUILD_UNITTESTS=ON .. && make && cd unit_tests && ./unit_tests
+script: 
+ - mkdir build 
+ - cd build
+ - cmake -DBUILD_UNITTESTS=ON .. 
+ - make
+ - cd unit_tests 
+ - cp ../hexanoise/opencl.cl .
+ - ./unit_tests
 
