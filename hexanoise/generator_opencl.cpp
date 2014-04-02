@@ -11,6 +11,10 @@
 #include <stdexcept>
 #include "node.hpp"
 
+#ifndef OPENCL_OCTAVES_LIMIT
+# define OPENCL_OCTAVES_LIMIT 10
+#endif
+
 namespace hexa {
 namespace noise {
 
@@ -211,16 +215,19 @@ std::string generator_opencl::co (const node& n)
         if (!n.input[2].is_const)
             throw std::runtime_error("fractal octave count must be a constexpr");
 
+        if (n.input[2].aux_var > OPENCL_OCTAVES_LIMIT)
+            throw std::runtime_error("fractal: too many octaves");
+
         std::string func_name ("p_fractal_" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body
         << "double " << func_name << " (double2 p, const double lac, const double per) {"
-        << "double result = 0.0; double div = 0.0;"
+        << "double result = 0.0; double div = 0.0; double step = 1.0;"
         << "for(int i = 0; i < " << (int)n.input[2].aux_var << "; ++i)"
         << "{"
-        << "  double step = pown(lac,i);"
         << "  result += " << co(n.input[1]) << " * step;"
+        << "  step *= lac;"
         << "  p *= per;"
         << "  p += (double2)(0.1, 0.1);"
         << "  div += step;"
