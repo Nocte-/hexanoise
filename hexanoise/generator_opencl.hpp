@@ -7,10 +7,9 @@
 
 #pragma once
 
-#include <iostream>
 #include <string>
 #include <sstream>
-#include <unordered_map>
+#include <list>
 
 #define __CL_ENABLE_EXCEPTIONS
 #include <CL/cl.hpp>
@@ -58,7 +57,7 @@ private:
 private:
     size_t count_;
     std::string main_;
-    std::unordered_map<std::string, std::string> functions_;
+    std::list<std::string> functions_;
 
     cl::Context      context_;
     cl::CommandQueue queue_;

@@ -65,6 +65,7 @@ public:
         perlin,
         png_lookup,
         simplex,
+        voronoi,
         worley,
         x,
         y,

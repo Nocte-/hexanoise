@@ -61,6 +61,7 @@ ELSE (APPLE)
 	# to the library
 	FIND_PATH(OPENCL_INCLUDE_DIRS CL/cl.h PATHS ${_OPENCL_INC_CAND} "/usr/local/cuda/include" "/opt/cuda/include" "/opt/AMDAPP/include" ENV OpenCL_INCPATH)
 	FIND_PATH(_OPENCL_CPP_INCLUDE_DIRS CL/cl.hpp PATHS ${_OPENCL_INC_CAND} "/usr/local/cuda/include" "/opt/cuda/include" "/opt/AMDAPP/include" ENV OpenCL_INCPATH)
+	SET(OPENCL_LIBRARIES OpenCL)
 
     ENDIF (WIN32)
 

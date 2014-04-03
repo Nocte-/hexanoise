@@ -6,13 +6,14 @@
 
 #include "generator_opencl.hpp"
 
+#include <iostream>
 #include <cmath>
 #include <fstream>
 #include <stdexcept>
 #include "node.hpp"
 
 #ifndef OPENCL_OCTAVES_LIMIT
-# define OPENCL_OCTAVES_LIMIT 10
+# define OPENCL_OCTAVES_LIMIT 16
 #endif
 
 namespace hexa {
@@ -43,7 +44,7 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     main_ += "\n";
     for (auto& p : functions_)
     {
-        main_ += p.second;
+        main_ += p;
         main_ += "\n\n";
     }
     main_ += "\n" \
@@ -66,7 +67,7 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     program_ = cl::Program(opencl_context, sources);
     try
     {
-    program_.build(device_vec);
+        program_.build(device_vec);
     }
     catch (cl::Error&)
     {
@@ -90,7 +91,7 @@ generator_opencl::run (const glm::dvec2& corner,
     kernel_.setArg(2, sizeof(step),   (void*)&step);
     kernel_.setArg(3, sizeof(count),  (void*)&count);
 
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, result.size(), 4);
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, result.size(), 0);
     queue_.enqueueReadBuffer(output, CL_TRUE, 0, result.size() * sizeof(double), &result[0]);
 
     return result;
@@ -117,6 +118,7 @@ std::string generator_opencl::co (const node& n)
     case node::entry_point:     return "p";
     case node::const_var:       return std::to_string(n.aux_var);
     case node::const_bool:      return std::to_string(n.aux_bool);
+    case node::const_str:       throw std::runtime_error("string encountered");
 
     case node::rotate:          return "p_rotate" + pl(n);
     case node::scale:           return "("+co(n.input[0])+"/"+co(n.input[1])+")";
@@ -133,7 +135,7 @@ std::string generator_opencl::co (const node& n)
         << co(n.input[1]) << ", "
         << co(n.input[2]) << "); }" << std::endl;
 
-        functions_[func_name] = func_body.str();
+        functions_.emplace_back(func_body.str());
 
         return func_name + "("+ co(n.input[0]) + ")";
     }
@@ -148,9 +150,37 @@ std::string generator_opencl::co (const node& n)
         << "p.x+(" << co(n.input[1]) << "), "
         << "p.y+(" << co(n.input[2]) << ")); }" << std::endl;
 
-        functions_[func_name] = func_body.str();
+        functions_.emplace_back(func_body.str());
 
         return func_name + "("+ co(n.input[0]) + ")";
+    }
+
+    case node::worley:
+    {
+        std::string func_name ("p_worley" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body
+        << "inline double " << func_name << " (const double2 q, uint seed) { "
+        << "  double2 p = p_worley(q, seed);"
+        << "  return " << co(n.input[1]) << "; }" << std::endl;
+
+        functions_.emplace_back(func_body.str());
+        return func_name + "("+co(n.input[0])+ ","+co(n.input[2])+")";
+    }
+
+    case node::voronoi:
+    {
+        std::string func_name ("p_voronoi" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body
+        << "inline double " << func_name << " (const double2 q, uint seed) { "
+        << "  double2 p = p_voronoi(q, seed);"
+        << "  return " << co(n.input[1]) << "; }" << std::endl;
+
+        functions_.emplace_back(func_body.str());
+        return func_name + "("+co(n.input[0])+ ","+co(n.input[2])+")";
     }
 
     case node::angle:           return "p_angle" + pl(n);
@@ -159,8 +189,6 @@ std::string generator_opencl::co (const node& n)
     case node::distance:        return "length" + pl(n);
     case node::manhattan:       return "p_manhattan" + pl(n);
     case node::perlin:          return "p_perlin" + pl(n);
-    case node::simplex:         return "p_simplex" + pl(n);
-    case node::worley:          return "p_worley" + pl(n);
     case node::x:               return co(n.input[0])+".x";
     case node::y:               return co(n.input[0])+".y";
 
@@ -215,8 +243,7 @@ std::string generator_opencl::co (const node& n)
         if (!n.input[2].is_const)
             throw std::runtime_error("fractal octave count must be a constexpr");
 
-        if (n.input[2].aux_var > OPENCL_OCTAVES_LIMIT)
-            throw std::runtime_error("fractal: too many octaves");
+        int octaves (std::min(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
 
         std::string func_name ("p_fractal_" + std::to_string(count_++));
 
@@ -234,7 +261,7 @@ std::string generator_opencl::co (const node& n)
         << "return result / div;"
         << "}";
 
-        functions_[func_name] = func_body.str();
+        functions_.emplace_back(func_body.str());
 
         return func_name + "("
                + co(n.input[0]) + "," + co(n.input[3]) + ","
@@ -251,19 +278,25 @@ std::string generator_opencl::co (const node& n)
         << "double " << func_name << " (double2 p) {"
         << "return " << co(n.input[1]) << ";}" << std::endl;
 
-        functions_[func_name] = func_body.str();
+        functions_.emplace_back(func_body.str());
 
         return func_name +"("+ co(n.input[0])+")";
     }
 
+    case node::external_:
+        throw std::runtime_error("OpenCL @external not implemented yet");
+
+    case node::simplex:
+        throw std::runtime_error("OpenCL simplex not implemented yet");
+
     case node::curve_linear:
-        throw std::runtime_error("OpenCL curve_linear not implemented");
+        throw std::runtime_error("OpenCL curve_linear not implemented yet");
 
     case node::curve_spline:
-        throw std::runtime_error("OpenCL curve_spline not implemented");
+        throw std::runtime_error("OpenCL curve_spline not implemented yet");
 
     case node::png_lookup:
-        throw std::runtime_error("OpenCL png_lookup not implemented");
+        throw std::runtime_error("OpenCL png_lookup not implemented yet");
 
     default:
         throw std::runtime_error("function not implemented in OpenCL yet");

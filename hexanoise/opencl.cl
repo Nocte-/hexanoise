@@ -1,5 +1,11 @@
 
-#pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#ifdef cl_khr_fp64
+    #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+#elif defined(cl_amd_fp64)
+    #pragma OPENCL EXTENSION cl_amd_fp64 : enable
+#else
+    #error "Double precision floating point not supported by OpenCL implementation."
+#endif
 
 #define ONE_F1                 (1.0f)
 #define ZERO_F1                (0.0f)
@@ -57,7 +63,10 @@ __constant float G[16*4] = {
      +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
 };  
-  
+
+__constant uint OFFSET_BASIS = 2166136261;
+__constant uint FNV_PRIME = 16777619;
+ 
 inline double lerp (double x, double a, double b)
 {
     return mad(x, b - a, a);
@@ -82,6 +91,17 @@ inline double2 lerp2d (const double x, const double2 a, const double2 b)
     return mad(x, b - a, a);
 }
 
+/* FNV hash: http://isthe.com/chongo/tech/comp/fnv/#FNV-source */
+inline uint hash (int x, int y)
+{
+  return (uint)((((OFFSET_BASIS ^ (uint)x) * FNV_PRIME) ^ (uint)y) * FNV_PRIME);
+}
+
+inline uint rng (uint last)
+{
+    return (1103515245 * last + 12345) & 0x7FFFFFFF;
+}
+
 inline double gradient_noise2d (double2 xy, int2 ixy, uint seed)
 {
     ixy.x += seed * 1013;
@@ -92,16 +112,6 @@ inline double gradient_noise2d (double2 xy, int2 ixy, uint seed)
     double2 g = (double2)(G[index], G[index+1]);
 
     return dot(xy, g);
-
-    /*
-    int index = dot(int2(1619, 31337), ixy) + 1013 * seed;
-    index ^= index >> 8;
-    index &= 0xff;
-
-    const double2 gradient = randomvectors[index];
-    const double2 f = (xy - ixy);
-    return dot(f, gradient);
-    */
 }
 
 double p_perlin (double2 xy, uint seed)
@@ -127,7 +137,75 @@ double p_perlin (double2 xy, uint seed)
     const double2 n1011 = (double2)(n10, n11);
     const double2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
-    return lerp(blend5(xyf.y), n2.x, n2.y);
+    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.2;
+}
+
+double2 p_worley (const double2 p, uint seed)
+{
+    double2 t = floor(p);
+    int2 xy0 = (int2)((int)t.x, (int)t.y);
+    double2 xyf = p - t;
+
+    double f0 = 9999.9;
+    double f1 = 9999.9;
+
+    for (int i = -1; i < 2; ++i)
+    {
+        for (int j = -1; j < 2; ++j)
+        {
+            int2 square = xy0 + (int2)(i,j);
+            uint rnglast = rng(hash(square.x + seed, square.y));
+
+            double2 rnd_pt;
+            rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
+            rnglast = rng(rnglast);
+            rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+
+            double dist = distance(xyf, rnd_pt);
+            if (dist < f0)
+            {
+                f1 = f0;
+                f0 = dist;
+            }
+            else if (dist < f1)
+            {
+                f1 = dist;
+            }
+        }
+    }
+    return (double2)(f0, f1);
+}
+
+double2 p_voronoi (const double2 p, uint seed)
+{
+    double2 t = floor(p);
+    int2 xy0 = (int2)((int)t.x, (int)t.y);
+    double2 xyf = p - t;
+
+    double f0 = 9999.9;
+    double2 nearest;
+
+    for (int i = -1; i < 2; ++i)
+    {
+        for (int j = -1; j < 2; ++j)
+        {
+            int2 square = xy0 + (int2)(i,j);
+            uint rnglast = rng(hash(square.x + seed, square.y));
+
+            double2 rnd_pt;
+            rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
+            rnglast = rng(rnglast);
+            rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+
+            double dist = distance(xyf, rnd_pt);
+            if (dist < f0)
+            {
+                nearest = rnd_pt;
+                f0 = dist;
+            }
+        }
+    }
+    return t + nearest;
 }
 
 inline double2 p_rotate (double2 p, double a)

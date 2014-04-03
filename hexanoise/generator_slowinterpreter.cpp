@@ -10,6 +10,10 @@
 #include <stdexcept>
 #include "node.hpp"
 
+#ifndef INTERPRETER_OCTAVES_LIMIT
+# define INTERPRETER_OCTAVES_LIMIT 16
+#endif
+
 namespace hexa {
 namespace noise {
 
@@ -47,33 +51,33 @@ static const int P[512] = {151,160,137,91,90,15,
   129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
   251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
   49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,  
+  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
   };
-  
+
 //////////////////////////////////////////////////////////////////////////
- 
+
 const int G_MASK = 15;
 const int G_SIZE = 16;
 const int G_VECSIZE = 4;
 static const float G[16*4] = {
-      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1, 
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
       -ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
-      +ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
-      -ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
-      +ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1, 
+      +ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1,
+      -ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1,
+      +ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1,
       -ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1,
-     +ZERO_F1,  +ONE_F1,  +ONE_F1, +ZERO_F1, 
-     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
-     +ZERO_F1,  +ONE_F1,  -ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  +ONE_F1,  +ONE_F1, +ZERO_F1,
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1,
+     +ZERO_F1,  +ONE_F1,  -ONE_F1, +ZERO_F1,
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1,
-      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1,
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
-};  
-  
+};
+
 inline double lerp (double x, double a, double b)
 {
     return a + x * (b - a);
@@ -96,6 +100,25 @@ inline double blend5 (const double a)
 inline glm::dvec2 lerp2d (const double x, const glm::dvec2& a, const glm::dvec2& b)
 {
     return a + x * (b - a);
+}
+
+#define OFFSET_BASIS 2166136261
+#define FNV_PRIME 16777619
+
+// FNV hash: http://isthe.com/chongo/tech/comp/fnv/#FNV-source
+inline uint32_t hash (uint32_t i, uint32_t j, uint32_t k)
+{
+  return (uint32_t)((((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME) ^ k) * FNV_PRIME);
+}
+
+inline uint32_t hash (uint32_t i, uint32_t j)
+{
+  return (uint32_t)((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME);
+}
+
+inline uint32_t rng(uint32_t last)
+{
+    return (1103515245 * last + 12345) & 0x7FFFFFFF;
 }
 
 inline double gradient_noise2d (const glm::dvec2& xy, glm::ivec2 ixy, uint32_t seed)
@@ -143,7 +166,74 @@ double p_perlin (const glm::dvec2& xy, uint32_t seed)
     const glm::dvec2 n1011 (n10, n11);
     const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
-    return lerp(blend5(xyf.y), n2.x, n2.y);
+    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
+}
+
+glm::dvec2 p_worley (const glm::dvec2& xy, uint32_t seed)
+{
+    glm::dvec2 t (glm::floor(xy));
+    glm::ivec2 xy0 ((int) t.x, (int) t.y);
+    glm::dvec2 xyf (xy - t);
+
+    double f0 (99), f1 (99);
+
+    for (int i (-1); i < 2; ++i)
+    {
+        for (int j (-1); j < 2; ++j)
+        {
+            glm::ivec2 square (xy0 + glm::ivec2(i,j));
+            auto rnglast (rng(hash(square.x + seed, square.y)));
+
+            glm::dvec2 rnd_pt;
+            rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+            rnglast = rng(rnglast);
+            rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+
+            double dist (glm::distance(xyf, rnd_pt));
+            if (dist < f0)
+            {
+                f1 = f0;
+                f0 = dist;
+            }
+            else if (dist < f1)
+            {
+                f1 = dist;
+            }
+        }
+    }
+    return glm::dvec2(f0, f1);
+}
+
+glm::dvec2 p_voronoi (const glm::dvec2& xy, uint32_t seed)
+{
+    glm::dvec2 t (glm::floor(xy));
+    glm::ivec2 xy0 ((int) t.x, (int) t.y);
+    glm::dvec2 xyf (xy - t);
+    glm::dvec2 result;
+
+    double f0 (99);
+
+    for (int i (-1); i < 2; ++i)
+    {
+        for (int j (-1); j < 2; ++j)
+        {
+            glm::ivec2 square (xy0 + glm::ivec2(i,j));
+            auto rnglast (rng(hash(square.x + seed, square.y)));
+
+            glm::dvec2 rnd_pt;
+            rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+            rnglast = rng(rnglast);
+            rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+
+            double dist (glm::distance(xyf, rnd_pt));
+            if (dist < f0)
+            {
+                f0 = dist;
+                result = rnd_pt;
+            }
+        }
+    }
+    return t + result;
 }
 
 } // anonymous namespace
@@ -216,13 +306,37 @@ generator_slowinterpreter::eval_v (const node& n)
         return std::sqrt(p.x*p.x + p.y*p.y);
     }
 
-	case node::perlin:
-	{
-	    auto p (eval_xy(in));
-		auto seed (eval_v(n.input[1]));
+    case node::perlin:
+    {
+        auto p (eval_xy(in));
+        auto seed (eval_v(n.input[1]));
         return p_perlin(p, seed);
     }
-	
+
+    case node::worley:
+    {
+        auto p (eval_xy(in));
+        auto seed (eval_v(n.input[2]));
+
+        auto tmp (p_);
+        p_ = p_worley(p, seed);
+        auto result (eval_v(n.input[1]));
+        p_ = tmp;
+        return result;
+    }
+
+    case node::voronoi:
+    {
+        auto p (eval_xy(in));
+        auto seed (eval_v(n.input[2]));
+
+        auto tmp (p_);
+        p_ = p_voronoi(p, seed);
+        auto result (eval_v(n.input[1]));
+        p_ = tmp;
+        return result;
+    }
+
     case node::external_:
     {
         auto tmp (p_);
@@ -260,6 +374,9 @@ generator_slowinterpreter::eval_v (const node& n)
 
         auto& f(n.input[1]);
         int  octaves(eval_v(n.input[2]));
+
+        octaves = std::min(octaves, INTERPRETER_OCTAVES_LIMIT);
+
         double lacunarity(eval_v(n.input[3]));
         double persistence(eval_v(n.input[4]));
 
@@ -331,6 +448,15 @@ generator_slowinterpreter::eval_v (const node& n)
         return (eval_bool(n.input[0])) ?
                     eval_v(n.input[1]) : eval_v(n.input[2]);
 
+    case node::png_lookup:
+        throw std::runtime_error("'png_lookup' not implemented yet");
+    case node::simplex:
+        throw std::runtime_error("'simplex' not implemented yet");
+    case node::curve_linear:
+        throw std::runtime_error("'curve_linear' not implemented yet");
+    case node::curve_spline:
+        throw std::runtime_error("'curve_spline' not implemented yet");
+
     default:
         throw std::runtime_error("type mismatch");
     }
@@ -358,6 +484,33 @@ generator_slowinterpreter::eval_xy (const node& n)
         auto p (eval_xy(n.input[0]));
         auto s (eval_v(n.input[1]));
         return glm::dvec2(p.x / s, p.y / s);
+    }
+
+    case node::shift:
+    {
+        auto p (eval_xy(n.input[0]));
+        auto sx (eval_v(n.input[1]));
+        auto sy (eval_v(n.input[2]));
+        return glm::dvec2(p.x + sx, p.y + sy);
+    }
+
+    case node::map:
+    {
+        auto tmp(p_);
+        p_ = eval_xy(n.input[0]);
+        auto x (eval_v(n.input[1]));
+        auto y (eval_v(n.input[2]));
+        p_ = tmp;
+        return glm::dvec2(x, y);
+    }
+
+    case node::turbulence:
+    {
+        auto p (eval_xy(n.input[0]));
+        auto x (eval_v(n.input[1]));
+        auto y (eval_v(n.input[2]));
+
+        return glm::dvec2(p.x + x, p.y + y);
     }
 
     case node::swap:
