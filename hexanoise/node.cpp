@@ -39,6 +39,11 @@ struct funcdef
     bool            is_const;
 
     std::vector<paramdef>   parameters;
+
+    // Fix a VS2013 bug:
+    funcdef(node::func_t i, const var_t& rt, bool ic, const std::vector<paramdef>& pd)
+        : id(i), return_type(rt), is_const(ic), parameters(pd)
+    { }
 };
 
 class global_visitor : public boost::static_visitor<node>
@@ -53,76 +58,76 @@ public:
 
 static const std::unordered_map<std::string, funcdef> functions
 {
-    { "!entry", { node::entry_point,xy, false,    {{ xy }}} },
-    { "!var",   { node::const_var,  var, true,     {{ xy }}} },
-    { "!str",   { node::const_str,  string, true,  {{ xy }}} },
-    { "!bool",  { node::const_bool, boolean, true, {{ xy }}} },
+    { "!entry", { node::entry_point,xy, false,     { xy }} },
+    { "!var",   { node::const_var,  var, true,     { xy }} },
+    { "!str",   { node::const_str,  string, true,  { xy }} },
+    { "!bool",  { node::const_bool, boolean, true, { xy }} },
 
-    { "rotate", { node::rotate, xy, false, {{ xy },
+    { "rotate", { node::rotate, xy, false, { xy ,
                                             { "angle", var } }} },
-    { "scale",  { node::scale,  xy, false, {{ xy },
+    { "scale",  { node::scale,  xy, false, { xy ,
                                             { "div", var }}} },
-    { "shift",  { node::shift,  xy, false, {{ xy },
+    { "shift",  { node::shift,  xy, false, { xy ,
                                             { "add_x", var },
                                             { "add_y", var }}} },
-    { "swap",   { node::swap,   xy, false, {{ xy }}} },
-    { "turbulence", { node::turbulence, xy, false, {{ xy }, { "x", var }, { "y", var } }} },
-    { "map", { node::map, xy, false, {{ xy }, { "x", var }, { "y", var } }} },
+    { "swap",   { node::swap,   xy, false, { xy }} },
+    { "turbulence", { node::turbulence, xy, false, { xy , { "x", var }, { "y", var } }} },
+    { "map", { node::map, xy, false, { xy , { "x", var }, { "y", var } }} },
 
-    { "angle", { node::angle,   var, false, {{ xy } }} },
-    { "chebyshev", { node::chebyshev,   var, false, {{ xy } }} },
-    { "checkerboard", { node::checkerboard, var, false, {{ xy } }} },
-    { "distance", { node::distance, var, false, {{ xy } }} },
-    { "manhattan", { node::manhattan,   var, false, {{ xy } }} },
-    { "fractal", { node::fractal,   var, false, {{ xy },
+    { "angle", { node::angle,   var, false, { xy }} },
+    { "chebyshev", { node::chebyshev,   var, false, { xy }} },
+    { "checkerboard", { node::checkerboard, var, false, { xy }} },
+    { "distance", { node::distance, var, false, { xy }} },
+    { "manhattan", { node::manhattan,   var, false, { xy }} },
+    { "fractal", { node::fractal,   var, false, { xy,
                                                { "noise_function", var },
                                                { "octaves", var, 2 },
                                                { "lacunarity", var, 0.5, },
                                                { "persistence", var, 2.0} }} },
 
-    { "perlin", { node::perlin, var, false, {{ xy }, {"seed", var, 0} }} },
+    { "perlin", { node::perlin, var, false, { xy , {"seed", var, 0} }} },
 
-    { "png_lookup", { node::png_lookup, var, false, {{ xy },
+    { "png_lookup", { node::png_lookup, var, false, { xy ,
                                                 { "filename", string } }} },
 
-    { "simplex", { node::simplex,   var, false, {{ xy }, {"seed", var, 0} }} },
-    { "worley", { node::worley, var, false, {{ xy }, {"seed", var, 0} }} },
-    { "x", { node::x,   var, false, {{ xy } }} },
-    { "y", { node::y,   var, false, {{ xy } }} },
+    { "simplex", { node::simplex,   var, false, { xy , {"seed", var, 0} }} },
+    { "worley", { node::worley, var, false, { xy , {"seed", var, 0} }} },
+    { "x", { node::x,   var, false, { xy }} },
+    { "y", { node::y,   var, false, { xy }} },
 
-    { "add", { node::add, var, false, {{ var }, { "n", var, 1.0 } }} },
-    { "sub", { node::sub, var, false, {{ var }, { "n", var, 1.0 } }} },
-    { "mul", { node::mul, var, false, {{ var }, { "n", var, 2.0 } }} },
-    { "div", { node::div, var, false, {{ var }, { "n", var, 2.0 } }} },
+    { "add", { node::add, var, false, { var, { "n", var, 1.0 } }} },
+    { "sub", { node::sub, var, false, { var, { "n", var, 1.0 } }} },
+    { "mul", { node::mul, var, false, { var, { "n", var, 2.0 } }} },
+    { "div", { node::div, var, false, { var, { "n", var, 2.0 } }} },
 
-    { "abs", { node::abs, var, false, {{ var } }} },
-    { "blend", { node::blend, var, false, {{ var }, {"a",var}, {"b",var} }} },
-    { "cos", { node::cos, var, false, {{ var }, }} },
-    { "min", { node::min, var, false, {{ var }, { "n", var } }} },
-    { "max", { node::max, var, false, {{ var }, { "n", var } }} },
-    { "neg", { node::neg, var, false, {{ var } }} },
-    { "pow", { node::pow, var, false, {{ var }, { "n", var, 2.0 } }} },
-    { "saw", { node::saw, var, false, {{ var } }} },
-    { "sin", { node::sin, var, false, {{ var } }} },
-    { "sqrt",{ node::sqrt,var, false, {{ var } }} },
-    { "tan", { node::tan, var, false, {{ var } }} },
+    { "abs", { node::abs, var, false, { var }} },
+    { "blend", { node::blend, var, false, { var, {"a",var}, {"b",var} }} },
+    { "cos", { node::cos, var, false, { var }} },
+    { "min", { node::min, var, false, { var, { "n", var } }} },
+    { "max", { node::max, var, false, { var, { "n", var } }} },
+    { "neg", { node::neg, var, false, { var }} },
+    { "pow", { node::pow, var, false, { var, { "n", var, 2.0 } }} },
+    { "saw", { node::saw, var, false, { var }} },
+    { "sin", { node::sin, var, false, { var }} },
+    { "sqrt",{ node::sqrt,var, false, { var }} },
+    { "tan", { node::tan, var, false, { var }} },
 
-    { "and", { node::band, boolean, false, {{ boolean }, { "x", boolean }}} },
-    { "or",  { node::bor,  boolean, false, {{ boolean }, { "x", boolean }}} },
-    { "xor", { node::bxor, boolean, false, {{ boolean }, { "x", boolean }}} },
-    { "not", { node::bnot, boolean, false, {{ boolean } }} },
+    { "and", { node::band, boolean, false, { boolean , { "x", boolean }}} },
+    { "or",  { node::bor,  boolean, false, { boolean , { "x", boolean }}} },
+    { "xor", { node::bxor, boolean, false, { boolean , { "x", boolean }}} },
+    { "not", { node::bnot, boolean, false, { boolean  }} },
 
-    { "is_equal",  { node::is_equal, boolean, false, {{ var }, {"c", var} }} },
-    { "is_greaterthan",  { node::is_greaterthan, boolean, false, {{ var }, {"c", var} }} },
-    { "is_gte",  { node::is_gte, boolean, false, {{ var }, {"c", var} }} },
-    { "is_lessthan",  { node::is_lessthan, boolean, false, {{ var }, {"c", var} }} },
-    { "is_lte",  { node::is_lte, boolean, false, {{ var }, {"c", var} }} },
+    { "is_equal",  { node::is_equal, boolean, false, { var , {"c", var} }} },
+    { "is_greaterthan",  { node::is_greaterthan, boolean, false, { var , {"c", var} }} },
+    { "is_gte",  { node::is_gte, boolean, false, { var , {"c", var} }} },
+    { "is_lessthan",  { node::is_lessthan, boolean, false, { var , {"c", var} }} },
+    { "is_lte",  { node::is_lte, boolean, false, { var, {"c", var} }} },
 
-    { "is_in_circle",  { node::is_in_circle, boolean, false, {{ xy }, {"radius", var} }} },
-    { "is_in_rectangle",  { node::is_in_rectangle, boolean, false, {{ xy },
+    { "is_in_circle",  { node::is_in_circle, boolean, false, { xy , {"radius", var} }} },
+    { "is_in_rectangle",  { node::is_in_rectangle, boolean, false, { xy ,
                                 {"x1", var}, {"y1", var}, {"x2", var}, {"y2", var} }} },
 
-    { "then_else",  { node::then_else, var, false, {{ boolean }, {"a", var}, {"b", var} }} }
+    { "then_else",  { node::then_else, var, false, { boolean , {"a", var}, {"b", var} }} }
 
 };
 

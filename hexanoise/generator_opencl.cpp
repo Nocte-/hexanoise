@@ -227,10 +227,9 @@ std::string generator_opencl::co (const node& n)
         << "for(int i = 0; i < " << (int)n.input[2].aux_var << "; ++i)"
         << "{"
         << "  result += " << co(n.input[1]) << " * step;"
+        << "  div += step;"
         << "  step *= lac;"
         << "  p *= per;"
-        << "  p += (double2)(0.1, 0.1);"
-        << "  div += step;"
         << "}"
         << "return result / div;"
         << "}";

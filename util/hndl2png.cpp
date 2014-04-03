@@ -130,23 +130,30 @@ int main (int argc, char** argv)
 
     std::unique_ptr<generator_i> gen;
 
-    std::vector<cl::Platform> platform_list;
-    cl::Platform::get(&platform_list);
-    if (platform_list.empty())
+    try
+    {
+        std::vector<cl::Platform> platform_list;
+        cl::Platform::get(&platform_list);
+        if (platform_list.empty())
+        {
+            gen = std::unique_ptr<generator_i>(new generator_slowinterpreter(context, n));
+        }
+        else
+        {
+            auto& pl(platform_list[0]);
+            std::vector<cl::Device> devices;
+            pl.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+
+            cl_context_properties properties [] =
+            { CL_CONTEXT_PLATFORM, (cl_context_properties) (pl) (), 0 };
+            cl::Context opencl_context(CL_DEVICE_TYPE_ALL, properties);
+
+            gen = std::unique_ptr<generator_i>(new generator_opencl(context, opencl_context, devices[0], n));
+        }
+    }
+    catch (...)
     {
         gen = std::unique_ptr<generator_i>(new generator_slowinterpreter(context, n));
-    }
-    else
-    {
-        auto& pl (platform_list[0]);
-        std::vector<cl::Device> devices;
-        pl.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-
-        cl_context_properties properties[] =
-            { CL_CONTEXT_PLATFORM, (cl_context_properties)(pl)(), 0};
-        cl::Context opencl_context (CL_DEVICE_TYPE_ALL, properties);
-
-        gen = std::unique_ptr<generator_i>(new generator_opencl(context, opencl_context, devices[0], n));
     }
 
     auto width (vm["width"].as<unsigned int>());
@@ -167,6 +174,11 @@ int main (int argc, char** argv)
     catch (std::runtime_error& e)
     {
         std::cerr << e.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...)
+    {
+        std::cerr << "Unknown exception" << std::endl;
         return EXIT_FAILURE;
     }
 

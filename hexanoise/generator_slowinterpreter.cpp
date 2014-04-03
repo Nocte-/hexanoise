@@ -13,7 +13,142 @@
 namespace hexa {
 namespace noise {
 
+namespace {
+
 const double pi = 3.14159265358979323846;
+
+#define ONE_F1                 (1.0f)
+#define ZERO_F1                (0.0f)
+
+const int P_MASK = 255;
+const int P_SIZE = 256;
+static const int P[512] = {151,160,137,91,90,15,
+  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
+  151,160,137,91,90,15,
+  131,13,201,95,96,53,194,233,7,225,140,36,103,30,69,142,8,99,37,240,21,10,23,
+  190, 6,148,247,120,234,75,0,26,197,62,94,252,219,203,117,35,11,32,57,177,33,
+  88,237,149,56,87,174,20,125,136,171,168, 68,175,74,165,71,134,139,48,27,166,
+  77,146,158,231,83,111,229,122,60,211,133,230,220,105,92,41,55,46,245,40,244,
+  102,143,54, 65,25,63,161, 1,216,80,73,209,76,132,187,208, 89,18,169,200,196,
+  135,130,116,188,159,86,164,100,109,198,173,186, 3,64,52,217,226,250,124,123,
+  5,202,38,147,118,126,255,82,85,212,207,206,59,227,47,16,58,17,182,189,28,42,
+  223,183,170,213,119,248,152, 2,44,154,163, 70,221,153,101,155,167, 43,172,9,
+  129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
+  251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
+  49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
+  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,  
+  };
+  
+//////////////////////////////////////////////////////////////////////////
+ 
+const int G_MASK = 15;
+const int G_SIZE = 16;
+const int G_VECSIZE = 4;
+static const float G[16*4] = {
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
+      +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1, 
+      -ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
+      +ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
+      -ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
+      +ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1, 
+      -ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1,
+     +ZERO_F1,  +ONE_F1,  +ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  +ONE_F1,  -ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1,
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
+};  
+  
+inline double lerp (double x, double a, double b)
+{
+    return a + x * (b - a);
+}
+
+inline double blend3 (const double a)
+{
+    return a * a * (3.0 - 2.0 * a);
+}
+
+inline double blend5 (const double a)
+{
+    const double a3 = a * a * a;
+    const double a4 = a3 * a;
+    const double a5 = a4 * a;
+
+    return 10.0 * a3 - 15.0 * a4 + 6.0 * a5;
+}
+
+inline glm::dvec2 lerp2d (const double x, const glm::dvec2& a, const glm::dvec2& b)
+{
+    return a + x * (b - a);
+}
+
+inline double gradient_noise2d (const glm::dvec2& xy, glm::ivec2 ixy, uint32_t seed)
+{
+    ixy.x += seed * 1013;
+    ixy.y += seed * 1619;
+    ixy &= P_MASK;
+
+    int index ((P[ixy.x+P[ixy.y]] & G_MASK) * G_VECSIZE);
+    glm::dvec2 g (G[index], G[index+1]);
+
+    return glm::dot(xy, g);
+
+    /*
+    int index = dot(int2(1619, 31337), ixy) + 1013 * seed;
+    index ^= index >> 8;
+    index &= 0xff;
+
+    const double2 gradient = randomvectors[index];
+    const double2 f = (xy - ixy);
+    return dot(f, gradient);
+    */
+}
+
+double p_perlin (const glm::dvec2& xy, uint32_t seed)
+{
+    glm::dvec2 t (glm::floor(xy));
+    glm::ivec2 xy0 ((int) t.x, (int) t.y);
+    glm::dvec2 xyf (xy - t);
+
+    const glm::ivec2 I01 (0, 1);
+    const glm::ivec2 I10(1, 0);
+    const glm::ivec2 I11(1, 1);
+
+    const glm::dvec2 F01 (0.0, 1.0);
+    const glm::dvec2 F10 (1.0, 0.0);
+    const glm::dvec2 F11 (1.0, 1.0);
+
+    const double n00 = gradient_noise2d(xyf      , xy0, seed);
+    const double n10 = gradient_noise2d(xyf - F10, xy0 + I10, seed);
+    const double n01 = gradient_noise2d(xyf - F01, xy0 + I01, seed);
+    const double n11 = gradient_noise2d(xyf - F11, xy0 + I11, seed);
+
+    const glm::dvec2 n0001 (n00, n01);
+    const glm::dvec2 n1011 (n10, n11);
+    const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
+
+    return lerp(blend5(xyf.y), n2.x, n2.y);
+}
+
+} // anonymous namespace
+
+//---------------------------------------------------------------------------
 
 generator_slowinterpreter::generator_slowinterpreter
                                 (const generator_context& context,
@@ -78,9 +213,16 @@ generator_slowinterpreter::eval_v (const node& n)
     case node::distance:
     {
         auto p (eval_xy(in));
-        return std::sqrt(glm::dot(p, p));
+        return std::sqrt(p.x*p.x + p.y*p.y);
     }
 
+	case node::perlin:
+	{
+	    auto p (eval_xy(in));
+		auto seed (eval_v(n.input[1]));
+        return p_perlin(p, seed);
+    }
+	
     case node::external_:
     {
         auto tmp (p_);
@@ -111,6 +253,27 @@ generator_slowinterpreter::eval_v (const node& n)
     case node::y:
         return eval_xy(in).y;
 
+    case node::fractal:
+    {
+        auto tmp(p_);
+        p_ = eval_xy(n.input[0]);
+
+        auto& f(n.input[1]);
+        int  octaves(eval_v(n.input[2]));
+        double lacunarity(eval_v(n.input[3]));
+        double persistence(eval_v(n.input[4]));
+
+        double div(0.0), mul(1.0), result(0.0);
+        for (int i(0); i < octaves; ++i)
+        {
+            result += eval_v(f) * mul;
+            div += mul;
+            mul *= lacunarity;
+            p_ *= persistence;
+        }
+        p_ = tmp;
+        return result / div;
+    }
 
     case node::abs:
         return std::abs(eval_v(in));
@@ -191,7 +354,11 @@ generator_slowinterpreter::eval_xy (const node& n)
     }
 
     case node::scale:
-        return eval_xy(n.input[0]) * eval_v(n.input[1]);
+    {
+        auto p (eval_xy(n.input[0]));
+        auto s (eval_v(n.input[1]));
+        return glm::dvec2(p.x / s, p.y / s);
+    }
 
     case node::swap:
     {

@@ -156,7 +156,7 @@
 #if defined(__APPLE__) || defined(__MACOSX)
 #include <OpenCL/opencl.h>
 #else
-#include <CL/opencl.h>
+#include <CL/cl.h>
 #endif // !__APPLE__
 
 #if !defined(CL_CALLBACK)
@@ -935,9 +935,6 @@ struct param_traits<detail:: token,param_name>       \
 };
 
 __PARAM_NAME_INFO_1_0(__DECLARE_PARAM_TRAITS)
-#if defined(CL_VERSION_1_1)
-__PARAM_NAME_INFO_1_1(__DECLARE_PARAM_TRAITS)
-#endif // CL_VERSION_1_1
 
 #if defined(USE_CL_DEVICE_FISSION)
 __PARAM_NAME_DEVICE_FISSION(__DECLARE_PARAM_TRAITS);
@@ -2695,68 +2692,6 @@ public:
                 (cl_event*) event),
             __ENQUEUE_TASK_ERR);
     }
-
-    cl_int enqueueNativeKernel(
-        void (*userFptr)(void *),
-        std::pair<void*, ::size_t> args,
-        const VECTOR_CLASS<Memory>* mem_objects = NULL,
-        const VECTOR_CLASS<const void*>* mem_locs = NULL,
-        const VECTOR_CLASS<Event>* events = NULL,
-        Event* event = NULL) const
-    {
-        cl_mem * mems = (mem_objects != NULL && mem_objects->size() > 0)
-            ? (cl_mem*) alloca(mem_objects->size() * sizeof(cl_mem))
-            : NULL;
-
-        if (mems != NULL) {
-            for (unsigned int i = 0; i < mem_objects->size(); i++) {
-                mems[i] = ((*mem_objects)[i])();
-            }
-        }
-
-        return detail::errHandler(
-            ::clEnqueueNativeKernel(
-                object_, userFptr, args.first, args.second,
-                (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
-                mems,
-                (mem_locs != NULL) ? (const void **) &mem_locs->front() : NULL,
-                (events != NULL) ? (cl_uint) events->size() : 0,
-                (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
-                (cl_event*) event),
-            __ENQUEUE_NATIVE_KERNEL);
-    }
-
-    cl_int enqueueAcquireGLObjects(
-         const VECTOR_CLASS<Memory>* mem_objects = NULL,
-         const VECTOR_CLASS<Event>* events = NULL,
-         Event* event = NULL) const
-     {
-         return detail::errHandler(
-             ::clEnqueueAcquireGLObjects(
-                 object_,
-                 (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
-                 (mem_objects != NULL) ? (const cl_mem *) &mem_objects->front(): NULL,
-                 (events != NULL) ? (cl_uint) events->size() : 0,
-                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
-                 (cl_event*) event),
-             __ENQUEUE_ACQUIRE_GL_ERR);
-     }
-
-    cl_int enqueueReleaseGLObjects(
-         const VECTOR_CLASS<Memory>* mem_objects = NULL,
-         const VECTOR_CLASS<Event>* events = NULL,
-         Event* event = NULL) const
-     {
-         return detail::errHandler(
-             ::clEnqueueReleaseGLObjects(
-                 object_,
-                 (mem_objects != NULL) ? (cl_uint) mem_objects->size() : 0,
-                 (mem_objects != NULL) ? (const cl_mem *) &mem_objects->front(): NULL,
-                 (events != NULL) ? (cl_uint) events->size() : 0,
-                 (events != NULL && events->size() > 0) ? (cl_event*) &events->front() : NULL,
-                 (cl_event*) event),
-             __ENQUEUE_RELEASE_GL_ERR);
-     }
 
 #if defined (USE_DX_INTEROP)
 typedef CL_API_ENTRY cl_int (CL_API_CALL *PFN_clEnqueueAcquireD3D10ObjectsKHR)(

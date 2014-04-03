@@ -31,8 +31,8 @@ set(SOURCE_FILES
     generator_context.cpp
     generator_slowinterpreter.cpp
     node.cpp
-    ${FLEX_token_OUTPUTS}
-    ${BISON_parser_OUTPUTS}
+    ${CMAKE_CURRENT_BINARY_DIR}/tokens.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
 )
 
 set(HEADER_FILES
