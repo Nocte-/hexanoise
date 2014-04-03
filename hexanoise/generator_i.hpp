@@ -14,21 +14,19 @@
 namespace hexa {
 namespace noise {
 
+/** Base class for generators. */
 class generator_i
 {
 public:
     generator_i (const generator_context& c) : cntx_(c) { }
     virtual ~generator_i() { }
 
-    const generator_context::image&
-    image (const std::string& name) const;
-
-    const generator_context::variable&
-    global (const std::string& name) const;
-
-    bool
-    have_blobal (const std::string& name) const;
-
+    /** Run the script for a given range.
+     * @param corner    The top-left corner of the range
+     * @param step      The step size between samples
+     * @param count     The number of samples to take in the x and y direction
+     * @return A buffer with size (count.x * count.y) holding the results
+     */
     virtual std::vector<double>
     run (const glm::dvec2& corner,
          const glm::dvec2& step,

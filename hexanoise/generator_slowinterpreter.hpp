@@ -19,9 +19,14 @@ namespace noise {
 
 class node;
 
+/** A rather slow interpreter for noise scripts. */
 class generator_slowinterpreter : public generator_i
 {
 public:
+    /** Set up an interpreter
+     * @param context  Shared data
+     * @param n        The compiled noise script to execute
+     */
     generator_slowinterpreter (const generator_context& context,
                                const node& n);
 

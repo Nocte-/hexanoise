@@ -16,12 +16,22 @@ namespace noise {
 class function;
 class generator_context;
 
+/** Variable types. */
 typedef enum
 {
-    xy, var, string, boolean
+    /** 2-D coordinates */
+    xy,
+    /** Scalar value */
+    var,
+    /** Text string (only used as a constexpr) */
+    string,
+    /** Boolean value */
+    boolean
 }
 var_t;
 
+/** A node in the expression tree.
+ *  A compiled HDNL script is represented by a node. */
 class node
 {
 public:
@@ -130,11 +140,19 @@ public:
     { }
 
     node (const node&) = default;
-    node (node&&) = default;
     node& operator= (const node&) = default;
 
-    bool is_correct() const;
+    // Visual Studio 2013 still doesn't support default move :/
+    node (node&& m)
+        : type(m.type)
+        , input(std::move(m.input))
+        , return_type(m.return_type)
+        , is_const(m.is_const)
+        , aux_string(std::move(m.aux_string))
+        , aux_var(m.aux_var)
+        , aux_bool(m.aux_bool)
+    { }
 };
 
-}}
+}} // namespace hexa::noise
 

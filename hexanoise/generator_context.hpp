@@ -72,6 +72,10 @@ public:
     bool
     exists_global (const std::string& name) const;
 
+    /** Get an image by name.
+     * @throw std::runtime_error if \a name was not found */
+    const image&
+    get_image (const std::string& name) const;
 
 private:
     void init();

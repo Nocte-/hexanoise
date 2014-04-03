@@ -77,7 +77,7 @@ generator_context::get_global (const std::string& name) const
 {
     auto found (variables_.find(name));
     if (found == variables_.end())
-        throw std::runtime_error("varibalbe " + name + " not defined");
+        throw std::runtime_error("variable '" + name + "'' not defined");
 
     return found->second;
 }
@@ -86,6 +86,16 @@ bool
 generator_context::exists_global (const std::string& name) const
 {
     return variables_.count(name) > 0;
+}
+
+const generator_context::image&
+generator_context::get_image (const std::string& name) const
+{
+    auto found (images_.find(name));
+    if (found == images_.end())
+        throw std::runtime_error("image '" + name + "'' not found");
+
+    return found->second;
 }
 
 }} // namespace hexa::noise

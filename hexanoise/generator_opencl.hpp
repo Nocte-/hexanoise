@@ -22,15 +22,25 @@ namespace noise {
 
 class node;
 
+/** Use OpenCL to execute a script. */
 class generator_opencl : public generator_i
 {
 public:
+    /** Set up a new generator
+     * @param context  Shared data
+     * @param opencl_context  The OpenCL context
+     * @param opencl_device   The script will be executed on this device
+     * @param n               The compiled script
+     * @param opencl_file     A text file that defines the base functions
+     *                        required by the OpenCL kernel.
+     */
     generator_opencl (const generator_context& context,
                       cl::Context& opencl_context,
                       cl::Device&  opencl_device,
                       const node& n,
                       const std::string& opencl_file = "opencl.cl");
 
+    /** Returns the generated OpenCL source code. */
     std::string opencl_sourcecode() const
     {
         return main_;
