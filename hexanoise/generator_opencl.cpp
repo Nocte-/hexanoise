@@ -243,7 +243,7 @@ std::string generator_opencl::co (const node& n)
         if (!n.input[2].is_const)
             throw std::runtime_error("fractal octave count must be a constexpr");
 
-        int octaves (std::min(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
+        int octaves (std::min<int>(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
 
         std::string func_name ("p_fractal_" + std::to_string(count_++));
 
@@ -251,7 +251,7 @@ std::string generator_opencl::co (const node& n)
         func_body
         << "double " << func_name << " (double2 p, const double lac, const double per) {"
         << "double result = 0.0; double div = 0.0; double step = 1.0;"
-        << "for(int i = 0; i < " << (int)n.input[2].aux_var << "; ++i)"
+        << "for(int i = 0; i < " << octaves << "; ++i)"
         << "{"
         << "  result += " << co(n.input[1]) << " * step;"
         << "  div += step;"
