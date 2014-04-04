@@ -281,6 +281,11 @@ int main (int argc, char** argv)
 
     write_png_file(pixmap, width, height, vm["output"].as<std::string>());
     }
+    catch (cl::Error& e)
+    {
+        std::cerr << "Error in " << e.what() << ", code " << e.err() << std::endl;
+        return EXIT_FAILURE;
+    }
     catch (std::exception& e)
     {
         std::cerr << "Exception: " << e.what() << std::endl;

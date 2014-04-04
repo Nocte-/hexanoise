@@ -91,7 +91,7 @@ generator_opencl::run (const glm::dvec2& corner,
     kernel_.setArg(2, sizeof(step),   (void*)&step);
     kernel_.setArg(3, sizeof(count),  (void*)&count);
 
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, result.size(), 0);
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, result.size(), cl::NullRange);
     queue_.enqueueReadBuffer(output, CL_TRUE, 0, result.size() * sizeof(double), &result[0]);
 
     return result;
