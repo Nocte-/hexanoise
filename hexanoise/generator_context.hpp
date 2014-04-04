@@ -35,6 +35,27 @@ public:
         uint8_t bitdepth;
         /** The actual bitmap data */
         std::vector<uint8_t>    buffer;
+
+        image () {}
+
+        image (image&& m)
+            : width (m.width)
+            , height (m.height)
+            , bitdepth (m.bitdepth)
+            , buffer (std::move(m.buffer))
+        { }
+
+        image& operator= (image&& m)
+        {
+            if (&m != this)
+            {
+                width = m.width;
+                height = m.height;
+                bitdepth = m.bitdepth;
+                buffer = std::move(m.buffer);
+            }
+            return *this;
+        }
     };
 
     /** Global variables can be either doubles, bools, or strings. */
@@ -72,8 +93,10 @@ public:
     bool
     exists_global (const std::string& name) const;
 
-    /** Get an image by name.
-     * @throw std::runtime_error if \a name was not found */
+    void
+    load_image (const std::string& name, const std::string& file);
+
+    /** Get an image by name. */
     const image&
     get_image (const std::string& name) const;
 

@@ -27,6 +27,12 @@ if(OPENCL_FOUND)
   include_directories(${OPENCL_INCLUDE_DIRS})
 endif()
 
+find_package(PNG)
+if(PNG_FOUND)
+  add_definitions("-DHAVE_PNG")
+  include_directories(${PNG_INCLUDE_DIRS} ${PNG_PNG_INCLUDE_DIR})
+endif()
+
 set(SOURCE_FILES
     generator_context.cpp
     generator_slowinterpreter.cpp
@@ -53,6 +59,8 @@ add_library(${LIBNAME_S} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 add_library(${LIBNAME}   SHARED ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(${LIBNAME} PROPERTIES SOVERSION ${VERSION_SO} VERSION ${VERSION})
 set_target_properties(${LIBNAME_S} PROPERTIES VERSION ${VERSION})
+
+target_link_libraries(${LIBNAME} ${PNG_LIBRARIES} ${OPENCL_LIBRARIES})
 
 install(TARGETS ${LIBNAME_S} ${LIBNAME} DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION "include/${LIBNAME}")

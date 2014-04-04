@@ -49,13 +49,12 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     }
     main_ += "\n" \
     "__kernel void noisemain(\n" \
-    "  __global double* output, const double2 start, const double2 step, const int2 count)\n" \
+    "  __global double* output, const double2 start, const double2 step)\n" \
     "{\n"\
-    "    int i = get_global_id(0);\n" \
-    "    double x = (double)(i % count.x);\n" \
-    "    double y = (double)(i / count.x);\n" \
-    "    double2 p = start + step * (double2)(x,y);\n" \
-    "    output[i] = ";
+    "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"\
+    "    int  sizex = get_global_size(0);\n"\
+    "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n" \
+    "    output[coord.y * sizex + coord.x] = ";
 
     main_ += body;
     main_ += ";\n}\n";
@@ -83,16 +82,21 @@ generator_opencl::run (const glm::dvec2& corner,
                        const glm::dvec2& step,
                        const glm::ivec2& count)
 {
-    std::vector<double> result (count.x * count.y);
-    cl::Buffer output (context_, CL_MEM_WRITE_ONLY, result.size() * sizeof(double));
+    unsigned int width (count.x), height (count.y);
+
+    std::vector<double> result (width * height);
+    cl::Buffer output (context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
+                       result.size() * sizeof(double),
+                       &result[0]);
 
     kernel_.setArg(0, output);
     kernel_.setArg(1, sizeof(corner), (void*)&corner);
     kernel_.setArg(2, sizeof(step),   (void*)&step);
-    kernel_.setArg(3, sizeof(count),  (void*)&count);
 
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, result.size(), cl::NullRange);
-    queue_.enqueueReadBuffer(output, CL_TRUE, 0, result.size() * sizeof(double), &result[0]);
+    auto memobj (queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                         result.size() * sizeof(double)));
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height}, cl::NullRange);
+    queue_.enqueueUnmapMemObject(output, memobj);
 
     return result;
 }

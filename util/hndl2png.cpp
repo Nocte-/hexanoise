@@ -106,6 +106,14 @@ void opencl_info()
     }
 }
 
+std::string readstream (std::istream& in)
+{
+    std::string result, line;
+    while (std::getline(in, line))
+        result.append(line);
+
+    return result;
+}
 
 namespace po = boost::program_options;
 using namespace hexa::noise;
@@ -191,7 +199,7 @@ int main (int argc, char** argv)
     std::string file (vm["input"].as<std::string>());
     if (file == "-")
     {
-        std::cin >> script;
+        script = readstream(std::cin);
     }
     else
     {
@@ -200,12 +208,14 @@ int main (int argc, char** argv)
             std::cerr << "Cannot open file " << file << std::endl;
             return EXIT_FAILURE;
         }
-        while (!s.eof())
-            s >> script;
+        script = readstream(s);
     }
 
     generator_context context;
     context.set_script("main", script);
+
+    context.load_image("hm", "hm.png");
+
     auto& n (context.get_script("main"));
 
     std::unique_ptr<generator_i> gen;

@@ -63,7 +63,6 @@ public:
     function*               input;
     std::vector<function*>* args;
     double                  value;
-    std::string             text;
 
     size_t                  line;
     size_t                  pos;

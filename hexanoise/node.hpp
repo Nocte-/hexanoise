@@ -116,14 +116,29 @@ public:
     }
     func_t;
 
+    struct control_point
+    {
+        double in;
+        double out;
+
+        control_point (const std::pair<double, double>& p)
+            : in (p.first), out (p.second)
+        { }
+    };
+
+public:
     func_t  type;
     std::vector<node> input;
     var_t   return_type;
     bool    is_const;
 
-    std::string     aux_string;
-    double          aux_var;
-    bool            aux_bool;
+    std::string         aux_string;
+    double              aux_var;
+    bool                aux_bool;
+
+    std::vector<control_point> curve;
+
+public:
 
     node (function* in, const generator_context& ctx);
     node (func_t t, bool c = false, var_t rt = var);
@@ -152,6 +167,7 @@ public:
         , aux_string(std::move(m.aux_string))
         , aux_var(m.aux_var)
         , aux_bool(m.aux_bool)
+        , curve(std::move(m.curve))
     { }
 };
 

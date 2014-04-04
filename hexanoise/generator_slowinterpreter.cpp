@@ -78,6 +78,11 @@ static const float G[16*4] = {
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
 };
 
+inline double clamp (double x, double min, double max)
+{
+    return std::min(std::max(x,min),max);
+}
+
 inline double lerp (double x, double a, double b)
 {
     return a + x * (b - a);
@@ -97,10 +102,20 @@ inline double blend5 (const double a)
     return 10.0 * a3 - 15.0 * a4 + 6.0 * a5;
 }
 
+inline double interp_cubic (double v0, double v1, double v2, double v3, double a)
+{
+    const double x (v3 - v2 - v0 + v1);
+    const double a2 (a * a);
+    const double a3 (a2 * a);
+    return x * a3 + (v0 - v1 - x) * a2 + (v2 - v0) * a + v1;
+}
+
 inline glm::dvec2 lerp2d (const double x, const glm::dvec2& a, const glm::dvec2& b)
 {
     return a + x * (b - a);
 }
+
+
 
 #define OFFSET_BASIS 2166136261
 #define FNV_PRIME 16777619
@@ -268,6 +283,65 @@ generator_slowinterpreter::eval (const glm::dvec2& p, const node& n)
 {
     p_ = p;
     return eval_v(n);
+}
+
+double
+curve_linear (double x, const std::vector<node::control_point>& curve)
+{
+    auto i (curve.begin());
+    if (x < i->in)
+        return i->out;
+
+    for (; i != curve.end(); ++i)
+    {
+        if (x < i->in)
+        {
+            --i;
+            double deltax ((i+1)->in - i->in);
+            return lerp((x - i->in) / deltax, i->out, (i+1)->out);
+        }
+    }
+    return std::prev(i)->out;
+}
+
+double
+curve_spline (double x, const std::vector<node::control_point>& curve)
+{
+    int index (0);
+    for (; index < (int)curve.size(); ++index)
+    {
+        if (x < curve[index].in)
+            break;
+    }
+
+    const int lim (curve.size() - 1);
+    const int index0 (clamp(index-2, 0, lim));
+    const int index1 (clamp(index-1, 0, lim));
+    const int index2 (clamp(index,   0, lim));
+    const int index3 (clamp(index+1, 0, lim));
+
+    if (index1 == index2)
+        return curve[index1].out;
+
+    const double in0 (curve[index1].in);
+    const double in1 (curve[index2].in);
+    const double a   ((x - in0) / (in1 - in0));
+
+    const double out0 (curve[index0].out);
+    const double out1 (curve[index1].out);
+    const double out2 (curve[index2].out);
+    const double out3 (curve[index3].out);
+
+    return interp_cubic(out0, out1, out2, out3, a);
+}
+
+double png (const glm::dvec2& p, const generator_context::image& img)
+{
+    glm::dvec2 fl (glm::floor(p));
+    glm::dvec2 fr (p - fl);
+
+    glm::ivec2 i (fr.x * img.width, fr.y * img.height);
+    return ((double)img.buffer[i.y * img.width + i.x] - 127.5) / 127.5;
 }
 
 double
@@ -448,14 +522,17 @@ generator_slowinterpreter::eval_v (const node& n)
         return (eval_bool(n.input[0])) ?
                     eval_v(n.input[1]) : eval_v(n.input[2]);
 
+    case node::curve_linear:
+        return curve_linear(eval_v(in), n.curve);
+
+    case node::curve_spline:
+        return curve_spline(eval_v(in), n.curve);
+
     case node::png_lookup:
-        throw std::runtime_error("'png_lookup' not implemented yet");
+        return png(eval_xy(in), cntx_.get_image(n.input[1].aux_string));
+
     case node::simplex:
         throw std::runtime_error("'simplex' not implemented yet");
-    case node::curve_linear:
-        throw std::runtime_error("'curve_linear' not implemented yet");
-    case node::curve_spline:
-        throw std::runtime_error("'curve_spline' not implemented yet");
 
     default:
         throw std::runtime_error("type mismatch");

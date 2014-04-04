@@ -54,7 +54,7 @@ input : function { *func = $1; }
 function : TVALUE 
                 { $$ = new function(); $$->type = function::const_v; $$->value = std::stod(*$1); delete $1; }
          | TSTRING
-                { $$ = new function(); $$->type = function::const_s; $$->text = *$1; delete $1; }
+                { $$ = new function(); $$->type = function::const_s; $$->name = *$1; delete $1; }
          | TDOLLAR TIDENTIFIER
                 { $$ = new function(*$2); $$->type = function::global; delete $2; }
          | TAT TIDENTIFIER

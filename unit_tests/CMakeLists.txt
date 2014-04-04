@@ -10,6 +10,8 @@ add_executable(${EXE} ${SOURCE_FILES})
 include_directories(..)
 
 find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS unit_test_framework)
+find_package(OpenCL)
+find_package(PNG)
 
-include_directories(${Boost_INCLUDE_DIRS})
-target_link_libraries(${EXE} hexanoise ${Boost_LIBRARIES} OpenCL)
+include_directories(${Boost_INCLUDE_DIRS} ${OPENCL_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${PNG_PNG_INCLUDE_DIR})
+target_link_libraries(${EXE} hexanoise ${Boost_LIBRARIES} ${PNG_LIBRARIES} OpenCL)
