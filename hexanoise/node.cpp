@@ -6,6 +6,7 @@
 
 #include "node.hpp"
 
+#include <map>
 #include <stdexcept>
 #include <unordered_map>
 #include "ast.hpp"
@@ -129,7 +130,10 @@ static const std::unordered_map<std::string, funcdef> functions
     { "is_in_rectangle",  { node::is_in_rectangle, boolean, { xy ,
                                 {"x1", var}, {"y1", var}, {"x2", var}, {"y2", var} }} },
 
-    { "then_else",  { node::then_else, var, { boolean , {"a", var}, {"b", var} }} }
+    { "then_else",  { node::then_else, var, { boolean , {"a", var}, {"b", var} }} },
+
+    { "curve_linear", { node::curve_linear, var, { var }} },
+    { "curve_spline", { node::curve_spline, var, { var }} }
 
 };
 
@@ -152,6 +156,41 @@ node::node (function* in, const generator_context& ctx)
             else
                 input.emplace_back(node(entry_point, false, xy));
 
+            // Special case: curve_linear and curve_spline take a list of
+            // const var parameters.
+            //
+            if (   type == node::curve_linear
+                || type == node::curve_spline)
+            {
+                std::vector<double> params;
+                for (auto ptr : *(in->args))
+                {
+                    if (ptr->type != function::const_v)
+                        throw std::runtime_error("curve_* only takes const variables as parameters");
+
+                    params.push_back(ptr->value);
+                }
+                if (params.size() % 2 != 0)
+                    throw std::runtime_error("curve_* must have an even number of parameters");
+
+                if (type == node::curve_linear && params.size() < 4)
+                    throw std::runtime_error("curve_linear must have at least 4 parameters");
+
+                if (type == node::curve_spline && params.size() < 8)
+                    throw std::runtime_error("curve_spline must have at least 8 parameters");
+
+                std::map<double, double> result;
+                for (auto i (params.begin()); i != params.end(); i += 2)
+                    result[*i] = *std::next(i);
+
+                for (auto& p : result)
+                    curve.push_back(control_point(p));
+
+                break;
+            }
+
+            // Handle parameters for all other functions.
+            //
             if (in->args)
             {
                 if (in->args->size() >= fdef.parameters.size())
@@ -195,7 +234,7 @@ node::node (function* in, const generator_context& ctx)
             type = const_str;
             return_type = string;
             is_const = true;
-            aux_string = in->name;
+            aux_string = in->name.substr(1, in->name.size() - 2);
             break;
 
         case function::const_bool:

@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE (opencl_basic)
 
     generator_slowinterpreter sl_gen (ctx, ctx.get_script("lol"));
 
-    auto result (sl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0), glm::ivec2(5000, 5000)));
+    auto result (sl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0), glm::ivec2(50, 50)));
     std::cout << result[0] << std::endl;
 
-    auto result2 (cl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0), glm::ivec2(5000, 5000)));
+    auto result2 (cl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0), glm::ivec2(50, 50)));
     std::cout << result[0] << std::endl;
 
     }

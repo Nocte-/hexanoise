@@ -32,8 +32,8 @@ png_load(const std::string& file_name)
     if (fp == 0)
         throw std::runtime_error("cannot open file " + file_name);
 
-    fread(header, 1, 8, fp);
-    if (png_sig_cmp(header, 0, 8))
+    auto read (fread(header, 1, 8, fp));
+    if (read != 8 || png_sig_cmp(header, 0, 8))
     {
         fclose(fp);
         throw std::runtime_error(file_name + " is not a PNG file");
