@@ -95,8 +95,13 @@ generator_opencl::run (const glm::dvec2& corner,
 
     auto memobj (queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
                                          result.size() * sizeof(double)));
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height}, cl::NullRange);
+
+    cl::Event ev;
+
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height}, cl::NullRange,
+                                nullptr, &ev);
     queue_.enqueueUnmapMemObject(output, memobj);
+    ev.wait();
 
     return result;
 }
