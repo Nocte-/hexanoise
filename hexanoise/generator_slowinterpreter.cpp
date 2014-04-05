@@ -21,8 +21,8 @@ namespace {
 
 const double pi = 3.14159265358979323846;
 
-#define ONE_F1                 (1.0f)
-#define ZERO_F1                (0.0f)
+#define ONE_F1                 (1.0)
+#define ZERO_F1                (0.0)
 
 const int P_MASK = 255;
 const int P_SIZE = 256;
@@ -59,7 +59,7 @@ static const int P[512] = {151,160,137,91,90,15,
 const int G_MASK = 15;
 const int G_SIZE = 16;
 const int G_VECSIZE = 4;
-static const float G[16*4] = {
+static const double G[16*4] = {
       +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
       -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
       +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
@@ -115,7 +115,10 @@ inline glm::dvec2 lerp2d (const double x, const glm::dvec2& a, const glm::dvec2&
     return a + x * (b - a);
 }
 
-
+inline double dot(const double* p, double x, double y)
+{
+    return p[0] * x + p[1] * y;
+}
 
 #define OFFSET_BASIS 2166136261
 #define FNV_PRIME 16777619
@@ -146,16 +149,6 @@ inline double gradient_noise2d (const glm::dvec2& xy, glm::ivec2 ixy, uint32_t s
     glm::dvec2 g (G[index], G[index+1]);
 
     return glm::dot(xy, g);
-
-    /*
-    int index = dot(int2(1619, 31337), ixy) + 1013 * seed;
-    index ^= index >> 8;
-    index &= 0xff;
-
-    const double2 gradient = randomvectors[index];
-    const double2 f = (xy - ixy);
-    return dot(f, gradient);
-    */
 }
 
 double p_perlin (const glm::dvec2& xy, uint32_t seed)
@@ -182,6 +175,88 @@ double p_perlin (const glm::dvec2& xy, uint32_t seed)
     const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
+}
+
+double p_simplex (const glm::dvec2& xy, uint32_t seed)
+{
+    double n0, n1, n2;
+
+    // Skew the input space to determine which simplex cell we're in
+    constexpr double F2 (0.5 * (std::sqrt(3.0) - 1.0));
+    constexpr double G2 ((3.0 - std::sqrt(3.0)) / 6.0);
+
+    double s ((xy.x + xy.y) * F2);
+    int i (std::floor(xy.x + s));
+    int j (std::floor(xy.y + s));
+
+    // Unskew the cell origin back to (x,y) space
+    double t ((i + j) * G2);
+    double X0 (i-t);
+    double Y0 (j-t);
+
+    // The x,y distances from the cell origin
+    double x0 = xy.x-X0;
+    double y0 = xy.y-Y0;
+
+    // For the 2D case, the simplex shape is an equilateral triangle.
+    // Determine which simplex we are in.
+    int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+    if (x0 > y0)
+    {
+        i1=1; // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+        j1=0;
+    }
+    else
+    {
+        i1=0; // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+        j1=1;
+    }
+
+    double x1 (x0 - i1 + G2);
+    double y1 (y0 - j1 + G2);
+    double x2 (x0 - 1.0 + 2.0 * G2);
+    double y2 (y0 - 1.0 + 2.0 * G2);
+
+    int ii ((i + seed * 1063) & 0xFF);
+    int jj (j & 0xFF);
+    int gi0 (P[ii+P[jj]] & G_MASK);
+    int gi1 (P[ii+i1+P[jj+j1]] & G_MASK);
+    int gi2 (P[ii+1+P[jj+1]] & G_MASK);
+
+    double t0 (0.5 - x0*x0-y0*y0);
+    if(t0<0)
+    {
+        n0 = 0.0;
+    }
+    else
+    {
+        t0 *= t0;
+        n0 = t0 * t0 * dot(&G[gi0*G_VECSIZE], x0, y0);
+    }
+
+    double t1 (0.5 - x1*x1-y1*y1);
+    if(t1<0)
+    {
+        n1 = 0.0;
+    }
+    else
+    {
+        t1 *= t1;
+        n1 = t1 * t1 * dot(&G[gi1*G_VECSIZE], x1, y1);
+    }
+
+    double t2 (0.5 - x2*x2-y2*y2);
+    if(t2<0)
+    {
+        n2 = 0.0;
+    }
+    else
+    {
+        t2 *= t2;
+        n2 = t2 * t2 * dot(&G[gi2*G_VECSIZE], x2, y2);
+    }
+
+    return 70.0 * (n0 + n1 + n2);
 }
 
 glm::dvec2 p_worley (const glm::dvec2& xy, uint32_t seed)
@@ -251,40 +326,6 @@ glm::dvec2 p_voronoi (const glm::dvec2& xy, uint32_t seed)
     return t + result;
 }
 
-} // anonymous namespace
-
-//---------------------------------------------------------------------------
-
-generator_slowinterpreter::generator_slowinterpreter
-                                (const generator_context& context,
-                                 const node& n)
-    : generator_i(context)
-    , n_(n)
-{
-}
-
-std::vector<double>
-generator_slowinterpreter::run (const glm::dvec2& corner,
-                                const glm::dvec2& step,
-                                const glm::ivec2& count)
-{
-    std::vector<double> result (count.x * count.y);
-    size_t i (0);
-
-    for (int y (0); y < count.y; ++y)
-        for (int x (0); x < count.x; ++x)
-            result[i++] = eval(corner + glm::dvec2(x,y) * step, n_);
-
-    return result;
-}
-
-double
-generator_slowinterpreter::eval (const glm::dvec2& p, const node& n)
-{
-    p_ = p;
-    return eval_v(n);
-}
-
 double
 curve_linear (double x, const std::vector<node::control_point>& curve)
 {
@@ -344,6 +385,41 @@ double png (const glm::dvec2& p, const generator_context::image& img)
     return ((double)img.buffer[i.y * img.width + i.x] - 127.5) / 127.5;
 }
 
+} // anonymous namespace
+
+//---------------------------------------------------------------------------
+
+generator_slowinterpreter::generator_slowinterpreter
+                                (const generator_context& context,
+                                 const node& n)
+    : generator_i(context)
+    , n_(n)
+    , seed_(static_cast<uint32_t>(boost::get<double>(context.get_global("seed"))))
+{
+}
+
+std::vector<double>
+generator_slowinterpreter::run (const glm::dvec2& corner,
+                                const glm::dvec2& step,
+                                const glm::ivec2& count)
+{
+    std::vector<double> result (count.x * count.y);
+    size_t i (0);
+
+    for (int y (0); y < count.y; ++y)
+        for (int x (0); x < count.x; ++x)
+            result[i++] = eval(corner + glm::dvec2(x,y) * step, n_);
+
+    return result;
+}
+
+double
+generator_slowinterpreter::eval (const glm::dvec2& p, const node& n)
+{
+    p_ = p;
+    return eval_v(n);
+}
+
 double
 generator_slowinterpreter::eval_v (const node& n)
 {
@@ -387,13 +463,20 @@ generator_slowinterpreter::eval_v (const node& n)
         return p_perlin(p, seed);
     }
 
+    case node::simplex:
+    {
+        auto p (eval_xy(in));
+        auto seed (eval_v(n.input[1]));
+        return p_simplex(p, seed_ + seed);
+    }
+
     case node::worley:
     {
         auto p (eval_xy(in));
         auto seed (eval_v(n.input[2]));
 
         auto tmp (p_);
-        p_ = p_worley(p, seed);
+        p_ = p_worley(p, seed_ + seed);
         auto result (eval_v(n.input[1]));
         p_ = tmp;
         return result;
@@ -405,7 +488,7 @@ generator_slowinterpreter::eval_v (const node& n)
         auto seed (eval_v(n.input[2]));
 
         auto tmp (p_);
-        p_ = p_voronoi(p, seed);
+        p_ = p_voronoi(p, seed_ + seed);
         auto result (eval_v(n.input[1]));
         p_ = tmp;
         return result;
@@ -530,9 +613,6 @@ generator_slowinterpreter::eval_v (const node& n)
 
     case node::png_lookup:
         return png(eval_xy(in), cntx_.get_image(n.input[1].aux_string));
-
-    case node::simplex:
-        throw std::runtime_error("'simplex' not implemented yet");
 
     default:
         throw std::runtime_error("type mismatch");

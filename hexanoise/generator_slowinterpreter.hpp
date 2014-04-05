@@ -44,7 +44,8 @@ private:
 
 private:
     const node& n_;
-    glm::dvec2 p_;
+    glm::dvec2  p_;
+    uint32_t    seed_;
 };
 
 }}
