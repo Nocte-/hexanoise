@@ -34,6 +34,7 @@ if(PNG_FOUND)
 endif()
 
 set(SOURCE_FILES
+    analysis.cpp
     generator_context.cpp
     generator_slowinterpreter.cpp
     node.cpp
@@ -43,6 +44,7 @@ set(SOURCE_FILES
 
 set(HEADER_FILES
     ast.hpp
+    analysis.hpp
     generator_context.hpp
     generator_i.hpp
     generator_slowinterpreter.hpp

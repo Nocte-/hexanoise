@@ -27,6 +27,7 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     : generator_i(ctx)
     , count_(1)
     , context_(opencl_context)
+    , device_(opencl_device)
     , queue_ (opencl_context, opencl_device)
 {
     std::string body (co(n));
@@ -59,6 +60,18 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     main_ += body;
     main_ += ";\n}\n";
 
+    main_ += "\n" \
+    "__kernel void noisemain_int16(\n" \
+    "  __global int16* output, const double2 start, const double2 step)\n" \
+    "{\n"\
+    "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"\
+    "    int  sizex = get_global_size(0);\n"\
+    "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n" \
+    "    output[coord.y * sizex + coord.x] = (int16)(";
+
+    main_ += body;
+    main_ += ");\n}\n";
+
     std::vector<cl::Device> device_vec;
     device_vec.emplace_back(opencl_device);
 
@@ -66,7 +79,7 @@ generator_opencl::generator_opencl (const generator_context& ctx,
     program_ = cl::Program(opencl_context, sources);
     try
     {
-        program_.build(device_vec);
+        program_.build(device_vec, "-cl-strict-aliasing -cl-mad-enable -cl-unsafe-math-optimizations -cl-fast-relaxed-math");
     }
     catch (cl::Error&)
     {
@@ -74,7 +87,8 @@ generator_opencl::generator_opencl (const generator_context& ctx,
         throw;
     }
 
-    kernel_ = cl::Kernel(program_, "noisemain");
+    kernel_       = cl::Kernel(program_, "noisemain");
+    kernel_int16_ = cl::Kernel(program_, "noisemain_int16");
 }
 
 std::vector<double>
@@ -83,25 +97,52 @@ generator_opencl::run (const glm::dvec2& corner,
                        const glm::ivec2& count)
 {
     unsigned int width (count.x), height (count.y);
+    unsigned int elements (width * height);
 
-    std::vector<double> result (width * height);
+    std::vector<double> result (elements);
     cl::Buffer output (context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
-                       result.size() * sizeof(double),
+                       elements * sizeof(double),
                        &result[0]);
 
     kernel_.setArg(0, output);
     kernel_.setArg(1, sizeof(corner), (void*)&corner);
     kernel_.setArg(2, sizeof(step),   (void*)&step);
 
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height},
+                                cl::NullRange);
+
     auto memobj (queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
-                                         result.size() * sizeof(double)));
+                                         elements * sizeof(double)));
 
-    cl::Event ev;
-
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height}, cl::NullRange,
-                                nullptr, &ev);
     queue_.enqueueUnmapMemObject(output, memobj);
-    ev.wait();
+
+    return result;
+}
+
+std::vector<int16_t>
+generator_opencl::run_int16 (const glm::dvec2& corner,
+                             const glm::dvec2& step,
+                             const glm::ivec2& count)
+{
+    unsigned int width (count.x), height (count.y);
+    unsigned int elements (width * height);
+
+    std::vector<int16_t> result (elements);
+    cl::Buffer output (context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
+                       elements * sizeof(int16_t),
+                       &result[0]);
+
+    kernel_int16_.setArg(0, output);
+    kernel_int16_.setArg(1, sizeof(corner), (void*)&corner);
+    kernel_int16_.setArg(2, sizeof(step),   (void*)&step);
+
+    queue_.enqueueNDRangeKernel(kernel_int16_, cl::NullRange, {width, height},
+                                cl::NullRange);
+
+    auto memobj (queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                         elements * sizeof(int16_t)));
+
+    queue_.enqueueUnmapMemObject(output, memobj);
 
     return result;
 }
@@ -198,6 +239,7 @@ std::string generator_opencl::co (const node& n)
     case node::distance:        return "length" + pl(n);
     case node::manhattan:       return "p_manhattan" + pl(n);
     case node::perlin:          return "p_perlin" + pl(n);
+    case node::simplex:         return "p_simplex" + pl(n);
     case node::x:               return co(n.input[0])+".x";
     case node::y:               return co(n.input[0])+".y";
 
@@ -294,9 +336,6 @@ std::string generator_opencl::co (const node& n)
 
     case node::external_:
         throw std::runtime_error("OpenCL @external not implemented yet");
-
-    case node::simplex:
-        throw std::runtime_error("OpenCL simplex not implemented yet");
 
     case node::curve_linear:
         throw std::runtime_error("OpenCL curve_linear not implemented yet");

@@ -140,6 +140,84 @@ double p_perlin (double2 xy, uint seed)
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.2;
 }
 
+__constant double F2 = 0.366025404; // 0.5 * (sqrt(3.0) - 1.0)
+__constant double G2 = 0.211324865; // (3.0 - sqrt(3.0)) / 6.0
+
+double p_simplex (double2 xy, uint seed)
+{
+    double n0, n1, n2;
+
+    // Skew the input space to determine which simplex cell we're in
+    double s = (xy.x + xy.y) * F2;
+    int i = floor(xy.x + s);
+    int j = floor(xy.y + s);
+
+    // Unskew the cell origin back to (x,y) space
+    double t = (i + j) * G2;
+    double2 o = (double2)(i - t, j - t);
+
+    // The x,y distances from the cell origin
+    double2 d0 = xy - o;
+
+    // For the 2D case, the simplex shape is an equilateral triangle.
+    // Determine which simplex we are in.
+    int i1, j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+    if (d0.x > d0.y)
+    {
+        i1=1; // lower triangle, XY order: (0,0)->(1,0)->(1,1)
+        j1=0;
+    }
+    else
+    {
+        i1=0; // upper triangle, YX order: (0,0)->(0,1)->(1,1)
+        j1=1;
+    }
+
+    double2 d1 = (double2)(d0.x - i1 + G2, d0.y - j1 + G2);
+    double2 d2 = (double2)(d0.x - 1.0 + 2.0 * G2, d0.y - 1.0 + 2.0 * G2);
+
+    int ii = (i + seed * 1063) & 0xFF;
+    int jj = j & 0xFF;
+    int gi0 = (P[ii+P[jj]] & G_MASK) * G_VECSIZE;
+    int gi1 = (P[ii+i1+P[jj+j1]] & G_MASK) * G_VECSIZE;
+    int gi2 = (P[ii+1+P[jj+1]] & G_MASK) * G_VECSIZE;
+
+    double t0 = 0.5 - dot(d0,d0);
+    if (t0 < 0)
+    {
+        n0 = 0.0;
+    }
+    else
+    {
+        t0 *= t0;
+        n0 = t0 * t0 * dot((double2)(G[gi0],G[gi0+1]), d0);
+    }
+
+    double t1 = 0.5 - dot(d1,d1);
+    if(t1 < 0)
+    {
+        n1 = 0.0;
+    }
+    else
+    {
+        t1 *= t1;
+        n1 = t1 * t1 * dot((double2)(G[gi1],G[gi1+1]), d1);
+    }
+
+    double t2 = 0.5 - dot(d2,d2);
+    if(t2 < 0)
+    {
+        n2 = 0.0;
+    }
+    else
+    {
+        t2 *= t2;
+        n2 = t2 * t2 * dot((double2)(G[gi2],G[gi2+1]), d2);
+    }
+
+    return 70.0 * (n0 + n1 + n2);
+}
+
 double2 p_worley (const double2 p, uint seed)
 {
     double2 t = floor(p);

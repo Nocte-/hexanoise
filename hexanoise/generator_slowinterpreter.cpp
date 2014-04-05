@@ -413,6 +413,21 @@ generator_slowinterpreter::run (const glm::dvec2& corner,
     return result;
 }
 
+std::vector<int16_t>
+generator_slowinterpreter::run_int16 (const glm::dvec2& corner,
+                                      const glm::dvec2& step,
+                                      const glm::ivec2& count)
+{
+    std::vector<int16_t> result (count.x * count.y);
+    size_t i (0);
+
+    for (int y (0); y < count.y; ++y)
+        for (int x (0); x < count.x; ++x)
+            result[i++] = static_cast<int16_t>(eval(corner + glm::dvec2(x,y) * step, n_));
+
+    return result;
+}
+
 double
 generator_slowinterpreter::eval (const glm::dvec2& p, const node& n)
 {

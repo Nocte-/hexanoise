@@ -35,6 +35,11 @@ public:
          const glm::dvec2& step,
          const glm::ivec2& count) override;
 
+    std::vector<int16_t>
+    run_int16 (const glm::dvec2& corner,
+               const glm::dvec2& step,
+               const glm::ivec2& count) override;
+
 private:
     double     eval (const glm::dvec2& p, const node& n);
 

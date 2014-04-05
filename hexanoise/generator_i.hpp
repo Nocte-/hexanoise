@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <vector>
 #include <glm/glm.hpp>
 #include "generator_context.hpp"
@@ -21,7 +22,7 @@ public:
     generator_i (const generator_context& c) : cntx_(c) { }
     virtual ~generator_i() { }
 
-    /** Run the script for a given range.
+    /** Run the script for a given range, output in double precision.
      * @param corner    The top-left corner of the range
      * @param step      The step size between samples
      * @param count     The number of samples to take in the x and y direction
@@ -31,6 +32,17 @@ public:
     run (const glm::dvec2& corner,
          const glm::dvec2& step,
          const glm::ivec2& count) = 0;
+
+    /** Run the script for a given range, output in signed 16-bit precision.
+     * @param corner    The top-left corner of the range
+     * @param step      The step size between samples
+     * @param count     The number of samples to take in the x and y direction
+     * @return A buffer with size (count.x * count.y) holding the results
+     */
+    virtual std::vector<int16_t>
+    run_int16 (const glm::dvec2& corner,
+               const glm::dvec2& step,
+               const glm::ivec2& count) = 0;
 
 protected:
     const generator_context&  cntx_;

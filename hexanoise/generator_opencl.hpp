@@ -50,6 +50,11 @@ public:
          const glm::dvec2& step,
          const glm::ivec2& count) override;
 
+    std::vector<int16_t>
+    run_int16 (const glm::dvec2& corner,
+               const glm::dvec2& step,
+               const glm::ivec2& count) override;
+
 private:
     std::string pl (const node& n);
     std::string co (const node& n);
@@ -60,9 +65,11 @@ private:
     std::list<std::string> functions_;
 
     cl::Context      context_;
+    cl::Device       device_;
     cl::CommandQueue queue_;
     cl::Program      program_;
     cl::Kernel       kernel_;
+    cl::Kernel       kernel_int16_;
 };
 
 }}

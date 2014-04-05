@@ -16,6 +16,8 @@
 
 #include <png.h>
 #include <boost/program_options.hpp>
+
+#include <hexanoise/analysis.hpp>
 #include <hexanoise/generator_context.hpp>
 #include <hexanoise/generator_opencl.hpp>
 #include <hexanoise/generator_slowinterpreter.hpp>
@@ -66,6 +68,7 @@ void write_png_file(const std::vector<uint8_t>& buf, int width, int height, cons
 
     png_write_end(png_ptr, NULL);
 
+    png_destroy_write_struct(&png_ptr, &info_ptr);
     free(row_pointers);
     fclose(fp);
 }
@@ -143,6 +146,9 @@ int main (int argc, char** argv)
             ("height,h", po::value<unsigned int>()->default_value(500),
             "output height")
 
+            ("limit", po::value<unsigned int>()->default_value(1000),
+            "limit the execution time (see also: --weight")
+
             ("input,i", po::value<std::string>()->default_value("-"),
             "input file, use '-' for stdin")
 
@@ -152,11 +158,14 @@ int main (int argc, char** argv)
             ("device", po::value<unsigned int>()->default_value(0),
              "choose an OpenCL device (see also: --info)")
 
-            ("force-slow",
+            ("use-interpreter",
              "disable OpenCL and use the interpreter")
 
             ("time", po::value<unsigned int>()->default_value(1),
              "run the script n times before writing the png file")
+
+            ("weight",
+             "print the estimated execution time and exit")
 
             ;
 
@@ -213,62 +222,67 @@ int main (int argc, char** argv)
 
     generator_context context;
     context.set_script("main", script);
-
-    context.load_image("hm", "hm.png");
-
     auto& n (context.get_script("main"));
+    auto wgt (weight(n));
+
+    if (vm.count("weight"))
+    {
+        std::cout << wgt << std::endl;
+        return EXIT_SUCCESS;
+    }
+
+    auto limit (vm["limit"].as<unsigned int>());
+    if (limit != 0 && wgt > limit)
+    {
+        std::cerr << "Function is too computationally expensive" << std::endl;
+        return EXIT_FAILURE;
+    }
 
     std::unique_ptr<generator_i> gen;
-
     try
     {
-        if (vm.count("force-slow"))
+        if (vm.count("use-interpreter"))
             throw 0; // Fake an error so the interpreter is used
 
         std::vector<cl::Platform> platform_list;
         cl::Platform::get(&platform_list);
         if (platform_list.empty())
+            throw 0; // Fake an error so the interpreter is used
+
+        auto platform_index (vm["platform"].as<unsigned int>());
+        if (platform_index >= platform_list.size())
         {
-            gen = std::unique_ptr<generator_i>(new generator_slowinterpreter(context, n));
+            std::cerr << "'" << platform_index << "' is not in the list of platforms. (See: --info)" << std::endl;
+            return EXIT_FAILURE;
         }
-        else
+
+        std::vector<cl::Device> devices;
+        auto& pl(platform_list[platform_index]);
+        pl.getDevices(CL_DEVICE_TYPE_ALL, &devices);
+
+        auto device_index (vm["device"].as<unsigned int>());
+        if (device_index >= devices.size())
         {
-            auto platform_index (vm["platform"].as<unsigned int>());
-            if (platform_index >= platform_list.size())
-            {
-                std::cerr << "'" << platform_index << "' is not in the list of platforms. (See: --info)" << std::endl;
-                return EXIT_FAILURE;
-            }
-
-            auto& pl(platform_list[platform_index]);
-            std::vector<cl::Device> devices;
-            pl.getDevices(CL_DEVICE_TYPE_ALL, &devices);
-
-            auto device_index (vm["device"].as<unsigned int>());
-            if (device_index >= devices.size())
-            {
-                std::cerr << "'" << device_index << "' is not in the list of devices. (See: --info)" << std::endl;
-                return EXIT_FAILURE;
-            }
-
-            cl_context_properties properties [] =
-            { CL_CONTEXT_PLATFORM, (cl_context_properties) (pl) (), 0 };
-            cl::Context opencl_context(CL_DEVICE_TYPE_ALL, properties);
-
-            auto tmp (new generator_opencl(context, opencl_context, devices[device_index], n));
-            if (vm.count("dumpsrc"))
-                std::cout << tmp->opencl_sourcecode() << std::endl;
-
-            gen = std::unique_ptr<generator_i>(tmp);
+            std::cerr << "'" << device_index << "' is not in the list of devices. (See: --info)" << std::endl;
+            return EXIT_FAILURE;
         }
+
+        cl_context_properties properties [] =
+                    { CL_CONTEXT_PLATFORM, (cl_context_properties) (pl) (), 0 };
+        cl::Context opencl_context (CL_DEVICE_TYPE_ALL, properties);
+
+        auto tmp (new generator_opencl(context, opencl_context, devices[device_index], n));
+        if (vm.count("dumpsrc"))
+        {
+            std::cout << tmp->opencl_sourcecode() << std::endl;
+            return EXIT_SUCCESS;
+        }
+        gen = std::unique_ptr<generator_i>(tmp);
     }
     catch (...)
     {
         gen = std::unique_ptr<generator_i>(new generator_slowinterpreter(context, n));
     }
-
-    if (vm.count("dumpsrc"))
-        return EXIT_SUCCESS;
 
     auto width (vm["width"].as<unsigned int>());
     auto height (vm["height"].as<unsigned int>());
