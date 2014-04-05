@@ -93,7 +93,7 @@ public:
     bool
     exists_global (const std::string& name) const;
 
-    void
+    bool
     load_image (const std::string& name, const std::string& file);
 
     /** Get an image by name. */

@@ -196,10 +196,18 @@ generator_context::exists_global (const std::string& name) const
     return variables_.count(name) > 0;
 }
 
-void
-generator_context::load_image (const std::string& name, const std::string& file)
+bool
+generator_context::load_image(const std::string& name, const std::string& file)
 {
-    images_[name] = png_load(file);
+    try
+    {
+        images_[name] = png_load(file);
+    }
+    catch (std::exception& e)
+    {
+        return false;
+    }
+    return true;
 }
 
 const generator_context::image&
