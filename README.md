@@ -1,7 +1,7 @@
 HexaNoise
 =========
 
-[![Build status](https://travis-ci.org/Nocte-/hexanoise.svg)](https://travis-ci.org/Nocte-/hexanoise)
+[![Build status](https://travis-ci.org/Nocte-/hexanoise.svg)](https://travis-ci.org/Nocte-/hexanoise) [![Coverage Status](https://coveralls.io/repos/Nocte-/hexanoise/badge.png)](https://coveralls.io/r/Nocte-/hexanoise)
 
 This is a library for generating 2D coherent noise.  It compiles a noise
 definition script to OpenCL, or it can run it through a simple interpreter in
@@ -46,5 +46,6 @@ A full description of HNDL is available as a [wiki page](https://github.com/Noct
 License
 -------
 
-HexaNoise is released under the MIT license.
+HexaNoise is free software: you can distribute it and/or modify it under the
+terms of the [MIT license](http://opensource.org/licenses/MIT).
 

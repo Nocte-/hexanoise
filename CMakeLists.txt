@@ -16,6 +16,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(BUILD_UNITTESTS 0 CACHE BOOL "Build the unit tests")
+set(BUILD_COVERAGE  0 CACHE BOOL "Code coverage (gcc only)")
 set(BUILD_UTILITIES 0 CACHE BOOL "Build utilities (hndl2png)")
 set(BUILD_DOCUMENTATION 0 CACHE BOOL "Generate Doxygen documentation")
 
@@ -37,6 +38,10 @@ else() # Most likely gcc or clang
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
     else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    endif()
+
+    if (BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
     endif()
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -Wall -Wno-deprecated-declarations")
