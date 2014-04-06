@@ -15,7 +15,7 @@ script:
  - cd build
  - cmake -DBUILD_UNITTESTS=ON -DBUILD_COVERAGE=ON ..
  - make
- - cp ../hexanoise/opencl.cl unit_tests
+ - cp ../hexanoise/opencl.cl .
  - unit_tests/unit_tests
 
 after_success:
