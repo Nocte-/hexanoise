@@ -84,6 +84,8 @@ public:
         mul,
         neg,
         pow,
+        range,
+        round,
         saw,
         sin,
         sqrt,

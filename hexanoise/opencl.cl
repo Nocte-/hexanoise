@@ -330,6 +330,11 @@ inline double p_blend (double x, double a, double b)
     return lerp(x, a, b);
 }
 
+inline double p_range (double x, double a, double b)
+{
+    return clamp((a * 0.5 + x + 1.0) * ((b - a) * 0.5), a, b);
+}
+
 inline bool p_is_in_circle (double2 p, double r)
 {
     return length(p) <= r;

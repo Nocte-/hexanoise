@@ -598,6 +598,22 @@ generator_slowinterpreter::eval_v (const node& n)
     case node::pow:
         return std::pow(eval_v(in), eval_v(n.input[1]));
 
+    case node::round:
+        return std::round(eval_v(in));
+
+    case node::range:
+    {
+        double x (eval_v(in));
+        double a (eval_v(n.input[1]));
+        double b (eval_v(n.input[2]));
+        double t ((x + 1.0 + a * 0.5) * ((b - a) * 0.5));
+
+        if (a > b)
+            std::swap(a,b);
+
+        return std::min(std::max(t, a),b);
+    }
+
     case node::saw:
     {
         auto v (eval_v(in));

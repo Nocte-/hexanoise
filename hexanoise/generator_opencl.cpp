@@ -266,6 +266,8 @@ std::string generator_opencl::co (const node& n)
         return "pow"+pl(n);
     }
 
+    case node::range:           return "p_range" + pl(n);
+    case node::round:           return "round" + pl(n);
     case node::saw:             return "p_saw" + pl(n);
     case node::sin:             return "sinpi" + pl(n);
     case node::sqrt:            return "sqrt" + pl(n);
