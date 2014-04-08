@@ -275,6 +275,9 @@ node::node (function* in, const generator_context& ctx)
             break;
 
         case function::external:
+            type = external_;
+            return_type = var;
+            aux_string = in->name;
             break;
     }
 }
