@@ -278,6 +278,12 @@ node::node (function* in, const generator_context& ctx)
             type = external_;
             return_type = var;
             aux_string = in->name;
+
+            if (in->input)
+                input.emplace_back(node(in->input, ctx));
+            else
+                input.emplace_back(node(entry_point, false, xy));
+
             break;
     }
 }
