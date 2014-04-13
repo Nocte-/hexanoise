@@ -310,6 +310,7 @@ std::string generator_opencl::co (const node& n)
         << "  div += step;"
         << "  step *= lac;"
         << "  p *= per;"
+        << "  p.x += 12345.0;"
         << "}"
         << "return result / div;"
         << "}";

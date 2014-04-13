@@ -182,8 +182,8 @@ double p_simplex (const glm::dvec2& xy, uint32_t seed)
     double n0, n1, n2;
 
     // Skew the input space to determine which simplex cell we're in
-    constexpr double F2 (0.5 * (std::sqrt(3.0) - 1.0));
-    constexpr double G2 ((3.0 - std::sqrt(3.0)) / 6.0);
+    const double F2 (0.5 * (std::sqrt(3.0) - 1.0));
+    const double G2 ((3.0 - std::sqrt(3.0)) / 6.0);
 
     double s ((xy.x + xy.y) * F2);
     int i (std::floor(xy.x + s));
@@ -559,6 +559,7 @@ generator_slowinterpreter::eval_v (const node& n)
             div += mul;
             mul *= lacunarity;
             p_ *= persistence;
+            p_.x += 12345;
         }
         p_ = tmp;
         return result / div;

@@ -56,6 +56,8 @@ if(OPENCL_FOUND)
   set(HEADER_FILES ${HEADER_FILES} generator_opencl.hpp)
 endif()
 
+include_directories(${GLM_INCLUDEDIR})
+
 set (LIBNAME_S "${LIBNAME}-s")
 add_library(${LIBNAME_S} STATIC ${SOURCE_FILES} ${HEADER_FILES})
 add_library(${LIBNAME}   SHARED ${SOURCE_FILES} ${HEADER_FILES})

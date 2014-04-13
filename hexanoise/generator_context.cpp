@@ -203,7 +203,7 @@ generator_context::load_image(const std::string& name, const std::string& file)
     {
         images_[name] = png_load(file);
     }
-    catch (std::exception& e)
+    catch (std::exception&)
     {
         return false;
     }
