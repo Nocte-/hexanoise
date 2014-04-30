@@ -21,7 +21,7 @@ namespace noise {
 
 class node;
 
-/** Use OpenCL to execute a script. */
+/** Use OpenCL to execute a HNDL script. */
 class generator_opencl : public generator_i
 {
 public:

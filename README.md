@@ -13,7 +13,7 @@ Examples
 
 The Hexahedra Noise Definition Language is a functional language that
 supports higher-order functions, lambdas, global variables, and named
-functions.  The first example generates billow noise:
+functions.  Here's an example that generates billow noise:
 
     scale(100):fractal(perlin:abs,2)
 

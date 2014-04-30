@@ -15,7 +15,8 @@
 namespace hexa {
 namespace noise {
 
-/** Base class for generators. */
+/** Base class for noise generators.
+ *  The actual implementations run the HNDL script. */
 class generator_i
 {
 public:

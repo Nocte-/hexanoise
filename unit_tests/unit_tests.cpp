@@ -14,6 +14,7 @@
 #include <hexanoise/generator_context.hpp>
 #include <hexanoise/generator_opencl.hpp>
 #include <hexanoise/generator_slowinterpreter.hpp>
+#include <hexanoise/simple_global_variables.hpp>
 
 using namespace hexa::noise;
 
@@ -57,8 +58,9 @@ BOOST_AUTO_TEST_CASE (opencl_basic)
         { CL_CONTEXT_PLATFORM, (cl_context_properties)(pl)(), 0};
     cl::Context opencl_context (CL_DEVICE_TYPE_ALL, properties);
 
-    generator_context ctx;
-    ctx.set_global("devil", 666.0);
+    simple_global_variables gv;
+    generator_context ctx (gv);
+    gv["devil"] = 666.0;
     ctx.set_script("lol", "distance:sin");
 
     generator_opencl cl_gen (ctx, opencl_context, devices[0], ctx.get_script("lol"));
