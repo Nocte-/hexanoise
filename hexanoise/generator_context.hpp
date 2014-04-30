@@ -11,9 +11,8 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <boost/property_tree/ptree_fwd.hpp>
-#include <boost/variant.hpp>
 
+#include "global_variables_i.hpp"
 #include "node.hpp"
 
 namespace hexa {
@@ -23,6 +22,9 @@ namespace noise {
  ** code. */
 class generator_context
 {
+public:
+    typedef global_variables_i::var_type        variable;
+
 public:
     /** Bitmap data for lookup_png. */
     struct image
@@ -58,18 +60,12 @@ public:
         }
     };
 
-    /** Global variables can be either doubles, bools, or strings. */
-    typedef boost::variant<double, bool, std::string>  variable;
-
 public:
+    /** Create a context without global variables. */
     generator_context ();
 
-    /** Initialize the context with a Hexahedra world setup file.
-     *  This is usually a JSON file, but anything that fits in a Boost
-     *  property tree works.  The generator_context only loads the
-     *  global settings and the area generator scripts.  For the
-     *  full documentation, please refer to the Hexahedra docs. */
-    generator_context (const boost::property_tree::ptree& conf);
+    /** Create a context with global variables. */
+    generator_context (const global_variables_i& global_vars);
 
     /** Add a HNDL script. */
     void
@@ -80,21 +76,22 @@ public:
     const node&
     get_script(const std::string& name) const;
 
-    /** Set a global variable to a given value. */
-    void
-    set_global (const std::string& name, const variable& var);
-
     /** Get a global variable by name.
      * @throw std::runtime_error if \a name was not found */
-    const variable&
+    variable
     get_global (const std::string& name) const;
 
     /** Check if a global variable exists. */
     bool
     exists_global (const std::string& name) const;
 
-    bool
-    load_image (const std::string& name, const std::string& file);
+    /** Register image data. */
+    void
+    set_image (const std::string& name, image&& data);
+
+    /** Load an image from a greyscale PNG file. */
+    void
+    load_png_image (const std::string& name, const std::string& png_file);
 
     /** Get an image by name. */
     const image&
@@ -104,9 +101,9 @@ private:
     void init();
 
 private:
+    const global_variables_i&                   variables_;
     std::unordered_map<std::string, node>       scripts_;
     std::unordered_map<std::string, image>      images_;
-    std::unordered_map<std::string, variable>   variables_;
 };
 
 }} // namespace hexa::noise

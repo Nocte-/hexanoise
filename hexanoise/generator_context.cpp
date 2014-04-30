@@ -121,25 +121,37 @@ png_load(const std::string& file_name)
 
 #endif
 
+class global_variables_null : public global_variables_i
+{
+public:
+    bool exists (const std::string& name) const override
+    {
+        return name == "seed";
+    }
+
+    var_type get (const std::string& name) const override
+    {
+        if (name == "seed")
+            return 0.0;
+
+        throw variable_not_found(name);
+    }
+};
+
+static global_variables_null global_null;
+
 } // anonymous namespace
 
 //---------------------------------------------------------------------------
 
 generator_context::generator_context ()
+    : variables_(global_null)
 {
-    init();
 }
 
-generator_context::generator_context (const boost::property_tree::ptree& conf)
+generator_context::generator_context (const global_variables_i& v)
+    : variables_(v)
 {
-    init();
-}
-
-void
-generator_context::init()
-{
-    if (variables_.count("seed") == 0)
-        variables_.emplace("seed", 0.0);
 }
 
 void
@@ -174,40 +186,28 @@ generator_context::get_script (const std::string& name) const
     return found->second;
 }
 
-void
-generator_context::set_global (const std::string& name, const variable& var)
-{
-    variables_[name] = var;
-}
-
-const generator_context::variable&
+generator_context::variable
 generator_context::get_global (const std::string& name) const
 {
-    auto found (variables_.find(name));
-    if (found == variables_.end())
-        throw std::runtime_error("variable '" + name + "'' not defined");
-
-    return found->second;
+    return variables_.get(name);
 }
 
 bool
 generator_context::exists_global (const std::string& name) const
 {
-    return variables_.count(name) > 0;
+    return variables_.exists(name);
 }
 
-bool
-generator_context::load_image(const std::string& name, const std::string& file)
+void
+generator_context::set_image(const std::string& name, image&& data)
 {
-    try
-    {
-        images_[name] = png_load(file);
-    }
-    catch (std::exception&)
-    {
-        return false;
-    }
-    return true;
+    images_[name] = std::move(data);
+}
+
+void
+generator_context::load_png_image(const std::string& name, const std::string& png_file)
+{
+    images_[name] = png_load(png_file);
 }
 
 const generator_context::image&

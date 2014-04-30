@@ -55,7 +55,7 @@ class global_visitor : public boost::static_visitor<node>
 {
 public:
     template <typename t>
-    node operator() (const t& s) const
+    node operator() (t s) const
     {
         return node(s);
     }
@@ -251,7 +251,7 @@ node::node (function* in, const generator_context& ctx)
             if (!ctx.exists_global(in->name))
                 throw std::runtime_error("global variable '" + in->name + "' not defined");
 
-            auto& global (ctx.get_global(in->name));
+            auto global (ctx.get_global(in->name));
             *this = boost::apply_visitor(global_visitor(), global);
             }
             break;
