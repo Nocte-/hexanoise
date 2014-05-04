@@ -48,7 +48,9 @@ set(HEADER_FILES
     generator_context.hpp
     generator_i.hpp
     generator_slowinterpreter.hpp
+    global_variables_i.hpp
     node.hpp
+    simple_global_variables.hpp
     version.hpp)
 
 if(OPENCL_FOUND)
