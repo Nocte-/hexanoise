@@ -1,4 +1,4 @@
-Source: noise
+Source: hexanoise
 Maintainer: Nocte <nocte@hippie.nu>
 Section: libs
 Priority: optional
@@ -6,17 +6,17 @@ Build-Depends: debhelper (>= 8.0.0), cmake (>= 2.8), cdbs
 Standards-Version: 3.9.4
 Homepage: http://github.com/Nocte-/noise
 
-Package: libnoise1-dev
+Package: libhexanoise1-dev
 Section: libdevel
 Architecture: any
-Depends: libnoise1 (= ${binary:Version}), ${misc:Depends}
-Description: Noise library (development files)
- Coherent noise library.
+Depends: libhexanoise1 (= ${binary:Version}), ${misc:Depends}
+Description: Hexahedra coherent noise library (development files)
+ Coherent noise library for procedural terrain generation.
 
-Package: libnoise1
+Package: libhexanoise1
 Section: libs
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description: Noise library
- Coherent noise library.
+Description: Hexahedra coherent noise library
+ Coherent noise library for procedural terrain generation.
 
