@@ -340,7 +340,7 @@ inline bool p_is_in_circle (double2 p, double r)
     return length(p) <= r;
 }
 
-inline bool p_is_in_rectangle (double2 p, double x1, double x2, double y1, double y2)
+inline bool p_is_in_rectangle (double2 p, double x1, double y1, double x2, double y2)
 {
     return p.x >= x1 && p.y >= y1 && p.x <= x2 && p.y <= y2;
 }
