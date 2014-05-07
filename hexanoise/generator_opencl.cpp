@@ -172,7 +172,7 @@ std::string generator_opencl::co (const node& n)
 
     case node::rotate:          return "p_rotate" + pl(n);
     case node::scale:           return "("+co(n.input[0])+"/"+co(n.input[1])+")";
-    case node::shift:           return "("+co(n.input[0])+"+"+co(n.input[1])+")";
+    case node::shift:           return "("+co(n.input[0])+"+(double2)("+co(n.input[1])+","+co(n.input[2])+"))";
     case node::swap:            return "p_swap" + pl(n);
 
     case node::map:
