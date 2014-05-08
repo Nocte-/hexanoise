@@ -6,6 +6,7 @@
 
 #include "analysis.hpp"
 
+#include <algorithm>
 #include "node.hpp"
 
 namespace hexa {
