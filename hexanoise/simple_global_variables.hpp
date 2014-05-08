@@ -37,7 +37,7 @@ public:
     /** Check if a variable exists. */
     bool 
     exists (const std::string& name) const override
-    { return count(name); }
+    { return count(name) > 0; }
 
     /** Get the value of a global variable.
      * @throw variable_not_found if \a name is not a known variable */
