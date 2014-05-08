@@ -88,10 +88,12 @@ inline double lerp (double x, double a, double b)
     return a + x * (b - a);
 }
 
+/*
 inline double blend3 (const double a)
 {
     return a * a * (3.0 - 2.0 * a);
 }
+*/
 
 inline double blend5 (const double a)
 {
@@ -748,6 +750,21 @@ generator_slowinterpreter::eval_bool (const node& n)
 
     case node::bxor:
         return eval_bool(n.input[0]) ^ eval_bool(n.input[1]);
+
+
+    case node::is_in_circle:
+        {
+        auto p (eval_xy(n.input[0]));
+        return std::sqrt(p.x*p.x+p.y*p.y) <= eval_v(n.input[1]);
+        }
+
+    case node::is_in_rectangle:
+        {
+        auto p (eval_xy(n.input[0]));
+
+        return    p.x >= eval_v(n.input[1]) && p.y >= eval_v(n.input[2])
+               && p.x <= eval_v(n.input[3]) && p.y <= eval_v(n.input[4]);
+        }
 
     default:
         throw std::runtime_error("type mismatch");
