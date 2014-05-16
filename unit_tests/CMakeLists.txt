@@ -13,10 +13,9 @@ find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED COMPONENTS unit_test_frame
 find_package(OpenCL)
 find_package(PNG)
 
-if (BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fprofile-arcs -ftest-coverage")
-endif()
-
 include_directories(${Boost_INCLUDE_DIRS} ${OPENCL_INCLUDE_DIRS} ${PNG_INCLUDE_DIRS} ${PNG_PNG_INCLUDE_DIR})
 target_link_libraries(${EXE} hexanoise ${Boost_LIBRARIES} ${PNG_LIBRARIES} OpenCL)
+if(BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_link_libraries(${EXE} -fprofile-arcs -ftest-coverage)
+endif()
 

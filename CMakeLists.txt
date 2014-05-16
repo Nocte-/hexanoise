@@ -16,7 +16,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 set(BUILD_UNITTESTS 0 CACHE BOOL "Build the unit tests")
-set(BUILD_COVERAGE  0 CACHE BOOL "Code coverage (gcc only)")
+set(BUILD_COVERAGE  0 CACHE BOOL "Generate a coverage report (gcc only)")
 set(BUILD_UTILITIES 0 CACHE BOOL "Build utilities (hndl2png)")
 set(BUILD_DOCUMENTATION 0 CACHE BOOL "Generate Doxygen documentation")
 
