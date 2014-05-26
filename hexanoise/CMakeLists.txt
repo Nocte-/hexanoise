@@ -61,7 +61,7 @@ set(HEADER_FILES
     version.hpp)
 
 if(OPENCL_FOUND)
-  set(SOURCE_FILES ${SOURCE_FILES} generator_opencl.cpp)
+  set(SOURCE_FILES ${SOURCE_FILES} generator_opencl.cpp ../libs/clew/clew.c)
   set(HEADER_FILES ${HEADER_FILES} generator_opencl.hpp)
 endif()
 
