@@ -8,10 +8,14 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/..
 
 find_package(Boost ${REQUIRED_BOOST_VERSION} REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+set(WDIR "${CMAKE_CURRENT_SOURCE_DIR}/../win32")
 
 find_package(BISON)
 if(BISON_FOUND)
   BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp)
+else()
+  message("Bison not installed, using prebuilt parser.cpp")
+  file(COPY "${WDIR}/parser.cpp" "${WDIR}/parser.hpp" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 find_package(FLEX)
@@ -19,6 +23,9 @@ if(FLEX_FOUND)
   FLEX_TARGET(token tokens.l ${CMAKE_CURRENT_BINARY_DIR}/tokens.cpp
               COMPILE_FLAGS --header-file=${CMAKE_CURRENT_BINARY_DIR}/tokens.hpp)
   ADD_FLEX_BISON_DEPENDENCY(token parser)
+else()
+  message("Flex not installed, using prebuilt tokens.cpp")
+  file(COPY "${WDIR}/tokens.cpp" "${WDIR}/tokens.hpp" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
 find_package(OpenCL)
@@ -68,6 +75,11 @@ set_target_properties(${LIBNAME} PROPERTIES SOVERSION ${VERSION_SO} VERSION ${VE
 set_target_properties(${LIBNAME_S} PROPERTIES VERSION ${VERSION})
 
 target_link_libraries(${LIBNAME} ${PNG_LIBRARIES} ${OPENCL_LIBRARIES})
+
+if(BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  target_link_libraries(${LIBNAME}   -fprofile-arcs -ftest-coverage)
+  target_link_libraries(${LIBNAME_S} -fprofile-arcs -ftest-coverage)
+endif()
 
 install(TARGETS ${LIBNAME_S} ${LIBNAME} DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION "include/${LIBNAME}")
