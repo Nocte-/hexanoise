@@ -74,7 +74,7 @@ add_library(${LIBNAME}   SHARED ${SOURCE_FILES} ${HEADER_FILES})
 set_target_properties(${LIBNAME} PROPERTIES SOVERSION ${VERSION_SO} VERSION ${VERSION})
 set_target_properties(${LIBNAME_S} PROPERTIES VERSION ${VERSION})
 
-target_link_libraries(${LIBNAME} ${PNG_LIBRARIES} ${OPENCL_LIBRARIES})
+target_link_libraries(${LIBNAME} ${PNG_LIBRARIES})
 
 if(BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_link_libraries(${LIBNAME}   -fprofile-arcs -ftest-coverage)
