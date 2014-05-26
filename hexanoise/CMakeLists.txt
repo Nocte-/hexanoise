@@ -28,12 +28,6 @@ else()
   file(COPY "${WDIR}/tokens.cpp" "${WDIR}/tokens.hpp" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
-find_package(OpenCL)
-if(OPENCL_FOUND)
-  add_definitions("-DHAVE_OPENCL")
-  include_directories(${OPENCL_INCLUDE_DIRS})
-endif()
-
 find_package(PNG)
 if(PNG_FOUND)
   add_definitions("-DHAVE_PNG")
@@ -43,8 +37,10 @@ endif()
 set(SOURCE_FILES
     analysis.cpp
     generator_context.cpp
+    generator_opencl.cpp 
     generator_slowinterpreter.cpp
     node.cpp
+    clew.c
     ${CMAKE_CURRENT_BINARY_DIR}/tokens.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/parser.cpp
 )
@@ -54,16 +50,15 @@ set(HEADER_FILES
     analysis.hpp
     generator_context.hpp
     generator_i.hpp
+    generator_opencl.hpp 
+    clew.h 
+    cl.hpp
     generator_slowinterpreter.hpp
     global_variables_i.hpp
     node.hpp
     simple_global_variables.hpp
     version.hpp)
 
-if(OPENCL_FOUND)
-  set(SOURCE_FILES ${SOURCE_FILES} generator_opencl.cpp ../libs/clew/clew.c)
-  set(HEADER_FILES ${HEADER_FILES} generator_opencl.hpp)
-endif()
 
 find_package(GLM REQUIRED)
 include_directories(${GLM_INCLUDE_DIR})

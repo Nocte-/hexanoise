@@ -16,6 +16,14 @@
 #include <hexanoise/generator_slowinterpreter.hpp>
 #include <hexanoise/simple_global_variables.hpp>
 
+#ifdef WIN32
+# define OPENCL_DLL_NAME "OpenCL.dll"
+#elif defined (MACOSX)
+# define OPENCL_DLL_NAME 0
+#else
+# define OPENCL_DLL_NAME "libOpenCL.so"
+#endif
+
 using namespace hexa::noise;
 
 inline void
@@ -30,6 +38,8 @@ check_err (cl_int err, const std::string& name)
 
 BOOST_AUTO_TEST_CASE (opencl_basic)
 {
+    BOOST_REQUIRE(clewInit(OPENCL_DLL_NAME) < 0);
+
     try
     {
     std::vector<cl::Platform> platform_list;

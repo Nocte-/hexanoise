@@ -140,24 +140,7 @@
 #ifndef CL_HPP_
 #define CL_HPP_
 
-#ifdef _WIN32
-#include <windows.h>
-#include <malloc.h>
-#if defined(USE_DX_INTEROP)
-#include <CL/cl_d3d10.h>
-#endif
-#endif // _WIN32
-
-//
-#if defined(USE_CL_DEVICE_FISSION)
-#include <CL/cl_ext.h>
-#endif
-
-#if defined(__APPLE__) || defined(__MACOSX)
-#include <OpenCL/opencl.h>
-#else
-#include <CL/cl.h>
-#endif // !__APPLE__
+#include "clew.h"
 
 #if !defined(CL_CALLBACK)
 #define CL_CALLBACK
@@ -1191,7 +1174,7 @@ public:
     cl_int getInfo(cl_device_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetDeviceInfo, object_, name, param),
+            detail::getInfo(clGetDeviceInfo, object_, name, param),
             __GET_DEVICE_INFO_ERR);
     }
 
@@ -1267,7 +1250,7 @@ public:
     cl_int getInfo(cl_platform_info name, STRING_CLASS* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetPlatformInfo, object_, name, param),
+            detail::getInfo(clGetPlatformInfo, object_, name, param),
             __GET_PLATFORM_INFO_ERR);
     }
 
@@ -1461,7 +1444,7 @@ public:
     cl_int getInfo(cl_context_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetContextInfo, object_, name, param),
+            detail::getInfo(clGetContextInfo, object_, name, param),
             __GET_CONTEXT_INFO_ERR);
     }
 
@@ -1537,7 +1520,7 @@ public:
     cl_int getInfo(cl_event_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetEventInfo, object_, name, param),
+            detail::getInfo(clGetEventInfo, object_, name, param),
             __GET_EVENT_INFO_ERR);
     }
 
@@ -1558,7 +1541,7 @@ public:
     cl_int getProfilingInfo(cl_profiling_info name, T* param) const
     {
         return detail::errHandler(detail::getInfo(
-            &::clGetEventProfilingInfo, object_, name, param),
+            clGetEventProfilingInfo, object_, name, param),
             __GET_EVENT_PROFILE_INFO_ERR);
     }
 
@@ -1684,7 +1667,7 @@ public:
     cl_int getInfo(cl_mem_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetMemObjectInfo, object_, name, param),
+            detail::getInfo(clGetMemObjectInfo, object_, name, param),
             __GET_MEM_OBJECT_INFO_ERR);
     }
 
@@ -1846,7 +1829,7 @@ public:
     cl_int getImageInfo(cl_image_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetImageInfo, object_, name, param),
+            detail::getInfo(clGetImageInfo, object_, name, param),
             __GET_IMAGE_INFO_ERR);
     }
 
@@ -1907,7 +1890,7 @@ public:
     cl_int getInfo(cl_sampler_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetSamplerInfo, object_, name, param),
+            detail::getInfo(clGetSamplerInfo, object_, name, param),
             __GET_SAMPLER_INFO_ERR);
     }
 
@@ -2033,7 +2016,7 @@ public:
     cl_int getInfo(cl_kernel_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetKernelInfo, object_, name, param),
+            detail::getInfo(clGetKernelInfo, object_, name, param),
             __GET_KERNEL_INFO_ERR);
     }
 
@@ -2056,7 +2039,7 @@ public:
     {
         return detail::errHandler(
             detail::getInfo(
-                &::clGetKernelWorkGroupInfo, object_, device(), name, param),
+                clGetKernelWorkGroupInfo, object_, device(), name, param),
                 __GET_KERNEL_WORK_GROUP_INFO_ERR);
     }
 
@@ -2204,7 +2187,7 @@ public:
     cl_int getInfo(cl_program_info name, T* param) const
     {
         return detail::errHandler(
-            detail::getInfo(&::clGetProgramInfo, object_, name, param),
+            detail::getInfo(clGetProgramInfo, object_, name, param),
             __GET_PROGRAM_INFO_ERR);
     }
 
@@ -2227,7 +2210,7 @@ public:
     {
         return detail::errHandler(
             detail::getInfo(
-                &::clGetProgramBuildInfo, object_, device(), name, param),
+                clGetProgramBuildInfo, object_, device(), name, param),
                 __GET_PROGRAM_BUILD_INFO_ERR);
     }
 
@@ -2318,7 +2301,7 @@ public:
     {
         return detail::errHandler(
             detail::getInfo(
-                &::clGetCommandQueueInfo, object_, name, param),
+                clGetCommandQueueInfo, object_, name, param),
                 __GET_COMMAND_QUEUE_INFO_ERR);
     }
 

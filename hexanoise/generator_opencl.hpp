@@ -12,7 +12,7 @@
 #include <list>
 
 #define __CL_ENABLE_EXCEPTIONS
-#include <CL/cl.hpp>
+#include "cl.hpp"
 
 #include "generator_i.hpp"
 
