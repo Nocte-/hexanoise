@@ -38,7 +38,7 @@ check_err (cl_int err, const std::string& name)
 
 BOOST_AUTO_TEST_CASE (opencl_basic)
 {
-    BOOST_REQUIRE(clewInit(OPENCL_DLL_NAME) < 0);
+    BOOST_REQUIRE(clewInit(OPENCL_DLL_NAME) >= 0);
 
     try
     {
