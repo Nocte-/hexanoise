@@ -1,22 +1,28 @@
-libhexanoise (0.1.3) raring; urgency=low
+hexanoise (0.1.4) raring; urgency=low
+
+  * Trying to fix the Launchpad builds
+
+ -- Nocte <nocte@outlook.com>  Sun, 01 Jun 2014 13:10:47 +0200
+
+hexanoise (0.1.3) raring; urgency=low
 
   * Bugfixes for shift() and in_rectangle() 
 
  -- Nocte <nocte@hippie.nu>  Thu, 08 May 2014 09:21:00 +0200
 
-libhexanoise (0.1.2) raring; urgency=low
+hexanoise (0.1.2) raring; urgency=low
 
   * Use OpenCL ICL for now, switching to CLEW later.
 
  -- Nocte <nocte@hippie.nu>  Sun, 04 May 2014 16:48:09 +0200
 
-libhexanoise (0.1.1) raring; urgency=low
+hexanoise (0.1.1) raring; urgency=low
 
   * Added build dependencies.
 
  -- Nocte <nocte@hippie.nu>  Sun, 04 May 2014 14:46:50 +0200
 
-libhexanoise (0.1.0) raring; urgency=low
+hexanoise (0.1.0) raring; urgency=low
 
   * Initial release. 
 
