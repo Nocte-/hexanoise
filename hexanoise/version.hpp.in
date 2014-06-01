@@ -17,7 +17,7 @@
   *  This gets bumped whenever the API is extended. */
 #define NOISE_VERSION_MINOR "@VERSION_MINOR@"
 
-  /** The library's patch number.
-   *  This gets bumped for bug fixes and optimizations. */
+/** The library's patch number.
+ *  This gets bumped for bug fixes and optimizations. */
 #define NOISE_VERSION_PATCH "@VERSION_PATCH@"
 

@@ -4,7 +4,6 @@
 //
 // Copyright 2014, nocte@hippie.nu            Released under the MIT License.
 //---------------------------------------------------------------------------
-
 #pragma once
 
 #include <cstdint>
@@ -12,16 +11,23 @@
 #include <glm/glm.hpp>
 #include "generator_context.hpp"
 
-namespace hexa {
-namespace noise {
+namespace hexa
+{
+namespace noise
+{
 
 /** Base class for noise generators.
  *  The actual implementations run the HNDL script. */
 class generator_i
 {
 public:
-    generator_i (const generator_context& c) : cntx_(c) { }
-    virtual ~generator_i() { }
+    generator_i(const generator_context& c) : cntx_(c)
+    {
+    }
+
+    virtual ~generator_i()
+    {
+    }
 
     /** Run the script for a given range, output in double precision.
      * @param corner    The top-left corner of the range
@@ -29,10 +35,9 @@ public:
      * @param count     The number of samples to take in the x and y direction
      * @return A buffer with size (count.x * count.y) holding the results
      */
-    virtual std::vector<double>
-    run (const glm::dvec2& corner,
-         const glm::dvec2& step,
-         const glm::ivec2& count) = 0;
+    virtual std::vector<double> run(const glm::dvec2& corner,
+                                    const glm::dvec2& step,
+                                    const glm::ivec2& count) = 0;
 
     /** Run the script for a given range, output in signed 16-bit precision.
      * @param corner    The top-left corner of the range
@@ -40,14 +45,12 @@ public:
      * @param count     The number of samples to take in the x and y direction
      * @return A buffer with size (count.x * count.y) holding the results
      */
-    virtual std::vector<int16_t>
-    run_int16 (const glm::dvec2& corner,
-               const glm::dvec2& step,
-               const glm::ivec2& count) = 0;
+    virtual std::vector<int16_t> run_int16(const glm::dvec2& corner,
+                                           const glm::dvec2& step,
+                                           const glm::ivec2& count) = 0;
 
 protected:
-    const generator_context&  cntx_;
+    const generator_context& cntx_;
 };
-
-}} // namespace hexa::noise
-
+}
+} // namespace hexa::noise

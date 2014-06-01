@@ -14,56 +14,54 @@
 #include "parser.hpp"
 #include "tokens.hpp"
 
-extern int yyparse(hexa::noise::function **func, yyscan_t scanner);
+extern int yyparse(hexa::noise::function** func, yyscan_t scanner);
 
-namespace hexa {
-namespace noise {
+namespace hexa
+{
+namespace noise
+{
 
-namespace {
+namespace
+{
 
 #if HAVE_PNG
 #include <png.h>
 
-generator_context::image
-png_load(const std::string& file_name)
+generator_context::image png_load(const std::string& file_name)
 {
     png_byte header[8];
-    FILE *fp = fopen(file_name.c_str(), "rb");
+    FILE* fp = fopen(file_name.c_str(), "rb");
     if (fp == 0)
         throw std::runtime_error("cannot open file " + file_name);
 
-    auto read (fread(header, 1, 8, fp));
-    if (read != 8 || png_sig_cmp(header, 0, 8))
-    {
+    auto read(fread(header, 1, 8, fp));
+    if (read != 8 || png_sig_cmp(header, 0, 8)) {
         fclose(fp);
         throw std::runtime_error(file_name + " is not a PNG file");
     }
-    png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png_ptr)
-    {
+    png_structp png_ptr =
+        png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png_ptr) {
         fclose(fp);
         throw std::runtime_error("png_create_read_struct failed");
     }
 
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (!info_ptr)
-    {
+    if (!info_ptr) {
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         fclose(fp);
         throw std::runtime_error("png_create_info_struct failed");
     }
 
     png_infop end_info = png_create_info_struct(png_ptr);
-    if (!end_info)
-    {
-        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp) NULL);
+    if (!end_info) {
+        png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
         fclose(fp);
         throw std::runtime_error("png_create_info_struct failed");
     }
 
     // the code in this if statement gets called if libpng encounters an error
-    if (setjmp(png_jmpbuf(png_ptr)))
-    {
+    if (setjmp(png_jmpbuf(png_ptr))) {
         fprintf(stderr, "error from libpng\n");
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         throw std::runtime_error("setjmp failed");
@@ -89,18 +87,18 @@ png_load(const std::string& file_name)
     result.bitdepth = bit_depth;
     result.buffer.resize(rowbytes * temp_height);
 
-    png_byte* image_data (&result.buffer[0]);
+    png_byte* image_data(&result.buffer[0]);
 
-    png_bytep* row_pointers = (png_bytep*)malloc(temp_height * sizeof(png_bytep));
-    if (row_pointers == NULL)
-    {
+    png_bytep* row_pointers =
+        (png_bytep*)malloc(temp_height * sizeof(png_bytep));
+    if (row_pointers == NULL) {
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         free(image_data);
         fclose(fp);
         throw std::runtime_error("out of memory");
     }
 
-    for (unsigned int i (0); i < temp_height; ++i)
+    for (unsigned int i(0); i < temp_height; ++i)
         row_pointers[i] = image_data + i * rowbytes;
 
     png_read_image(png_ptr, row_pointers);
@@ -113,8 +111,7 @@ png_load(const std::string& file_name)
 
 #else
 
-generator_context::image
-png_load(const std::string& file_name)
+generator_context::image png_load(const std::string& file_name)
 {
     throw std::runtime_error("no PNG support");
 }
@@ -124,12 +121,12 @@ png_load(const std::string& file_name)
 class global_variables_null : public global_variables_i
 {
 public:
-    bool exists (const std::string& name) const override
+    bool exists(const std::string& name) const override
     {
         return name == "seed";
     }
 
-    var_type get (const std::string& name) const override
+    var_type get(const std::string& name) const override
     {
         if (name == "seed")
             return 0.0;
@@ -144,23 +141,21 @@ static global_variables_null global_null;
 
 //---------------------------------------------------------------------------
 
-generator_context::generator_context ()
-    : variables_(global_null)
+generator_context::generator_context() : variables_(global_null)
 {
 }
 
-generator_context::generator_context (const global_variables_i& v)
+generator_context::generator_context(const global_variables_i& v)
     : variables_(v)
 {
 }
 
-void
-generator_context::set_script (const std::string& name,
-                               const std::string& script)
+void generator_context::set_script(const std::string& name,
+                                   const std::string& script)
 {
     function* func;
     yyscan_t scanner;
-    YY_BUFFER_STATE  state;
+    YY_BUFFER_STATE state;
 
     if (yylex_init(&scanner))
         throw std::runtime_error("yylex_init failed");
@@ -176,10 +171,9 @@ generator_context::set_script (const std::string& name,
     delete func;
 }
 
-const node&
-generator_context::get_script (const std::string& name) const
+const node& generator_context::get_script(const std::string& name) const
 {
-    auto found (scripts_.find(name));
+    auto found(scripts_.find(name));
     if (found == scripts_.end())
         throw std::runtime_error("script '" + name + "'' not found");
 
@@ -187,38 +181,36 @@ generator_context::get_script (const std::string& name) const
 }
 
 generator_context::variable
-generator_context::get_global (const std::string& name) const
+    generator_context::get_global(const std::string& name) const
 {
     return variables_.get(name);
 }
 
-bool
-generator_context::exists_global (const std::string& name) const
+bool generator_context::exists_global(const std::string& name) const
 {
     return variables_.exists(name);
 }
 
-void
-generator_context::set_image(const std::string& name, image&& data)
+void generator_context::set_image(const std::string& name, image&& data)
 {
     images_[name] = std::move(data);
 }
 
-void
-generator_context::load_png_image(const std::string& name, const std::string& png_file)
+void generator_context::load_png_image(const std::string& name,
+                                       const std::string& png_file)
 {
     images_[name] = png_load(png_file);
 }
 
 const generator_context::image&
-generator_context::get_image (const std::string& name) const
+    generator_context::get_image(const std::string& name) const
 {
-    auto found (images_.find(name));
+    auto found(images_.find(name));
     if (found == images_.end())
         throw std::runtime_error("image " + name + " not found");
 
     return found->second;
 }
 
-}} // namespace hexa::noise
-
+} // namespace noise
+} // namespace hexa

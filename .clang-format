@@ -1,0 +1,8 @@
+BasedOnStyle: LLVM
+AccessModifierOffset: -4
+AlwaysBreakTemplateDeclarations: true
+BreakBeforeBraces: Linux
+IndentWidth: 4
+ColumnLimit: 79
+PointerBindsToType: true
+

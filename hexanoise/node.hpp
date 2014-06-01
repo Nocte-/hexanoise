@@ -4,21 +4,21 @@
 //
 // Copyright 2014, nocte@hippie.nu            Released under the MIT License.
 //---------------------------------------------------------------------------
-
 #pragma once
 
 #include <string>
 #include <vector>
 
-namespace hexa {
-namespace noise {
+namespace hexa
+{
+namespace noise
+{
 
 class function;
 class generator_context;
 
 /** Variable types. */
-typedef enum
-{
+typedef enum {
     /** 2-D coordinates */
     xy,
     /** Scalar value */
@@ -27,8 +27,7 @@ typedef enum
     string,
     /** Boolean value */
     boolean
-}
-var_t;
+} var_t;
 
 /** A node in the expression tree.
  *  A compiled HDNL script is represented by a node. */
@@ -36,8 +35,7 @@ class node
 {
 public:
 
-    typedef enum
-    {
+    typedef enum {
         entry_point,
         const_var,
         const_str,
@@ -115,63 +113,64 @@ public:
         funcdef_bool_xy,
 
         then_else
-    }
-    func_t;
+    } func_t;
 
     struct control_point
     {
         double in;
         double out;
 
-        control_point (const std::pair<double, double>& p)
-            : in (p.first), out (p.second)
-        { }
+        control_point(const std::pair<double, double>& p)
+            : in(p.first), out(p.second)
+        {
+        }
     };
 
 public:
-    func_t  type;
+    func_t type;
     std::vector<node> input;
-    var_t   return_type;
-    bool    is_const;
+    var_t return_type;
+    bool is_const;
 
-    std::string         aux_string;
-    double              aux_var;
-    bool                aux_bool;
+    std::string aux_string;
+    double aux_var;
+    bool aux_bool;
 
     std::vector<control_point> curve;
 
 public:
 
-    node (function* in, const generator_context& ctx);
-    node (func_t t, bool c = false, var_t rt = var);
+    node(function* in, const generator_context& ctx);
+    node(func_t t, bool c = false, var_t rt = var);
 
-    explicit node (double value)
+    explicit node(double value)
         : type(const_var), return_type(var), is_const(true), aux_var(value)
-    { }
+    {
+    }
 
-    explicit node (const std::string& value)
-        : type(const_str), return_type(string), is_const(true), aux_string(value)
-    { }
+    explicit node(const std::string& value)
+        : type(const_str), return_type(string), is_const(true),
+          aux_string(value)
+    {
+    }
 
-    explicit node (bool value)
-        : type(const_bool), return_type(boolean), is_const(true), aux_bool(value)
-    { }
+    explicit node(bool value)
+        : type(const_bool), return_type(boolean), is_const(true),
+          aux_bool(value)
+    {
+    }
 
-    node (const node&) = default;
-    node& operator= (const node&) = default;
+    node(const node&) = default;
+    node& operator=(const node&) = default;
 
     // Visual Studio 2013 still doesn't support default move :/
-    node (node&& m)
-        : type(m.type)
-        , input(std::move(m.input))
-        , return_type(m.return_type)
-        , is_const(m.is_const)
-        , aux_string(std::move(m.aux_string))
-        , aux_var(m.aux_var)
-        , aux_bool(m.aux_bool)
-        , curve(std::move(m.curve))
-    { }
+    node(node&& m)
+        : type(m.type), input(std::move(m.input)), return_type(m.return_type),
+          is_const(m.is_const), aux_string(std::move(m.aux_string)),
+          aux_var(m.aux_var), aux_bool(m.aux_bool), curve(std::move(m.curve))
+    {
+    }
 };
 
-}} // namespace hexa::noise
-
+} // namespace noise
+} // namespace hexa

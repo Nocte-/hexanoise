@@ -1,3 +1,9 @@
+hexanoise (0.1.5) raring; urgency=low
+
+  * Switch to clang-format 
+
+ -- Nocte <nocte@outlook.com>  Mon, 02 Jun 2014 00:10:29 +0200
+
 hexanoise (0.1.4) raring; urgency=low
 
   * Trying to fix the Launchpad builds

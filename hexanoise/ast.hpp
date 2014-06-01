@@ -11,8 +11,10 @@
 #include <string>
 #include <vector>
 
-namespace hexa {
-namespace noise {
+namespace hexa
+{
+namespace noise
+{
 
 /** Intermediate representation of an HNDL script.
  *  This class is only used by the Bison parser.  The library itself
@@ -24,8 +26,7 @@ class function
 {
 public:
     /** Function type. */
-    typedef enum
-    {
+    typedef enum {
         /** Normal function.
          *  'name' is the identifier, 'input' has the curry arguments. */
         func,
@@ -55,26 +56,26 @@ public:
          *  'name' holds the name of the external function.  The input
          *  parameters are empty. */
         external
-    }
-    types;
+    } types;
 
-    types                   type;
-    std::string             name;
-    function*               input;
+    types type;
+    std::string name;
+    function* input;
     std::vector<function*>* args;
-    double                  value;
+    double value;
 
-    size_t                  line;
-    size_t                  pos;
+    size_t line;
+    size_t pos;
 
     function(const std::string& n = std::string())
-        : type(func), name(n), input(0), args(0) { }
+        : type(func), name(n), input(0), args(0)
+    {
+    }
 
     ~function()
     {
         delete input;
-        if (args)
-        {
+        if (args) {
             for (auto p : *args)
                 delete p;
         }
@@ -83,5 +84,5 @@ public:
     }
 };
 
-}}
-
+} // namespace noise
+} // namespace hexa

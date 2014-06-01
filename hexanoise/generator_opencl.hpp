@@ -4,7 +4,6 @@
 //
 // Copyright 2014, nocte@hippie.nu            Released under the MIT License.
 //---------------------------------------------------------------------------
-
 #pragma once
 
 #include <string>
@@ -16,8 +15,10 @@
 
 #include "generator_i.hpp"
 
-namespace hexa {
-namespace noise {
+namespace hexa
+{
+namespace noise
+{
 
 class node;
 
@@ -33,11 +34,10 @@ public:
      * @param opencl_file     A text file that defines the base functions
      *                        required by the OpenCL kernel.
      */
-    generator_opencl (const generator_context& context,
-                      cl::Context& opencl_context,
-                      cl::Device&  opencl_device,
-                      const node& n,
-                      const std::string& opencl_file = "opencl.cl");
+    generator_opencl(const generator_context& context,
+                     cl::Context& opencl_context, cl::Device& opencl_device,
+                     const node& n,
+                     const std::string& opencl_file = "opencl.cl");
 
     /** Returns the generated OpenCL source code. */
     std::string opencl_sourcecode() const
@@ -45,32 +45,28 @@ public:
         return main_;
     }
 
-    std::vector<double>
-    run (const glm::dvec2& corner,
-         const glm::dvec2& step,
-         const glm::ivec2& count) override;
+    std::vector<double> run(const glm::dvec2& corner, const glm::dvec2& step,
+                            const glm::ivec2& count) override;
 
-    std::vector<int16_t>
-    run_int16 (const glm::dvec2& corner,
-               const glm::dvec2& step,
-               const glm::ivec2& count) override;
+    std::vector<int16_t> run_int16(const glm::dvec2& corner,
+                                   const glm::dvec2& step,
+                                   const glm::ivec2& count) override;
 
 private:
-    std::string pl (const node& n);
-    std::string co (const node& n);
+    std::string pl(const node& n);
+    std::string co(const node& n);
 
 private:
     size_t count_;
     std::string main_;
     std::list<std::string> functions_;
 
-    cl::Context      context_;
-    cl::Device       device_;
+    cl::Context context_;
+    cl::Device device_;
     cl::CommandQueue queue_;
-    cl::Program      program_;
-    cl::Kernel       kernel_;
-    cl::Kernel       kernel_int16_;
+    cl::Program program_;
+    cl::Kernel kernel_;
+    cl::Kernel kernel_int16_;
 };
-
-}}
-
+}
+}
