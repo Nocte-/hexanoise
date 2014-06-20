@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <stdexcept>
+#include <glm/gtx/rotate_vector.hpp>
 #include "node.hpp"
 
 #ifndef INTERPRETER_OCTAVES_LIMIT
@@ -126,6 +127,11 @@ inline double dot(const double* p, double x, double y)
     return p[0] * x + p[1] * y;
 }
 
+inline double dot(const double* p, double x, double y, double z)
+{
+    return p[0] * x + p[1] * y + p[2] * z;
+}
+
 #define OFFSET_BASIS 2166136261
 #define FNV_PRIME 16777619
 
@@ -160,6 +166,20 @@ inline double gradient_noise2d(const glm::dvec2& xy, glm::ivec2 ixy,
     return glm::dot(xy, g);
 }
 
+inline double gradient_noise3d(const glm::dvec3& xyz, glm::ivec3 ixyz,
+                               uint32_t seed)
+{
+    ixyz.x += seed * 1013;
+    ixyz.y += seed * 1619;
+    ixyz.z += seed * 3691;
+    ixyz &= P_MASK;
+
+    int index((P[ixyz.x + P[ixyz.y + P[ixyz.z]]] & G_MASK) * G_VECSIZE);
+    glm::dvec3 g{G[index], G[index + 1], G[index + 2]};
+
+    return glm::dot(xyz, g);
+}
+
 double p_perlin(const glm::dvec2& xy, uint32_t seed)
 {
     glm::dvec2 t(glm::floor(xy));
@@ -184,6 +204,36 @@ double p_perlin(const glm::dvec2& xy, uint32_t seed)
     const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
+}
+
+double p_perlin3(const glm::dvec3& xyz, uint32_t seed)
+{
+    return 0.0;
+    
+    /*
+    glm::dvec3 t = glm::floor(xyz);
+    glm::ivec3 xyz0 {(int)t.x, (int)t.y, (int)t.z};
+    glm::dvec3 xyzf = xyz - t;
+
+    const glm::ivec3 I01{0, 1, 0};
+    const glm::ivec3 I10{1, 0, 0};
+    const glm::ivec3 I11{1, 1, 0};
+
+    const glm::dvec3 F01{0.0, 1.0, 0.0};
+    const glm::dvec3 F10{1.0, 0.0, 0.0};
+    const glm::dvec3 F11{1.0, 1.0, 0.0};
+
+    const double n00 = gradient_noise3d(xyzf, xyz0, seed);
+    const double n10 = gradient_noise3d(xyzf - F10, xyz0 + I10, seed);
+    const double n01 = gradient_noise3d(xyzf - F01, xyz0 + I01, seed);
+    const double n11 = gradient_noise3d(xyzf - F11, xyz0 + I11, seed);
+
+    const glm::dvec2 n0001(n00, n01);
+    const glm::dvec2 n1011(n10, n11);
+    const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
+
+    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
+    */
 }
 
 double p_simplex(const glm::dvec2& xy, uint32_t seed)
@@ -257,6 +307,112 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
     return 70.0 * (n0 + n1 + n2);
 }
 
+double p_simplex3(const glm::dvec3& p, uint32_t seed)
+{
+    // Skew the input space to determine which simplex cell we're in
+    const double F3 = 1.0 / 3.0;
+    float s = (p.x + p.y + p.z) * F3;
+    int i = std::floor(p.x + s);
+    int j = std::floor(p.y + s);
+    int k = std::floor(p.z + s);
+
+    // Unskew the cell origin back to (x,y) space    
+    const double G3 = 1.0 / 6.0;
+    double t = (i + j +  k) * G3;    
+    double X0 = i-t; 
+    double Y0 = j-t;
+    double Z0 = k-t;
+
+    // The x,y distances from the cell origin
+    double x0 = p.x - X0;
+    double y0 = p.y - Y0;
+    double z0 = p.y - Z0;
+
+    // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
+    // Determine which simplex we are in.
+    int i1, j1, k1; // Offsets for second corner of simplex in (i,j,k) coords
+    int i2, j2, k2; // Offsets for third corner
+
+    if (x0 >= y0) {
+        if (y0 >= z0) { 
+            i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; 
+        }
+        else if (x0 >= z0) {
+            i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; 
+        } 
+        else { 
+            i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; 
+        }
+    }
+    else { // x0 < y0
+        if (y0 < z0) { 
+            i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; 
+        }
+        else if (x0 < z0) { 
+            i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; 
+        } 
+        else { 
+            i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; 
+        }
+    }
+
+    double x1 = x0 - i1 + G3;
+    double y1 = y0 - j1 + G3;
+    double z1 = z0 - k1 + G3;
+    double x2 = x0 - i2 + 2.0 * G3;
+    double y2 = y0 - j2 + 2.0 * G3;
+    double z2 = z0 - k2 + 2.0 * G3;
+    double x3 = x0 - 1.0 + 3.0 * G3;
+    double y3 = y0 - 1.0 + 3.0 * G3;
+    double z3 = z0 - 1.0 + 3.0 * G3;
+
+    int ii = (i + seed * 1063) & 0xFF;
+    int jj = j & 0xFF;
+    int kk = k & 0xFF;
+    
+    int gi0 = P[ii + P[jj + P[kk]]] & G_MASK;
+    int gi1 = P[ii + i1 + P[jj + j1 + P[kk + k1]]] & G_MASK;
+    int gi2 = P[ii + i2 + P[jj + j2 + P[kk + k2]]] & G_MASK;
+    int gi3 = P[ii + 1 + P[jj + 1 + P[kk + 1]]] & G_MASK;
+
+    // Calculate the contribution from the four corners
+    double n0, n1, n2, n3;
+    
+    double t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
+    if (t0 < 0) {
+        n0 = 0.0;
+    } else {
+        t0 *= t0;
+        n0 = t0 * t0 * dot(&G[gi0 * G_VECSIZE], x0, y0, z0);
+    }
+
+    double t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
+    if (t1 < 0) {
+        n1 = 0.0;
+    } else {
+        t1 *= t1;
+        n1 = t1 * t1 * dot(&G[gi1 * G_VECSIZE], x1, y1, z1);
+    }
+
+    double t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
+    if (t2 < 0) {
+        n2 = 0.0;
+    } else {
+        t2 *= t2;
+        n2 = t2 * t2 * dot(&G[gi2 * G_VECSIZE], x2, y2, z2);
+    }
+
+    double t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
+    if (t3 < 0) {
+        n3 = 0.0;
+    } else {
+        t3 *= t3;
+        n3 = t3 * t3 * dot(&G[gi3 * G_VECSIZE], x3, y3, z3);
+    }
+    
+    return 32.0 * (n0 + n1 + n2 + n3);   
+}
+
 glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
 {
     glm::dvec2 t(glm::floor(xy));
@@ -287,33 +443,68 @@ glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
     return glm::dvec2(f0, f1);
 }
 
-glm::dvec2 p_voronoi(const glm::dvec2& xy, uint32_t seed)
+glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
+{
+    glm::dvec3 t = glm::floor(p);
+    glm::ivec3 p0 {(int)t.x, (int)t.y, (int)t.z};
+    glm::dvec3 pf = p - t;
+
+    double f0 = 99, f1 = 99;
+
+    for (int i = -1; i < 2; ++i) {
+        for (int j = -1; j < 2; ++j) {
+            for (int k = -1; k < 2; ++k) {
+                glm::ivec3 square = p0 + glm::ivec3(i, j, k);
+                auto rnglast = rng(hash(square.x + seed, square.y, square.z));
+    
+                glm::dvec3 rnd_pt;
+                rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+                rnglast = rng(rnglast);
+                rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+                rnglast = rng(rnglast);
+                rnd_pt.z = k + (double)rnglast / (double)0x7FFFFFFF;
+    
+                double dist = glm::distance(pf, rnd_pt);
+                if (dist < f0) {
+                    f1 = f0;
+                    f0 = dist;
+                } else if (dist < f1) {
+                    f1 = dist;
+                }
+            }
+        }
+    }
+    return glm::dvec2(f0, f1);
+}
+
+glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
 {
     glm::dvec2 t(glm::floor(xy));
     glm::ivec2 xy0((int)t.x, (int)t.y);
     glm::dvec2 xyf(xy - t);
     glm::dvec2 result;
 
-    double f0(99);
+    double f0 = 99.;
 
-    for (int i(-1); i < 2; ++i) {
-        for (int j(-1); j < 2; ++j) {
-            glm::ivec2 square(xy0 + glm::ivec2(i, j));
-            auto rnglast(rng(hash(square.x + seed, square.y)));
+    for (int i = -1; i < 2; ++i) {
+        for (int j = -1; j < 2; ++j) {
+            glm::ivec2 square = xy0 + glm::ivec2{i, j};
+            auto rnglast = rng(hash(square.x + seed, square.y));
 
             glm::dvec2 rnd_pt;
             rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
             rnglast = rng(rnglast);
             rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
 
-            double dist(glm::distance(xyf, rnd_pt));
+            double dist = glm::distance(xyf, rnd_pt);
             if (dist < f0) {
                 f0 = dist;
                 result = rnd_pt;
             }
         }
     }
-    return t + result;
+    t += result;
+    return glm::dvec3{t.x, t.y, 0.0};
 }
 
 double curve_linear(double x, const std::vector<node::control_point>& curve)
@@ -334,39 +525,39 @@ double curve_linear(double x, const std::vector<node::control_point>& curve)
 
 double curve_spline(double x, const std::vector<node::control_point>& curve)
 {
-    int index(0);
+    int index = 0;
     for (; index < (int)curve.size(); ++index) {
         if (x < curve[index].in)
             break;
     }
 
-    const int lim(curve.size() - 1);
-    const int index0(clamp(index - 2, 0, lim));
-    const int index1(clamp(index - 1, 0, lim));
-    const int index2(clamp(index, 0, lim));
-    const int index3(clamp(index + 1, 0, lim));
+    const int lim = curve.size() - 1;
+    const int index0 =clamp(index - 2, 0, lim);
+    const int index1 = clamp(index - 1, 0, lim);
+    const int index2 = clamp(index, 0, lim);
+    const int index3 = clamp(index + 1, 0, lim);
 
     if (index1 == index2)
         return curve[index1].out;
 
-    const double in0(curve[index1].in);
-    const double in1(curve[index2].in);
-    const double a((x - in0) / (in1 - in0));
+    const double in0 = curve[index1].in;
+    const double in1 = curve[index2].in;
+    const double a = (x - in0) / (in1 - in0);
 
-    const double out0(curve[index0].out);
-    const double out1(curve[index1].out);
-    const double out2(curve[index2].out);
-    const double out3(curve[index3].out);
+    const double out0 = curve[index0].out;
+    const double out1 = curve[index1].out;
+    const double out2 = curve[index2].out;
+    const double out3 = curve[index3].out;
 
     return interp_cubic(out0, out1, out2, out3, a);
 }
 
 double png(const glm::dvec2& p, const generator_context::image& img)
 {
-    glm::dvec2 fl(glm::floor(p));
-    glm::dvec2 fr(p - fl);
+    glm::dvec2 fl = glm::floor(p);
+    glm::dvec2 fr = p - fl;
 
-    glm::ivec2 i(fr.x * img.width, fr.y * img.height);
+    glm::ivec2 i{fr.x * img.width, fr.y * img.height};
     return ((double)img.buffer[i.y * img.width + i.x] - 127.5) / 127.5;
 }
 
@@ -387,10 +578,9 @@ std::vector<double> generator_slowinterpreter::run(const glm::dvec2& corner,
                                                    const glm::ivec2& count)
 {
     std::vector<double> result(count.x * count.y);
-    size_t i(0);
-
-    for (int y(0); y < count.y; ++y)
-        for (int x(0); x < count.x; ++x)
+    size_t i = 0;
+    for (int y = 0; y < count.y; ++y)
+        for (int x = 0; x < count.x; ++x)
             result[i++] = eval(corner + glm::dvec2(x, y) * step, n_);
 
     return result;
@@ -400,17 +590,56 @@ std::vector<int16_t> generator_slowinterpreter::run_int16(
     const glm::dvec2& corner, const glm::dvec2& step, const glm::ivec2& count)
 {
     std::vector<int16_t> result(count.x * count.y);
-    size_t i(0);
-
-    for (int y(0); y < count.y; ++y)
-        for (int x(0); x < count.x; ++x)
+    size_t i = 0;
+    for (int y = 0; y < count.y; ++y) {
+        for (int x = 0; x < count.x; ++x) {
             result[i++] = static_cast<int16_t>(
                 eval(corner + glm::dvec2(x, y) * step, n_));
+        }
+    }
+    return result;
+}
 
+std::vector<double> generator_slowinterpreter::run(const glm::dvec3& corner,
+                                                   const glm::dvec3& step,
+                                                   const glm::ivec3& count)
+{
+    std::vector<double> result(count.x * count.y);
+    size_t i = 0;
+    for (int z = 0; z < count.z; ++z) {
+        for (int y = 0; y < count.y; ++y) {
+            for (int x = 0; x < count.x; ++x) {
+                result[i++] = eval(corner + glm::dvec3(x,y,z) * step, n_);
+            }
+        }
+    }
+    return result;
+}
+
+std::vector<int16_t> generator_slowinterpreter::run_int16(
+    const glm::dvec3& corner, const glm::dvec3& step, const glm::ivec3& count)
+{
+    std::vector<int16_t> result(count.x * count.y);
+    size_t i = 0;
+    for (int z = 0; z < count.z; ++z) {
+        for (int y = 0; y < count.y; ++y) {
+            
+            for (int x = 0; x < count.x; ++x) {
+                result[i++] = static_cast<int16_t>(
+                    eval(corner + glm::dvec3(x, y, z) * step, n_));
+            }
+        }
+    }
     return result;
 }
 
 double generator_slowinterpreter::eval(const glm::dvec2& p, const node& n)
+{
+    p_.x = p.x; p_.y = p.y; p_.z = 0.0;
+    return eval_v(n);
+}
+
+double generator_slowinterpreter::eval(const glm::dvec3& p, const node& n)
 {
     p_ = p;
     return eval_v(n);
@@ -421,60 +650,97 @@ double generator_slowinterpreter::eval_v(const node& n)
     if (n.type == node::const_var)
         return n.aux_var;
 
-    auto& in(n.input[0]);
+    auto& in = n.input[0];
 
     switch (n.type) {
     case node::angle: {
-        auto p(eval_xy(in));
+        auto p = eval_xy(in);
         return std::atan2(p.y, p.x) / pi;
     }
+        
     case node::chebyshev: {
         auto p(eval_xy(in));
         return std::max(p.x, p.y);
     }
-
+        
+    case node::chebyshev3: {
+        auto p = eval_xyz(in);
+        return std::max(std::max(p.x, p.y), p.z);
+    }
+        
     case node::checkerboard: {
-        auto p(eval_xy(in));
-        auto fl(glm::floor(p));
-        auto fr(p - fl);
+        auto p = eval_xy(in);
+        auto fl = glm::floor(p);
+        auto fr = p - fl;
         return ((fr.x < 0.5 && fr.y < 0.5) || (fr.x >= 0.5 && fr.y >= 0.5))
                    ? 1
                    : -1;
     }
 
-    case node::distance: {
-        auto p(eval_xy(in));
-        return std::sqrt(p.x * p.x + p.y * p.y);
+    case node::checkerboard3: {
+        auto p = eval_xyz(in);
+        auto fl = glm::floor(p);
+        auto fr = p - fl;
+        bool a = fr.x < 0.5;
+        bool b = fr.y < 0.5;
+        bool c = fr.z < 0.5;
+        return (a ^ b ^ c) ? 1 : -1;
     }
+    case node::distance:
+        return glm::length(eval_xy(in));
+
+    case node::distance3:
+        return glm::length(eval_xyz(in));
 
     case node::perlin: {
-        auto p(eval_xy(in));
-        auto seed(eval_v(n.input[1]));
+        auto p = eval_xy(in);
+        auto seed = eval_v(n.input[1]);
         return p_perlin(p, seed);
     }
 
+    case node::perlin3: {
+        auto p = eval_xyz(in);
+        auto seed = eval_v(n.input[1]);
+        return p_perlin3(p, seed);
+    }
+        
     case node::simplex: {
-        auto p(eval_xy(in));
-        auto seed(eval_v(n.input[1]));
+        auto p = eval_xy(in);
+        auto seed = eval_v(n.input[1]);
         return p_simplex(p, seed_ + seed);
     }
 
+    case node::simplex3: {
+        auto p = eval_xyz(in);
+        auto seed = eval_v(n.input[1]);
+        return p_simplex3(p, seed_ + seed);
+    }
+        
     case node::worley: {
-        auto p(eval_xy(in));
-        auto seed(eval_v(n.input[2]));
-
-        auto tmp(p_);
-        p_ = p_worley(p, seed_ + seed);
-        auto result(eval_v(n.input[1]));
+        auto p = eval_xy(in);
+        auto seed = eval_v(n.input[2]);
+        auto tmp = p_;
+        p_ = glm::dvec3(p_worley(p, seed_ + seed), 0.0);
+        auto result = eval_v(n.input[1]);
         p_ = tmp;
         return result;
     }
 
+    case node::worley3: {
+        auto p = eval_xyz(in);
+        auto seed = eval_v(n.input[2]);
+        auto tmp = p_;
+        p_ = glm::dvec3(p_worley3(p, seed_ + seed), 0.0);
+        auto result = eval_v(n.input[1]);
+        p_ = tmp;
+        return result;
+    }
+        
     case node::voronoi: {
         auto p(eval_xy(in));
         auto seed(eval_v(n.input[2]));
 
-        auto tmp(p_);
+        auto tmp = p_;
         p_ = p_voronoi(p, seed_ + seed);
         auto result(eval_v(n.input[1]));
         p_ = tmp;
@@ -482,46 +748,54 @@ double generator_slowinterpreter::eval_v(const node& n)
     }
 
     case node::external_: {
-        auto tmp(p_);
-        p_ = eval_xy(in);
+        auto tmp = p_;
+        p_ = glm::dvec3{eval_xy(in), 0.0};
         auto result(eval_v(cntx_.get_script(n.aux_string)));
         p_ = tmp;
         return result;
     }
 
     case node::lambda_: {
-        auto tmp(p_);
-        p_ = eval_xy(in);
+        auto tmp = p_;
+        p_ = glm::dvec3{eval_xy(in), 0.0};
         auto result(eval_v(n.input[1]));
         p_ = tmp;
         return result;
     }
 
     case node::manhattan: {
-        auto p(eval_xy(in));
+        auto p = eval_xy(in);
         return std::max(std::abs(p.x), std::abs(p.y));
     }
 
+    case node::manhattan3: {
+        auto p = eval_xyz(in);
+        return std::max(std::max(std::abs(p.x), std::abs(p.y)), std::abs(p.z));
+    }
+            
     case node::x:
         return eval_xy(in).x;
 
     case node::y:
         return eval_xy(in).y;
 
-    case node::fractal: {
-        auto tmp(p_);
-        p_ = eval_xy(n.input[0]);
+    case node::z:
+        return eval_xyz(in).z;
 
-        auto& f(n.input[1]);
-        int octaves(eval_v(n.input[2]));
+    case node::fractal: {
+        auto tmp = p_;
+        p_ = glm::dvec3{eval_xy(n.input[0]), 0.0};
+
+        auto& f = n.input[1];
+        int octaves = eval_v(n.input[2]);
 
         octaves = std::min(octaves, INTERPRETER_OCTAVES_LIMIT);
 
-        double lacunarity(eval_v(n.input[3]));
-        double persistence(eval_v(n.input[4]));
+        double lacunarity = eval_v(n.input[3]);
+        double persistence = eval_v(n.input[4]);
 
-        double div(0.0), mul(1.0), result(0.0);
-        for (int i(0); i < octaves; ++i) {
+        double div = 0.0, mul = 1.0, result = 0.0;
+        for (int i = 0; i < octaves; ++i) {
             result += eval_v(f) * mul;
             div += mul;
             mul *= lacunarity;
@@ -532,6 +806,30 @@ double generator_slowinterpreter::eval_v(const node& n)
         return result / div;
     }
 
+    case node::fractal3: {
+        auto tmp = p_;
+        p_ = eval_xyz(n.input[0]);
+
+        auto& f = n.input[1];
+        int octaves = eval_v(n.input[2]);
+
+        octaves = std::min(octaves, INTERPRETER_OCTAVES_LIMIT);
+
+        double lacunarity = eval_v(n.input[3]);
+        double persistence = eval_v(n.input[4]);
+
+        double div = 0.0, mul = 1.0, result = 0.0;
+        for (int i = 0; i < octaves; ++i) {
+            result += eval_v(f) * mul;
+            div += mul;
+            mul *= lacunarity;
+            p_ *= persistence;
+            p_.x += 12345;
+        }
+        p_ = tmp;
+        return result / div;
+    }
+    
     case node::abs:
         return std::abs(eval_v(in));
 
@@ -539,8 +837,9 @@ double generator_slowinterpreter::eval_v(const node& n)
         return eval_v(in) + eval_v(n.input[1]);
 
     case node::blend: {
-        double l((eval_v(in) + 1.0) / 2.0);
-        double a(eval_v(in)), b(eval_v(n.input[1]));
+        double l = (eval_v(in) + 1.0) / 2.0;
+        double a = eval_v(n.input[1]);
+        double b = eval_v(n.input[2]);
         return a + l * (b - a);
     }
 
@@ -569,10 +868,10 @@ double generator_slowinterpreter::eval_v(const node& n)
         return std::round(eval_v(in));
 
     case node::range: {
-        double x(eval_v(in));
-        double a(eval_v(n.input[1]));
-        double b(eval_v(n.input[2]));
-        double t((x + 1.0 + a * 0.5) * ((b - a) * 0.5));
+        double x = eval_v(in);
+        double a = eval_v(n.input[1]);
+        double b = eval_v(n.input[2]);
+        double t = (x + 1.0 + a * 0.5) * ((b - a) * 0.5);
 
         if (a > b)
             std::swap(a, b);
@@ -581,7 +880,7 @@ double generator_slowinterpreter::eval_v(const node& n)
     }
 
     case node::saw: {
-        auto v(eval_v(in));
+        auto v = eval_v(in);
         return v - std::floor(v);
     }
 
@@ -619,53 +918,106 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
 {
     switch (n.type) {
     case node::entry_point:
-        return p_;
+        return glm::dvec2{p_};
 
     case node::rotate: {
-        auto p(eval_xy(n.input[0]));
-        auto t(eval_v(n.input[1]) * pi);
-        auto ct(std::cos(t));
-        auto st(std::sin(t));
-        return glm::dvec2(p.x * ct - p.y * st, p.x * st + p.y * ct);
+        auto p = eval_xy(n.input[0]);
+        auto t = eval_v(n.input[1]) * pi;
+        auto ct = std::cos(t);
+        auto st = std::sin(t);
+        return glm::dvec2{p.x * ct - p.y * st, p.x * st + p.y * ct};
     }
 
     case node::scale: {
-        auto p(eval_xy(n.input[0]));
-        auto s(eval_v(n.input[1]));
-        return glm::dvec2(p.x / s, p.y / s);
+        auto p = eval_xy(n.input[0]);
+        auto s = eval_v(n.input[1]);
+        return glm::dvec2{p.x / s, p.y / s};
     }
 
     case node::shift: {
-        auto p(eval_xy(n.input[0]));
-        auto sx(eval_v(n.input[1]));
-        auto sy(eval_v(n.input[2]));
-        return glm::dvec2(p.x + sx, p.y + sy);
+        auto p = eval_xy(n.input[0]);
+        auto sx = eval_v(n.input[1]);
+        auto sy = eval_v(n.input[2]);
+        return glm::dvec2{p.x + sx, p.y + sy};
     }
 
     case node::map: {
         auto tmp(p_);
-        p_ = eval_xy(n.input[0]);
-        auto x(eval_v(n.input[1]));
-        auto y(eval_v(n.input[2]));
+        p_ = glm::dvec3(eval_xy(n.input[0]), 0.0);
+        auto x = eval_v(n.input[1]);
+        auto y = eval_v(n.input[2]);
         p_ = tmp;
-        return glm::dvec2(x, y);
+        return glm::dvec2{x, y};
     }
 
     case node::turbulence: {
-        auto p(eval_xy(n.input[0]));
-        auto x(eval_v(n.input[1]));
-        auto y(eval_v(n.input[2]));
-
-        return glm::dvec2(p.x + x, p.y + y);
+        auto tmp(p_);
+        p_ = glm::dvec3(eval_xy(n.input[0]), 0.0);
+        auto x = eval_v(n.input[1]);
+        auto y = eval_v(n.input[2]);
+        p_ = tmp;
+        return glm::dvec2{p_.x + x, p_.y + y};
     }
 
     case node::swap: {
-        auto p(eval_xy(n.input[0]));
-        return glm::dvec2(p.y, p.x);
+        auto p = eval_xy(n.input[0]);
+        return glm::dvec2{p.y, p.x};
     }
 
+    case node::xy: {
+        auto p = eval_xyz(n.input[0]);
+        return glm::dvec2{p.x, p.y};
+    }
+    
     default:
         throw std::runtime_error("type mismatch");
+    }
+}
+
+glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
+{
+    switch (n.type) {
+    case node::entry_point:
+        return p_;
+
+    case node::rotate3: {
+        auto p = eval_xyz(n.input[0]);
+        auto axis = eval_xyz(n.input[1]);
+        auto angle = eval_v(n.input[2]) * pi;
+
+        return glm::rotate(axis, angle, p);
+    }
+    
+    case node::scale3: {
+        auto p = eval_xyz(n.input[0]);
+        auto s = eval_v(n.input[1]);
+        return p / s;
+    }
+
+    case node::shift3: {
+        auto p = eval_xyz(n.input[0]);
+        auto q = input_vec3(n, 1);        
+        return p + q;
+    }
+
+    case node::map3: {
+        auto tmp = p_;
+        p_ = eval_xyz(n.input[0]);
+        auto q = input_vec3(n, 1);
+        p_ = tmp;
+        return q;
+    }
+
+    case node::turbulence3: {
+        auto tmp = p_;
+        p_ = eval_xyz(n.input[0]);
+        auto q = input_vec3(n, 1);
+        p_ = tmp;
+        return p_ + q;
+    }
+        
+    default:
+        throw std::runtime_error("type mismatch");        
     }
 }
 
@@ -717,6 +1069,11 @@ bool generator_slowinterpreter::eval_bool(const node& n)
     default:
         throw std::runtime_error("type mismatch");
     }
+}
+
+glm::dvec3 generator_slowinterpreter::input_vec3 (const node& n, int i)
+{
+    return glm::dvec3{eval_v(n.input[i]), eval_v(n.input[i+1]), eval_v(n.input[i+2])};
 }
 
 } // namespace noise

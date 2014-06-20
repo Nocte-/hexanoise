@@ -52,6 +52,13 @@ public:
                                    const glm::dvec2& step,
                                    const glm::ivec2& count) override;
 
+    std::vector<double> run(const glm::dvec3& corner, const glm::dvec3& step,
+                            const glm::ivec3& count) override;
+
+    std::vector<int16_t> run_int16(const glm::dvec3& corner,
+                                   const glm::dvec3& step,
+                                   const glm::ivec3& count) override;
+    
 private:
     std::string pl(const node& n);
     std::string co(const node& n);
@@ -67,6 +74,7 @@ private:
     cl::Program program_;
     cl::Kernel kernel_;
     cl::Kernel kernel_int16_;
+    cl::Kernel kernel3_;
 };
 }
 }

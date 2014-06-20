@@ -70,19 +70,31 @@ BOOST_AUTO_TEST_CASE(opencl_basic)
         gv["devil"] = 666.0;
         ctx.set_script("lol", "distance:sin");
 
-        generator_opencl cl_gen(ctx, opencl_context, devices[0],
-                                ctx.get_script("lol"));
-        std::cout << cl_gen.opencl_sourcecode() << std::endl;
+        auto& sc = ctx.get_script("lol");
+        BOOST_CHECK_EQUAL(sc.type, node::sin);
+        BOOST_CHECK_EQUAL(sc.input.size(), 1);
+        
+        auto& sc2 = sc.input[0];
+        BOOST_CHECK_EQUAL(sc2.type, node::distance);
+        BOOST_CHECK_EQUAL(sc2.input.size(), 1);
+        
+        auto& sc3 = sc2.input[0];
+        BOOST_CHECK_EQUAL(sc3.type, node::entry_point);
+        BOOST_CHECK_EQUAL(sc3.input.size(), 0);
+                
+        //generator_opencl cl_gen(ctx, opencl_context, devices[0],
+        //                        sc);
+        //std::cout << cl_gen.opencl_sourcecode() << std::endl;
 
-        generator_slowinterpreter sl_gen(ctx, ctx.get_script("lol"));
+        generator_slowinterpreter sl_gen(ctx, sc);
 
         auto result(sl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0),
                                glm::ivec2(50, 50)));
         std::cout << result[0] << std::endl;
 
-        auto result2(cl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0),
-                                glm::ivec2(50, 50)));
-        std::cout << result[0] << std::endl;
+        //auto result2(cl_gen.run(glm::dvec2(5.5, 5.5), glm::dvec2(1.0, 1.0),
+        //                        glm::ivec2(50, 50)));
+        //std::cout << result[0] << std::endl;
     }
     catch (cl::Error & e)
     {

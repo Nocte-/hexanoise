@@ -138,7 +138,26 @@ static const std::unordered_map<std::string, funcdef> functions{
     { "then_else",
       { node::then_else, var, { boolean, { "a", var }, { "b", var } } } },
     { "curve_linear", { node::curve_linear, var, { var } } },
-    { "curve_spline", { node::curve_spline, var, { var } } }
+    { "curve_spline", { node::curve_spline, var, { var } } },
+    
+    
+    { "rotate3", { node::rotate3, xyz, { xyz, {"axis", xyz}, {"angle", var} } } },
+    { "scale3", { node::scale3, xyz, { xyz, {"div", var} } } },
+    { "shift3",
+        { node::shift, xyz, { xyz, { "add_x", var }, { "add_y", var }, { "add_z", var }} } },
+    { "map3", { node::map3, xyz, { xyz, { "x", var }, { "y", var }, {"z", var }} } },    
+    { "fractal3",
+      { node::fractal3, var,
+        { xyz, { "noise_function", var }, { "octaves", var, 2 },    
+                { "lacunarity", var, 0.5, }, { "persistence", var, 2.0 } } } },                
+    { "xy", { node::xy, xy, { xyz } } },
+    { "z", { node::z, var, { xyz } } },
+    { "chebyshev3", { node::chebyshev3, var, { xyz } } }, 
+    { "checkerboard3", { node::checkerboard3, var, { xyz } } },
+    { "distance3", { node::distance3, var, { xyz } } }, 
+    { "manhattan3", { node::manhattan3, var, { xyz } } }, 
+    { "perlin3", { node::perlin3, var, { xyz, { "seed", var, 0 } } } },
+    { "simplex3", { node::simplex3, var, { xyz, { "seed", var, 0 } } } }
 };
 
 node::node(function* in, const generator_context& ctx)
@@ -156,7 +175,7 @@ node::node(function* in, const generator_context& ctx)
         if (in->input)
             input.emplace_back(node(in->input, ctx));
         else
-            input.emplace_back(node(entry_point, false, xy));
+            input.emplace_back(node(entry_point, false, var_t::xy));
 
         // Special case: curve_linear and curve_spline take a list of
         // const var parameters.
@@ -263,7 +282,7 @@ node::node(function* in, const generator_context& ctx)
         if (in->input)
             input.emplace_back(node(in->input, ctx));
         else
-            input.emplace_back(node(entry_point, false, xy));
+            input.emplace_back(node(entry_point, false, var_t::xy));
 
         input.emplace_back(node((*in->args)[0], ctx));
 
@@ -280,7 +299,7 @@ node::node(function* in, const generator_context& ctx)
         if (in->input)
             input.emplace_back(node(in->input, ctx));
         else
-            input.emplace_back(node(entry_point, false, xy));
+            input.emplace_back(node(entry_point, false, var_t::xy));
 
         break;
     }
@@ -292,4 +311,3 @@ node::node(func_t t, bool c, var_t rt) : type(t), return_type(rt), is_const(c)
 
 } // namespace noise
 } // namespace hexa
-

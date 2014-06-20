@@ -19,10 +19,12 @@ class generator_context;
 
 /** Variable types. */
 typedef enum {
-    /** 2-D coordinates */
-    xy,
     /** Scalar value */
     var,
+    /** 2-D coordinates */
+    xy,
+    /** 3-D coordinates */
+    xyz,
     /** Text string (only used as a constexpr) */
     string,
     /** Boolean value */
@@ -112,7 +114,32 @@ public:
 
         funcdef_bool_xy,
 
-        then_else
+        then_else,
+        
+        funcdef_xyz_xyz,
+        
+        rotate3,
+        scale3,
+        shift3,
+        map3,
+        turbulence3,
+        
+        funcdef_xyz_xy,
+        
+        xy,
+        
+        funcdef_xyz_v,
+        
+        chebyshev3,
+        checkerboard3,
+        distance3,
+        manhattan3,
+        fractal3,
+        perlin3,
+        simplex3,
+        worley3,
+        z
+        
     } func_t;
 
     struct control_point

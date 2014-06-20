@@ -58,6 +58,22 @@ generator_opencl::generator_opencl(const generator_context& ctx,
     main_ += body;
     main_ += ";\n}\n";
 
+    
+    main_ +=
+        "\n"
+        "__kernel void noisemain3(\n"
+        "  __global double* output, const double3 start, const double3 step)\n"
+        "{\n"
+        "    int3 coord = (int3)(get_global_id(0), get_global_id(1), get_global_id(2));\n"
+        "    int  sizex = get_global_size(0);\n"
+        "    int  sizey = get_global_size(1);\n"
+        "    double3 p = mad(step, (double3)(coord.x, coord.y, coord.z), start);\n"
+        "    output[coord.z * sizex * sizey + coord.y * sizex + coord.x] = ";
+
+    main_ += body;
+    main_ += ";\n}\n";
+
+    
     main_ +=
         "\n"
         "__kernel void noisemain_int16(\n"
@@ -90,6 +106,7 @@ generator_opencl::generator_opencl(const generator_context& ctx,
     }
 
     kernel_ = cl::Kernel(program_, "noisemain");
+    kernel3_ = cl::Kernel(program_, "noisemain3");
     kernel_int16_ = cl::Kernel(program_, "noisemain_int16");
 }
 
@@ -123,8 +140,8 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec2& corner,
                                                  const glm::dvec2& step,
                                                  const glm::ivec2& count)
 {
-    unsigned int width(count.x), height(count.y);
-    unsigned int elements(width * height);
+    unsigned int width = count.x, height = count.y;
+    unsigned int elements = width * height;
 
     std::vector<int16_t> result(elements);
     cl::Buffer output(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
@@ -145,10 +162,43 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec2& corner,
     return result;
 }
 
+std::vector<double> generator_opencl::run(const glm::dvec3& corner,
+                                          const glm::dvec3& step,
+                                          const glm::ivec3& count)
+{
+    unsigned int width = count.x, height = count.y, depth = count.z;
+    unsigned int elements = width * height * depth;
+
+    std::vector<double> result(elements);
+    cl::Buffer output(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
+                      elements * sizeof(double), &result[0]);
+
+    kernel3_.setArg(0, output);
+    kernel3_.setArg(1, sizeof(corner), (void*)&corner);
+    kernel3_.setArg(2, sizeof(step), (void*)&step);
+
+    queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange, { width, height },
+                                cl::NullRange);
+
+    auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                        elements * sizeof(double)));
+
+    queue_.enqueueUnmapMemObject(output, memobj);
+
+    return result;
+}
+
+std::vector<int16_t> generator_opencl::run_int16(const glm::dvec3& corner,
+                                                 const glm::dvec3& step,
+                                                 const glm::ivec3& count)
+{
+    throw std::runtime_error("opencl::run_int16 3-D not implemented yet");
+}
+
 std::string generator_opencl::pl(const node& n)
 {
-    std::string result("(");
-    for (auto i(n.input.begin()); i != n.input.end();) {
+    std::string result{"("};
+    for (auto i = n.input.begin(); i != n.input.end();) {
         result += co(*i);
         ++i;
         if (i != n.input.end())
