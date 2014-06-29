@@ -101,3 +101,15 @@ BOOST_AUTO_TEST_CASE(opencl_basic)
         std::cerr << e.what() << ": " << e.err() << std::endl;
     }
 }
+
+BOOST_AUTO_TEST_CASE(test_3d)
+{
+    generator_context ctx;
+    ctx.set_script("lol", "distance3");
+    auto& sc = ctx.get_script("lol");
+    generator_slowinterpreter sl_gen(ctx, sc);
+    
+    auto result(sl_gen.run(glm::dvec3(8.,8.,8.), glm::dvec3(1.0, 1.0, 1.0),
+                           glm::ivec3(1,1,1)));
+    std::cout << result[0] << std::endl;
+}

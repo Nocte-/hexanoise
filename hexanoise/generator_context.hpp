@@ -39,13 +39,13 @@ public:
         /** The actual bitmap data */
         std::vector<uint8_t> buffer;
 
-        image()
-        {
-        }
+        image() {}
 
         image(image&& m)
-            : width(m.width), height(m.height), bitdepth(m.bitdepth),
-              buffer(std::move(m.buffer))
+            : width(m.width)
+            , height(m.height)
+            , bitdepth(m.bitdepth)
+            , buffer(std::move(m.buffer))
         {
         }
 

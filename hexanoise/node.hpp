@@ -28,7 +28,9 @@ typedef enum {
     /** Text string (only used as a constexpr) */
     string,
     /** Boolean value */
-    boolean
+    boolean,
+    /** Entry point */
+    entry
 } var_t;
 
 /** A node in the expression tree.
@@ -36,7 +38,6 @@ typedef enum {
 class node
 {
 public:
-
     typedef enum {
         entry_point,
         const_var,
@@ -115,21 +116,21 @@ public:
         funcdef_bool_xy,
 
         then_else,
-        
+
         funcdef_xyz_xyz,
-        
+
         rotate3,
         scale3,
         shift3,
         map3,
         turbulence3,
-        
+
         funcdef_xyz_xy,
-        
+
         xy,
-        
+
         funcdef_xyz_v,
-        
+
         chebyshev3,
         checkerboard3,
         distance3,
@@ -139,7 +140,7 @@ public:
         simplex3,
         worley3,
         z
-        
+
     } func_t;
 
     struct control_point
@@ -148,7 +149,8 @@ public:
         double out;
 
         control_point(const std::pair<double, double>& p)
-            : in(p.first), out(p.second)
+            : in(p.first)
+            , out(p.second)
         {
         }
     };
@@ -166,24 +168,30 @@ public:
     std::vector<control_point> curve;
 
 public:
-
     node(function* in, const generator_context& ctx);
     node(func_t t, bool c = false, var_t rt = var);
 
     explicit node(double value)
-        : type(const_var), return_type(var), is_const(true), aux_var(value)
+        : type(const_var)
+        , return_type(var)
+        , is_const(true)
+        , aux_var(value)
     {
     }
 
     explicit node(const std::string& value)
-        : type(const_str), return_type(string), is_const(true),
-          aux_string(value)
+        : type(const_str)
+        , return_type(string)
+        , is_const(true)
+        , aux_string(value)
     {
     }
 
     explicit node(bool value)
-        : type(const_bool), return_type(boolean), is_const(true),
-          aux_bool(value)
+        : type(const_bool)
+        , return_type(boolean)
+        , is_const(true)
+        , aux_bool(value)
     {
     }
 
@@ -192,9 +200,14 @@ public:
 
     // Visual Studio 2013 still doesn't support default move :/
     node(node&& m)
-        : type(m.type), input(std::move(m.input)), return_type(m.return_type),
-          is_const(m.is_const), aux_string(std::move(m.aux_string)),
-          aux_var(m.aux_var), aux_bool(m.aux_bool), curve(std::move(m.curve))
+        : type(m.type)
+        , input(std::move(m.input))
+        , return_type(m.return_type)
+        , is_const(m.is_const)
+        , aux_string(std::move(m.aux_string))
+        , aux_var(m.aux_var)
+        , aux_bool(m.aux_bool)
+        , curve(std::move(m.curve))
     {
     }
 };

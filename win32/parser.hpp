@@ -30,8 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-#ifndef YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
-# define YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
+#ifndef YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
+# define YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -52,7 +52,7 @@ typedef void* yyscan_t;
 
 
 /* Line 2053 of yacc.c  */
-#line 56 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.hpp"
+#line 56 "/ssd/devel/hexanoise-build/hexanoise/parser.hpp"
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -88,7 +88,7 @@ typedef union YYSTYPE
 
 
 /* Line 2053 of yacc.c  */
-#line 92 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.hpp"
+#line 92 "/ssd/devel/hexanoise-build/hexanoise/parser.hpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -110,4 +110,4 @@ int yyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED  */
+#endif /* !YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED  */

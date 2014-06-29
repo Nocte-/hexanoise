@@ -2,9 +2,9 @@
 #define yyHEADER_H 1
 #define yyIN_HEADER 1
 
-#line 6 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.hpp"
+#line 6 "/ssd/devel/hexanoise-build/hexanoise/tokens.hpp"
 
-#line 8 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.hpp"
+#line 8 "/ssd/devel/hexanoise-build/hexanoise/tokens.hpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -348,6 +348,6 @@ extern int yylex \
 
 #line 41 "tokens.l"
 
-#line 352 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.hpp"
+#line 352 "/ssd/devel/hexanoise-build/hexanoise/tokens.hpp"
 #undef yyIN_HEADER
 #endif /* yyHEADER_H */

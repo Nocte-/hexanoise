@@ -33,10 +33,7 @@ class simple_global_variables
       public std::unordered_map<std::string, global_variables_i::var_type>
 {
 public:
-    simple_global_variables()
-    {
-        emplace("seed", 0.0);
-    }
+    simple_global_variables() { emplace("seed", 0.0); }
 
     /** Check if a variable exists. */
     bool exists(const std::string& name) const override

@@ -68,7 +68,10 @@ public:
     size_t pos;
 
     function(const std::string& n = std::string())
-        : type(func), name(n), input(0), args(0)
+        : type(func)
+        , name(n)
+        , input(0)
+        , args(0)
     {
     }
 

@@ -34,8 +34,8 @@ size_t weight(const node& n)
         return n.input[2].aux_var * weight(n.input[1]) + weight(n.input[0]);
 
     case node::then_else:
-        return weight(n.input[0]) +
-               std::max(weight(n.input[1]), weight(n.input[2]));
+        return weight(n.input[0])
+               + std::max(weight(n.input[1]), weight(n.input[2]));
 
     case node::perlin:
     case node::worley:

@@ -21,13 +21,12 @@ namespace noise
 class generator_i
 {
 public:
-    generator_i(const generator_context& c) : cntx_(c)
+    generator_i(const generator_context& c)
+        : cntx_(c)
     {
     }
 
-    virtual ~generator_i()
-    {
-    }
+    virtual ~generator_i() {}
 
     /** Run the script for a given range, output in double precision.
      * @param corner    The top-left corner of the range
@@ -52,8 +51,10 @@ public:
     /** Run the script for a given range, output in double precision.
      * @param corner    The corner of the range
      * @param step      The step size between samples
-     * @param count     The number of samples to take in the x, y, and z direction
-     * @return A buffer with size (count.x * count.y * count.z) holding the results
+     * @param count     The number of samples to take in the x, y, and z
+     * direction
+     * @return A buffer with size (count.x * count.y * count.z) holding the
+     * results
      */
     virtual std::vector<double> run(const glm::dvec3& corner,
                                     const glm::dvec3& step,
@@ -62,13 +63,15 @@ public:
     /** Run the script for a given range, output in signed 16-bit precision.
      * @param corner    The corner of the range
      * @param step      The step size between samples
-     * @param count     The number of samples to take in the x, y, and z direction
-     * @return A buffer with size (count.x * count.y * count.z) holding the results
+     * @param count     The number of samples to take in the x, y, and z
+     * direction
+     * @return A buffer with size (count.x * count.y * count.z) holding the
+     * results
      */
     virtual std::vector<int16_t> run_int16(const glm::dvec3& corner,
                                            const glm::dvec3& step,
                                            const glm::ivec3& count) = 0;
-    
+
 protected:
     const generator_context& cntx_;
 };

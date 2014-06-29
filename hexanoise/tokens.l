@@ -23,7 +23,7 @@
 <COMMENT>.          { }
 
 [ \t\n\r]           /* Skip whitespace */
-[a-z_]+             SAVE_TOKEN; return TIDENTIFIER;
+[a-z_]+3?           SAVE_TOKEN; return TIDENTIFIER;
 [-]?[0-9]+\.?[0-9]* SAVE_TOKEN; return TVALUE;
 \"[a-zA-Z0-9/_.]*\" SAVE_TOKEN; return TSTRING;
 

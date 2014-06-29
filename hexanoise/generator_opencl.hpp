@@ -40,10 +40,7 @@ public:
                      const std::string& opencl_file = "opencl.cl");
 
     /** Returns the generated OpenCL source code. */
-    std::string opencl_sourcecode() const
-    {
-        return main_;
-    }
+    std::string opencl_sourcecode() const { return main_; }
 
     std::vector<double> run(const glm::dvec2& corner, const glm::dvec2& step,
                             const glm::ivec2& count) override;
@@ -58,7 +55,7 @@ public:
     std::vector<int16_t> run_int16(const glm::dvec3& corner,
                                    const glm::dvec3& step,
                                    const glm::ivec3& count) override;
-    
+
 private:
     std::string pl(const node& n);
     std::string co(const node& n);

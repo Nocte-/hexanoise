@@ -53,8 +53,8 @@ private:
     glm::dvec3 eval_xyz(const node& n);
     bool eval_bool(const node& n);
 
-    glm::dvec3 input_vec3 (const node& n, int i);
-    
+    glm::dvec3 input_vec3(const node& n, int i);
+
 private:
     const node& n_;
     glm::dvec3 p_;

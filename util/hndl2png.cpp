@@ -22,6 +22,14 @@
 #include <hexanoise/generator_opencl.hpp>
 #include <hexanoise/generator_slowinterpreter.hpp>
 
+#ifdef WIN32
+#define OPENCL_DLL_NAME "OpenCL.dll"
+#elif defined(MACOSX)
+#define OPENCL_DLL_NAME 0
+#else
+#define OPENCL_DLL_NAME "libOpenCL.so"
+#endif
+
 void write_png_file(const std::vector<uint8_t>& buf, int width, int height, const std::string& file_name)
 {
     FILE *fp = 0;
@@ -129,6 +137,9 @@ int main (int argc, char** argv)
 {
     try
     {
+        
+    bool have_opencl {clewInit(OPENCL_DLL_NAME) >= 0};
+                
     po::variables_map vm;
     po::options_description options;
     options.add_options()
@@ -186,7 +197,10 @@ int main (int argc, char** argv)
     {
         try
         {
-            opencl_info();
+            if (have_opencl)
+                opencl_info();
+            else
+                std::cout << "OpenCL is not available on this system." << std::endl;
         }
         catch (std::exception& e)
         {
@@ -241,7 +255,7 @@ int main (int argc, char** argv)
     std::unique_ptr<generator_i> gen;
     try
     {
-        if (vm.count("use-interpreter"))
+        if (!have_opencl || vm.count("use-interpreter"))
             throw 0; // Fake an error so the interpreter is used
 
         std::vector<cl::Platform> platform_list;

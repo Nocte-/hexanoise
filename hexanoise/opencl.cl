@@ -97,6 +97,11 @@ inline uint hash (int x, int y)
   return (uint)((((OFFSET_BASIS ^ (uint)x) * FNV_PRIME) ^ (uint)y) * FNV_PRIME);
 }
 
+inline uint hash3 (int x, int y, int z)
+{
+  return (uint)((((((OFFSET_BASIS ^ (uint)x) * FNV_PRIME) ^ (uint)y) * FNV_PRIME) ^ (uint)z) * FNV_PRIME);
+}
+
 inline uint rng (uint last)
 {
     return (1103515245 * last + 12345) & 0x7FFFFFFF;
@@ -254,6 +259,47 @@ double2 p_worley (const double2 p, uint seed)
     return (double2)(f0, f1);
 }
 
+double3 p_worley3 (const double3 p, uint seed)
+{
+    double3 t = floor(p);
+    int3 xyz0 = (int3)((int)t.x, (int)t.y, (int)t.z);
+    double3 xyzf = p - t;
+
+    double f0 = 9999.9;
+    double f1 = 9999.9;
+
+    for (int i = -1; i < 2; ++i)
+    {
+        for (int j = -1; j < 2; ++j)
+        {
+            for (int k = -1; k < 2; ++k)
+            {
+                int3 square = xyz0 + (int3)(i,j,k);
+                uint rnglast = rng(hash3(square.x + seed, square.y, square.z));
+
+                double3 rnd_pt;
+                rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
+                rnglast = rng(rnglast);
+                rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+                rnglast = rng(rnglast);
+                rnd_pt.z = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+
+                double dist = distance(xyzf, rnd_pt);
+                if (dist < f0)
+                {
+                    f1 = f0;
+                    f0 = dist;
+                }
+                else if (dist < f1)
+                {
+                    f1 = dist;
+                }
+            }
+        }
+    }
+    return (double2)(f0, f1);
+}
+
 double2 p_voronoi (const double2 p, uint seed)
 {
     double2 t = floor(p);
@@ -307,6 +353,11 @@ inline double p_chebyshev (double2 p)
     return fmax(fabs(p.x), fabs(p.y));
 }
 
+inline double p_chebyshev3 (double3 p)
+{
+    return fmax(fmax(fabs(p.x), fabs(p.y)), fabs(p.z));
+}
+
 inline double p_saw (double n)
 {
     return n - floor(n);
@@ -315,13 +366,23 @@ inline double p_saw (double n)
 inline double p_checkerboard (double2 p)
 {
     double2 sp = p - floor(p);
-    return (sp.x < 0.5 && sp.y < 0.5) || (sp.x >= 0.5 && sp.y >= 0.5)
-           ? 1.0 : -1.0;
+    return (sp.x < 0.5) ^ (sp.y < 0.5) ? 1.0 : -1.0;
+}
+
+inline double p_checkerboard3 (double3 p)
+{
+    double3 sp = p - floor(p);
+    return (sp.x < 0.5) ^ (sp.y < 0.5) ^ (sp.z < 0.5) ? 1.0 : -1.0;
 }
 
 inline double p_manhattan (double2 p)
 {
     return fabs(p.x) + fabs(p.y);
+}
+
+inline double p_manhattan3 (double3 p)
+{
+    return fabs(p.x) + fabs(p.y) + fabs(p.z);
 }
 
 inline double p_blend (double x, double a, double b)

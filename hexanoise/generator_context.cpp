@@ -39,8 +39,8 @@ generator_context::image png_load(const std::string& file_name)
         fclose(fp);
         throw std::runtime_error(file_name + " is not a PNG file");
     }
-    png_structp png_ptr =
-        png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    png_structp png_ptr
+        = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         fclose(fp);
         throw std::runtime_error("png_create_read_struct failed");
@@ -89,8 +89,8 @@ generator_context::image png_load(const std::string& file_name)
 
     png_byte* image_data(&result.buffer[0]);
 
-    png_bytep* row_pointers =
-        (png_bytep*)malloc(temp_height * sizeof(png_bytep));
+    png_bytep* row_pointers
+        = (png_bytep*)malloc(temp_height * sizeof(png_bytep));
     if (row_pointers == NULL) {
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         free(image_data);
@@ -141,7 +141,8 @@ static global_variables_null global_null;
 
 //---------------------------------------------------------------------------
 
-generator_context::generator_context() : variables_(global_null)
+generator_context::generator_context()
+    : variables_(global_null)
 {
 }
 
@@ -181,7 +182,7 @@ const node& generator_context::get_script(const std::string& name) const
 }
 
 generator_context::variable
-    generator_context::get_global(const std::string& name) const
+generator_context::get_global(const std::string& name) const
 {
     return variables_.get(name);
 }
@@ -203,7 +204,7 @@ void generator_context::load_png_image(const std::string& name,
 }
 
 const generator_context::image&
-    generator_context::get_image(const std::string& name) const
+generator_context::get_image(const std::string& name) const
 {
     auto found(images_.find(name));
     if (found == images_.end())

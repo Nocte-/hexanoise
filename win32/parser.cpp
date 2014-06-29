@@ -83,7 +83,7 @@ using namespace hexa::noise;
 
 
 /* Line 371 of yacc.c  */
-#line 87 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.cpp"
+#line 87 "/ssd/devel/hexanoise-build/hexanoise/parser.cpp"
 
 # ifndef YY_NULL
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -103,8 +103,8 @@ using namespace hexa::noise;
 
 /* In a future release of Bison, this section will be replaced
    by #include "parser.hpp".  */
-#ifndef YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
-# define YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
+#ifndef YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
+# define YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED
 /* Enabling traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -125,7 +125,7 @@ typedef void* yyscan_t;
 
 
 /* Line 387 of yacc.c  */
-#line 129 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.cpp"
+#line 129 "/ssd/devel/hexanoise-build/hexanoise/parser.cpp"
 
 /* Tokens.  */
 #ifndef YYTOKENTYPE
@@ -161,7 +161,7 @@ typedef union YYSTYPE
 
 
 /* Line 387 of yacc.c  */
-#line 165 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.cpp"
+#line 165 "/ssd/devel/hexanoise-build/hexanoise/parser.cpp"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
@@ -183,12 +183,12 @@ int yyparse ();
 #endif
 #endif /* ! YYPARSE_PARAM */
 
-#endif /* !YY_YY_HOME_UNICORN_DEVEL_SSD_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED  */
+#endif /* !YY_YY_SSD_DEVEL_HEXANOISE_BUILD_HEXANOISE_PARSER_HPP_INCLUDED  */
 
 /* Copy the second part of user declarations.  */
 
 /* Line 390 of yacc.c  */
-#line 192 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.cpp"
+#line 192 "/ssd/devel/hexanoise-build/hexanoise/parser.cpp"
 
 #ifdef short
 # undef short
@@ -1477,7 +1477,7 @@ yyreduce:
 
 
 /* Line 1787 of yacc.c  */
-#line 1481 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/parser.cpp"
+#line 1481 "/ssd/devel/hexanoise-build/hexanoise/parser.cpp"
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires

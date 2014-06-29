@@ -31,38 +31,41 @@ const double pi = 3.14159265358979323846;
 const int P_MASK = 255;
 const int P_SIZE = 256;
 static const int P[512] = {
-    151, 160, 137, 91, 90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140,
-    36, 103, 30, 69, 142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120,
-    234, 75, 0, 26, 197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33,
-    88, 237, 149, 56, 87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71,
-    134, 139, 48, 27, 166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133,
-    230, 220, 105, 92, 41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161,
-    1, 216, 80, 73, 209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130,
-    116, 188, 159, 86, 164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250,
-    124, 123, 5, 202, 38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227,
-    47, 16, 58, 17, 182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44,
-    154, 163, 70, 221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19,
-    98, 108, 110, 79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228,
-    251, 34, 242, 193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235,
-    249, 14, 239, 107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176,
-    115, 121, 50, 45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29,
-    24, 72, 243, 141, 128, 195, 78, 66, 215, 61, 156, 180, 151, 160, 137, 91,
-    90, 15, 131, 13, 201, 95, 96, 53, 194, 233, 7, 225, 140, 36, 103, 30, 69,
-    142, 8, 99, 37, 240, 21, 10, 23, 190, 6, 148, 247, 120, 234, 75, 0, 26,
-    197, 62, 94, 252, 219, 203, 117, 35, 11, 32, 57, 177, 33, 88, 237, 149, 56,
-    87, 174, 20, 125, 136, 171, 168, 68, 175, 74, 165, 71, 134, 139, 48, 27,
-    166, 77, 146, 158, 231, 83, 111, 229, 122, 60, 211, 133, 230, 220, 105, 92,
-    41, 55, 46, 245, 40, 244, 102, 143, 54, 65, 25, 63, 161, 1, 216, 80, 73,
-    209, 76, 132, 187, 208, 89, 18, 169, 200, 196, 135, 130, 116, 188, 159, 86,
-    164, 100, 109, 198, 173, 186, 3, 64, 52, 217, 226, 250, 124, 123, 5, 202,
-    38, 147, 118, 126, 255, 82, 85, 212, 207, 206, 59, 227, 47, 16, 58, 17,
-    182, 189, 28, 42, 223, 183, 170, 213, 119, 248, 152, 2, 44, 154, 163, 70,
-    221, 153, 101, 155, 167, 43, 172, 9, 129, 22, 39, 253, 19, 98, 108, 110,
-    79, 113, 224, 232, 178, 185, 112, 104, 218, 246, 97, 228, 251, 34, 242,
-    193, 238, 210, 144, 12, 191, 179, 162, 241, 81, 51, 145, 235, 249, 14, 239,
-    107, 49, 192, 214, 31, 181, 199, 106, 157, 184, 84, 204, 176, 115, 121, 50,
-    45, 127, 4, 150, 254, 138, 236, 205, 93, 222, 114, 67, 29, 24, 72, 243,
-    141, 128, 195, 78, 66, 215, 61, 156, 180,
+    151, 160, 137, 91,  90,  15,  131, 13,  201, 95,  96,  53,  194, 233, 7,
+    225, 140, 36,  103, 30,  69,  142, 8,   99,  37,  240, 21,  10,  23,  190,
+    6,   148, 247, 120, 234, 75,  0,   26,  197, 62,  94,  252, 219, 203, 117,
+    35,  11,  32,  57,  177, 33,  88,  237, 149, 56,  87,  174, 20,  125, 136,
+    171, 168, 68,  175, 74,  165, 71,  134, 139, 48,  27,  166, 77,  146, 158,
+    231, 83,  111, 229, 122, 60,  211, 133, 230, 220, 105, 92,  41,  55,  46,
+    245, 40,  244, 102, 143, 54,  65,  25,  63,  161, 1,   216, 80,  73,  209,
+    76,  132, 187, 208, 89,  18,  169, 200, 196, 135, 130, 116, 188, 159, 86,
+    164, 100, 109, 198, 173, 186, 3,   64,  52,  217, 226, 250, 124, 123, 5,
+    202, 38,  147, 118, 126, 255, 82,  85,  212, 207, 206, 59,  227, 47,  16,
+    58,  17,  182, 189, 28,  42,  223, 183, 170, 213, 119, 248, 152, 2,   44,
+    154, 163, 70,  221, 153, 101, 155, 167, 43,  172, 9,   129, 22,  39,  253,
+    19,  98,  108, 110, 79,  113, 224, 232, 178, 185, 112, 104, 218, 246, 97,
+    228, 251, 34,  242, 193, 238, 210, 144, 12,  191, 179, 162, 241, 81,  51,
+    145, 235, 249, 14,  239, 107, 49,  192, 214, 31,  181, 199, 106, 157, 184,
+    84,  204, 176, 115, 121, 50,  45,  127, 4,   150, 254, 138, 236, 205, 93,
+    222, 114, 67,  29,  24,  72,  243, 141, 128, 195, 78,  66,  215, 61,  156,
+    180, 151, 160, 137, 91,  90,  15,  131, 13,  201, 95,  96,  53,  194, 233,
+    7,   225, 140, 36,  103, 30,  69,  142, 8,   99,  37,  240, 21,  10,  23,
+    190, 6,   148, 247, 120, 234, 75,  0,   26,  197, 62,  94,  252, 219, 203,
+    117, 35,  11,  32,  57,  177, 33,  88,  237, 149, 56,  87,  174, 20,  125,
+    136, 171, 168, 68,  175, 74,  165, 71,  134, 139, 48,  27,  166, 77,  146,
+    158, 231, 83,  111, 229, 122, 60,  211, 133, 230, 220, 105, 92,  41,  55,
+    46,  245, 40,  244, 102, 143, 54,  65,  25,  63,  161, 1,   216, 80,  73,
+    209, 76,  132, 187, 208, 89,  18,  169, 200, 196, 135, 130, 116, 188, 159,
+    86,  164, 100, 109, 198, 173, 186, 3,   64,  52,  217, 226, 250, 124, 123,
+    5,   202, 38,  147, 118, 126, 255, 82,  85,  212, 207, 206, 59,  227, 47,
+    16,  58,  17,  182, 189, 28,  42,  223, 183, 170, 213, 119, 248, 152, 2,
+    44,  154, 163, 70,  221, 153, 101, 155, 167, 43,  172, 9,   129, 22,  39,
+    253, 19,  98,  108, 110, 79,  113, 224, 232, 178, 185, 112, 104, 218, 246,
+    97,  228, 251, 34,  242, 193, 238, 210, 144, 12,  191, 179, 162, 241, 81,
+    51,  145, 235, 249, 14,  239, 107, 49,  192, 214, 31,  181, 199, 106, 157,
+    184, 84,  204, 176, 115, 121, 50,  45,  127, 4,   150, 254, 138, 236, 205,
+    93,  222, 114, 67,  29,  24,  72,  243, 141, 128, 195, 78,  66,  215, 61,
+    156, 180,
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -70,16 +73,17 @@ static const int P[512] = {
 const int G_MASK = 15;
 const int G_SIZE = 16;
 const int G_VECSIZE = 4;
-static const double G[16 * 4] = {
-    +ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1,
-    +ONE_F1, -ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, -ONE_F1, +ZERO_F1, +ZERO_F1,
-    +ONE_F1, +ZERO_F1, +ONE_F1, +ZERO_F1, -ONE_F1, +ZERO_F1, +ONE_F1, +ZERO_F1,
-    +ONE_F1, +ZERO_F1, -ONE_F1, +ZERO_F1, -ONE_F1, +ZERO_F1, -ONE_F1, +ZERO_F1,
-    +ZERO_F1, +ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, +ONE_F1, +ZERO_F1,
-    +ZERO_F1, +ONE_F1, -ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, -ONE_F1, +ZERO_F1,
-    +ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1,
-    +ZERO_F1, -ONE_F1, +ONE_F1, +ZERO_F1, +ZERO_F1, -ONE_F1, -ONE_F1, +ZERO_F1
-};
+static const double G[16 * 4]
+    = {+ONE_F1,  +ONE_F1,  +ZERO_F1, +ZERO_F1, -ONE_F1,  +ONE_F1,  +ZERO_F1,
+       +ZERO_F1, +ONE_F1,  -ONE_F1,  +ZERO_F1, +ZERO_F1, -ONE_F1,  -ONE_F1,
+       +ZERO_F1, +ZERO_F1, +ONE_F1,  +ZERO_F1, +ONE_F1,  +ZERO_F1, -ONE_F1,
+       +ZERO_F1, +ONE_F1,  +ZERO_F1, +ONE_F1,  +ZERO_F1, -ONE_F1,  +ZERO_F1,
+       -ONE_F1,  +ZERO_F1, -ONE_F1,  +ZERO_F1, +ZERO_F1, +ONE_F1,  +ONE_F1,
+       +ZERO_F1, +ZERO_F1, -ONE_F1,  +ONE_F1,  +ZERO_F1, +ZERO_F1, +ONE_F1,
+       -ONE_F1,  +ZERO_F1, +ZERO_F1, -ONE_F1,  -ONE_F1,  +ZERO_F1, +ONE_F1,
+       +ONE_F1,  +ZERO_F1, +ZERO_F1, -ONE_F1,  +ONE_F1,  +ZERO_F1, +ZERO_F1,
+       +ZERO_F1, -ONE_F1,  +ONE_F1,  +ZERO_F1, +ZERO_F1, -ONE_F1,  -ONE_F1,
+       +ZERO_F1};
 
 inline double clamp(double x, double min, double max)
 {
@@ -138,9 +142,8 @@ inline double dot(const double* p, double x, double y, double z)
 // FNV hash: http://isthe.com/chongo/tech/comp/fnv/#FNV-source
 inline uint32_t hash(uint32_t i, uint32_t j, uint32_t k)
 {
-    return (uint32_t)(
-        (((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME) ^ k) *
-        FNV_PRIME);
+    return (uint32_t)((((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME)
+                       ^ k) * FNV_PRIME);
 }
 
 inline uint32_t hash(uint32_t i, uint32_t j)
@@ -209,7 +212,7 @@ double p_perlin(const glm::dvec2& xy, uint32_t seed)
 double p_perlin3(const glm::dvec3& xyz, uint32_t seed)
 {
     return 0.0;
-    
+
     /*
     glm::dvec3 t = glm::floor(xyz);
     glm::ivec3 xyz0 {(int)t.x, (int)t.y, (int)t.z};
@@ -316,12 +319,12 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
     int j = std::floor(p.y + s);
     int k = std::floor(p.z + s);
 
-    // Unskew the cell origin back to (x,y) space    
+    // Unskew the cell origin back to (x,y) space
     const double G3 = 1.0 / 6.0;
-    double t = (i + j +  k) * G3;    
-    double X0 = i-t; 
-    double Y0 = j-t;
-    double Z0 = k-t;
+    double t = (i + j + k) * G3;
+    double X0 = i - t;
+    double Y0 = j - t;
+    double Z0 = k - t;
 
     // The x,y distances from the cell origin
     double x0 = p.x - X0;
@@ -334,25 +337,50 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
     int i2, j2, k2; // Offsets for third corner
 
     if (x0 >= y0) {
-        if (y0 >= z0) { 
-            i1=1; j1=0; k1=0; i2=1; j2=1; k2=0; 
+        if (y0 >= z0) {
+            i1 = 1;
+            j1 = 0;
+            k1 = 0;
+            i2 = 1;
+            j2 = 1;
+            k2 = 0;
+        } else if (x0 >= z0) {
+            i1 = 1;
+            j1 = 0;
+            k1 = 0;
+            i2 = 1;
+            j2 = 0;
+            k2 = 1;
+        } else {
+            i1 = 0;
+            j1 = 0;
+            k1 = 1;
+            i2 = 1;
+            j2 = 0;
+            k2 = 1;
         }
-        else if (x0 >= z0) {
-            i1=1; j1=0; k1=0; i2=1; j2=0; k2=1; 
-        } 
-        else { 
-            i1=0; j1=0; k1=1; i2=1; j2=0; k2=1; 
-        }
-    }
-    else { // x0 < y0
-        if (y0 < z0) { 
-            i1=0; j1=0; k1=1; i2=0; j2=1; k2=1; 
-        }
-        else if (x0 < z0) { 
-            i1=0; j1=1; k1=0; i2=0; j2=1; k2=1; 
-        } 
-        else { 
-            i1=0; j1=1; k1=0; i2=1; j2=1; k2=0; 
+    } else { // x0 < y0
+        if (y0 < z0) {
+            i1 = 0;
+            j1 = 0;
+            k1 = 1;
+            i2 = 0;
+            j2 = 1;
+            k2 = 1;
+        } else if (x0 < z0) {
+            i1 = 0;
+            j1 = 1;
+            k1 = 0;
+            i2 = 0;
+            j2 = 1;
+            k2 = 1;
+        } else {
+            i1 = 0;
+            j1 = 1;
+            k1 = 0;
+            i2 = 1;
+            j2 = 1;
+            k2 = 0;
         }
     }
 
@@ -369,7 +397,7 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
     int ii = (i + seed * 1063) & 0xFF;
     int jj = j & 0xFF;
     int kk = k & 0xFF;
-    
+
     int gi0 = P[ii + P[jj + P[kk]]] & G_MASK;
     int gi1 = P[ii + i1 + P[jj + j1 + P[kk + k1]]] & G_MASK;
     int gi2 = P[ii + i2 + P[jj + j2 + P[kk + k2]]] & G_MASK;
@@ -377,7 +405,7 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
 
     // Calculate the contribution from the four corners
     double n0, n1, n2, n3;
-    
+
     double t0 = 0.6 - x0 * x0 - y0 * y0 - z0 * z0;
     if (t0 < 0) {
         n0 = 0.0;
@@ -409,8 +437,8 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
         t3 *= t3;
         n3 = t3 * t3 * dot(&G[gi3 * G_VECSIZE], x3, y3, z3);
     }
-    
-    return 32.0 * (n0 + n1 + n2 + n3);   
+
+    return 32.0 * (n0 + n1 + n2 + n3);
 }
 
 glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
@@ -446,7 +474,7 @@ glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
 glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
 {
     glm::dvec3 t = glm::floor(p);
-    glm::ivec3 p0 {(int)t.x, (int)t.y, (int)t.z};
+    glm::ivec3 p0{(int)t.x, (int)t.y, (int)t.z};
     glm::dvec3 pf = p - t;
 
     double f0 = 99, f1 = 99;
@@ -456,14 +484,14 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
             for (int k = -1; k < 2; ++k) {
                 glm::ivec3 square = p0 + glm::ivec3(i, j, k);
                 auto rnglast = rng(hash(square.x + seed, square.y, square.z));
-    
+
                 glm::dvec3 rnd_pt;
                 rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
                 rnglast = rng(rnglast);
                 rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
                 rnglast = rng(rnglast);
                 rnd_pt.z = k + (double)rnglast / (double)0x7FFFFFFF;
-    
+
                 double dist = glm::distance(pf, rnd_pt);
                 if (dist < f0) {
                     f1 = f0;
@@ -532,7 +560,7 @@ double curve_spline(double x, const std::vector<node::control_point>& curve)
     }
 
     const int lim = curve.size() - 1;
-    const int index0 =clamp(index - 2, 0, lim);
+    const int index0 = clamp(index - 2, 0, lim);
     const int index1 = clamp(index - 1, 0, lim);
     const int index2 = clamp(index, 0, lim);
     const int index3 = clamp(index + 1, 0, lim);
@@ -567,8 +595,9 @@ double png(const glm::dvec2& p, const generator_context::image& img)
 
 generator_slowinterpreter::generator_slowinterpreter(
     const generator_context& context, const node& n)
-    : generator_i(context), n_(n),
-      seed_(static_cast<uint32_t>(
+    : generator_i(context)
+    , n_(n)
+    , seed_(static_cast<uint32_t>(
           boost::get<double>(context.get_global("seed"))))
 {
 }
@@ -609,7 +638,7 @@ std::vector<double> generator_slowinterpreter::run(const glm::dvec3& corner,
     for (int z = 0; z < count.z; ++z) {
         for (int y = 0; y < count.y; ++y) {
             for (int x = 0; x < count.x; ++x) {
-                result[i++] = eval(corner + glm::dvec3(x,y,z) * step, n_);
+                result[i++] = eval(corner + glm::dvec3(x, y, z) * step, n_);
             }
         }
     }
@@ -623,7 +652,7 @@ std::vector<int16_t> generator_slowinterpreter::run_int16(
     size_t i = 0;
     for (int z = 0; z < count.z; ++z) {
         for (int y = 0; y < count.y; ++y) {
-            
+
             for (int x = 0; x < count.x; ++x) {
                 result[i++] = static_cast<int16_t>(
                     eval(corner + glm::dvec3(x, y, z) * step, n_));
@@ -635,7 +664,9 @@ std::vector<int16_t> generator_slowinterpreter::run_int16(
 
 double generator_slowinterpreter::eval(const glm::dvec2& p, const node& n)
 {
-    p_.x = p.x; p_.y = p.y; p_.z = 0.0;
+    p_.x = p.x;
+    p_.y = p.y;
+    p_.z = 0.0;
     return eval_v(n);
 }
 
@@ -657,34 +688,29 @@ double generator_slowinterpreter::eval_v(const node& n)
         auto p = eval_xy(in);
         return std::atan2(p.y, p.x) / pi;
     }
-        
+
     case node::chebyshev: {
         auto p(eval_xy(in));
         return std::max(p.x, p.y);
     }
-        
+
     case node::chebyshev3: {
         auto p = eval_xyz(in);
         return std::max(std::max(p.x, p.y), p.z);
     }
-        
+
     case node::checkerboard: {
         auto p = eval_xy(in);
         auto fl = glm::floor(p);
         auto fr = p - fl;
-        return ((fr.x < 0.5 && fr.y < 0.5) || (fr.x >= 0.5 && fr.y >= 0.5))
-                   ? 1
-                   : -1;
+        return (fr.x < 0.5) ^ (fr.y < 0.5) ? 1 : -1;
     }
 
     case node::checkerboard3: {
         auto p = eval_xyz(in);
         auto fl = glm::floor(p);
         auto fr = p - fl;
-        bool a = fr.x < 0.5;
-        bool b = fr.y < 0.5;
-        bool c = fr.z < 0.5;
-        return (a ^ b ^ c) ? 1 : -1;
+        return (fr.x < 0.5) ^ (fr.y < 0.5) ^ (fr.z < 0.5) ? 1 : -1;
     }
     case node::distance:
         return glm::length(eval_xy(in));
@@ -703,7 +729,7 @@ double generator_slowinterpreter::eval_v(const node& n)
         auto seed = eval_v(n.input[1]);
         return p_perlin3(p, seed);
     }
-        
+
     case node::simplex: {
         auto p = eval_xy(in);
         auto seed = eval_v(n.input[1]);
@@ -715,7 +741,7 @@ double generator_slowinterpreter::eval_v(const node& n)
         auto seed = eval_v(n.input[1]);
         return p_simplex3(p, seed_ + seed);
     }
-        
+
     case node::worley: {
         auto p = eval_xy(in);
         auto seed = eval_v(n.input[2]);
@@ -735,7 +761,7 @@ double generator_slowinterpreter::eval_v(const node& n)
         p_ = tmp;
         return result;
     }
-        
+
     case node::voronoi: {
         auto p(eval_xy(in));
         auto seed(eval_v(n.input[2]));
@@ -772,7 +798,7 @@ double generator_slowinterpreter::eval_v(const node& n)
         auto p = eval_xyz(in);
         return std::max(std::max(std::abs(p.x), std::abs(p.y)), std::abs(p.z));
     }
-            
+
     case node::x:
         return eval_xy(in).x;
 
@@ -829,7 +855,7 @@ double generator_slowinterpreter::eval_v(const node& n)
         p_ = tmp;
         return result / div;
     }
-    
+
     case node::abs:
         return std::abs(eval_v(in));
 
@@ -968,7 +994,7 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
         auto p = eval_xyz(n.input[0]);
         return glm::dvec2{p.x, p.y};
     }
-    
+
     default:
         throw std::runtime_error("type mismatch");
     }
@@ -987,7 +1013,7 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
 
         return glm::rotate(axis, angle, p);
     }
-    
+
     case node::scale3: {
         auto p = eval_xyz(n.input[0]);
         auto s = eval_v(n.input[1]);
@@ -996,7 +1022,7 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
 
     case node::shift3: {
         auto p = eval_xyz(n.input[0]);
-        auto q = input_vec3(n, 1);        
+        auto q = input_vec3(n, 1);
         return p + q;
     }
 
@@ -1015,9 +1041,9 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
         p_ = tmp;
         return p_ + q;
     }
-        
+
     default:
-        throw std::runtime_error("type mismatch");        
+        throw std::runtime_error("type mismatch");
     }
 }
 
@@ -1062,8 +1088,8 @@ bool generator_slowinterpreter::eval_bool(const node& n)
     case node::is_in_rectangle: {
         auto p(eval_xy(n.input[0]));
 
-        return p.x >= eval_v(n.input[1]) && p.y >= eval_v(n.input[2]) &&
-               p.x <= eval_v(n.input[3]) && p.y <= eval_v(n.input[4]);
+        return p.x >= eval_v(n.input[1]) && p.y >= eval_v(n.input[2])
+               && p.x <= eval_v(n.input[3]) && p.y <= eval_v(n.input[4]);
     }
 
     default:
@@ -1071,9 +1097,10 @@ bool generator_slowinterpreter::eval_bool(const node& n)
     }
 }
 
-glm::dvec3 generator_slowinterpreter::input_vec3 (const node& n, int i)
+glm::dvec3 generator_slowinterpreter::input_vec3(const node& n, int i)
 {
-    return glm::dvec3{eval_v(n.input[i]), eval_v(n.input[i+1]), eval_v(n.input[i+2])};
+    return glm::dvec3{eval_v(n.input[i]), eval_v(n.input[i + 1]),
+                      eval_v(n.input[i + 2])};
 }
 
 } // namespace noise

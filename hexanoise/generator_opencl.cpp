@@ -25,8 +25,11 @@ generator_opencl::generator_opencl(const generator_context& ctx,
                                    cl::Context& opencl_context,
                                    cl::Device& opencl_device, const node& n,
                                    const std::string& opencl_file)
-    : generator_i(ctx), count_(1), context_(opencl_context),
-      device_(opencl_device), queue_(opencl_context, opencl_device)
+    : generator_i(ctx)
+    , count_(1)
+    , context_(opencl_context)
+    , device_(opencl_device)
+    , queue_(opencl_context, opencl_device)
 {
     std::string body(co(n));
 
@@ -45,44 +48,45 @@ generator_opencl::generator_opencl(const generator_context& ctx,
         main_ += p;
         main_ += "\n\n";
     }
-    main_ +=
-        "\n"
-        "__kernel void noisemain(\n"
-        "  __global double* output, const double2 start, const double2 step)\n"
-        "{\n"
-        "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-        "    int  sizex = get_global_size(0);\n"
-        "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
-        "    output[coord.y * sizex + coord.x] = ";
+    main_ += "\n"
+             "__kernel void noisemain(\n"
+             "  __global double* output, const double2 start, const double2 "
+             "step)\n"
+             "{\n"
+             "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
+             "    int  sizex = get_global_size(0);\n"
+             "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
+             "    output[coord.y * sizex + coord.x] = ";
 
     main_ += body;
     main_ += ";\n}\n";
 
-    
-    main_ +=
-        "\n"
-        "__kernel void noisemain3(\n"
-        "  __global double* output, const double3 start, const double3 step)\n"
-        "{\n"
-        "    int3 coord = (int3)(get_global_id(0), get_global_id(1), get_global_id(2));\n"
-        "    int  sizex = get_global_size(0);\n"
-        "    int  sizey = get_global_size(1);\n"
-        "    double3 p = mad(step, (double3)(coord.x, coord.y, coord.z), start);\n"
-        "    output[coord.z * sizex * sizey + coord.y * sizex + coord.x] = ";
+    main_ += "\n"
+             "__kernel void noisemain3(\n"
+             "  __global double* output, const double3 start, const double3 "
+             "step)\n"
+             "{\n"
+             "    int3 coord = (int3)(get_global_id(0), get_global_id(1), "
+             "get_global_id(2));\n"
+             "    int  sizex = get_global_size(0);\n"
+             "    int  sizey = get_global_size(1);\n"
+             "    double3 p = mad(step, (double3)(coord.x, coord.y, coord.z), "
+             "start);\n"
+             "    output[coord.z * sizex * sizey + coord.y * sizex + coord.x] "
+             "= ";
 
     main_ += body;
     main_ += ";\n}\n";
 
-    
-    main_ +=
-        "\n"
-        "__kernel void noisemain_int16(\n"
-        "  __global int16* output, const double2 start, const double2 step)\n"
-        "{\n"
-        "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-        "    int  sizex = get_global_size(0);\n"
-        "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
-        "    output[coord.y * sizex + coord.x] = (int16)(";
+    main_ += "\n"
+             "__kernel void noisemain_int16(\n"
+             "  __global int16* output, const double2 start, const double2 "
+             "step)\n"
+             "{\n"
+             "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
+             "    int  sizex = get_global_size(0);\n"
+             "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
+             "    output[coord.y * sizex + coord.x] = (int16)(";
 
     main_ += body;
     main_ += ");\n}\n";
@@ -90,16 +94,13 @@ generator_opencl::generator_opencl(const generator_context& ctx,
     std::vector<cl::Device> device_vec;
     device_vec.emplace_back(opencl_device);
 
-    cl::Program::Sources sources(1, { main_.c_str(), main_.size() });
+    cl::Program::Sources sources(1, {main_.c_str(), main_.size()});
     program_ = cl::Program(opencl_context, sources);
-    try
-    {
+    try {
         program_.build(device_vec,
                        "-cl-strict-aliasing -cl-mad-enable "
                        "-cl-unsafe-math-optimizations -cl-fast-relaxed-math");
-    }
-    catch (cl::Error&)
-    {
+    } catch (cl::Error&) {
         std::cerr << program_.getBuildInfo<CL_PROGRAM_BUILD_LOG>(opencl_device)
                   << std::endl;
         throw;
@@ -125,7 +126,7 @@ std::vector<double> generator_opencl::run(const glm::dvec2& corner,
     kernel_.setArg(1, sizeof(corner), (void*)&corner);
     kernel_.setArg(2, sizeof(step), (void*)&step);
 
-    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, { width, height },
+    queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height},
                                 cl::NullRange);
 
     auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
@@ -151,8 +152,8 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec2& corner,
     kernel_int16_.setArg(1, sizeof(corner), (void*)&corner);
     kernel_int16_.setArg(2, sizeof(step), (void*)&step);
 
-    queue_.enqueueNDRangeKernel(kernel_int16_, cl::NullRange,
-                                { width, height }, cl::NullRange);
+    queue_.enqueueNDRangeKernel(kernel_int16_, cl::NullRange, {width, height},
+                                cl::NullRange);
 
     auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
                                         elements * sizeof(int16_t)));
@@ -177,7 +178,7 @@ std::vector<double> generator_opencl::run(const glm::dvec3& corner,
     kernel3_.setArg(1, sizeof(corner), (void*)&corner);
     kernel3_.setArg(2, sizeof(step), (void*)&step);
 
-    queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange, { width, height },
+    queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange, {width, height},
                                 cl::NullRange);
 
     auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
@@ -223,10 +224,14 @@ std::string generator_opencl::co(const node& n)
     case node::rotate:
         return "p_rotate" + pl(n);
     case node::scale:
+    case node::scale3:
         return "(" + co(n.input[0]) + "/" + co(n.input[1]) + ")";
     case node::shift:
-        return "(" + co(n.input[0]) + "+(double2)(" + co(n.input[1]) + "," +
-               co(n.input[2]) + "))";
+        return "(" + co(n.input[0]) + "+(double2)(" + co(n.input[1]) + ","
+               + co(n.input[2]) + "))";
+    case node::shift3:
+        return "(" + co(n.input[0]) + "+(double3)(" + co(n.input[1]) + ","
+               + co(n.input[2]) + "," + co(n.input[3]) + "))";
     case node::swap:
         return "p_swap" + pl(n);
 
@@ -242,15 +247,43 @@ std::string generator_opencl::co(const node& n)
 
         return func_name + "(" + co(n.input[0]) + ")";
     }
+    case node::map3: {
+        std::string func_name("p_map3" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body << "inline double3 " << func_name
+                  << " (const double3 p) { return (double3)(" << co(n.input[1])
+                  << ", " << co(n.input[2]) << ", " << co(n.input[3]) << "); }"
+                  << std::endl;
+
+        functions_.emplace_back(func_body.str());
+
+        return func_name + "(" + co(n.input[0]) + ")";
+    }
 
     case node::turbulence: {
-        std::string func_name("p_map" + std::to_string(count_++));
+        std::string func_name("p_turb" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double2 " << func_name
                   << " (const double2 p) { return (double2)("
                   << "p.x+(" << co(n.input[1]) << "), "
                   << "p.y+(" << co(n.input[2]) << ")); }" << std::endl;
+
+        functions_.emplace_back(func_body.str());
+
+        return func_name + "(" + co(n.input[0]) + ")";
+    }
+
+    case node::turbulence3: {
+        std::string func_name("p_turb3" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body << "inline double3 " << func_name
+                  << " (const double3 p) { return (double3)("
+                  << "p.x+(" << co(n.input[1]) << "), "
+                  << "p.y+(" << co(n.input[2]) << "), "
+                  << "p.z+(" << co(n.input[3]) << ")); }" << std::endl;
 
         functions_.emplace_back(func_body.str());
 
@@ -264,6 +297,19 @@ std::string generator_opencl::co(const node& n)
         func_body << "inline double " << func_name
                   << " (const double2 q, uint seed) { "
                   << "  double2 p = p_worley(q, seed);"
+                  << "  return " << co(n.input[1]) << "; }" << std::endl;
+
+        functions_.emplace_back(func_body.str());
+        return func_name + "(" + co(n.input[0]) + "," + co(n.input[2]) + ")";
+    }
+
+    case node::worley3: {
+        std::string func_name("p_worley3" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body << "inline double " << func_name
+                  << " (const double3 q, uint seed) { "
+                  << "  double3 p = p_worley3(q, seed);"
                   << "  return " << co(n.input[1]) << "; }" << std::endl;
 
         functions_.emplace_back(func_body.str());
@@ -287,20 +333,35 @@ std::string generator_opencl::co(const node& n)
         return "p_angle" + pl(n);
     case node::chebyshev:
         return "p_chebyshev" + pl(n);
+    case node::chebyshev3:
+        return "p_chebyshev3" + pl(n);
     case node::checkerboard:
         return "p_checkerboard" + pl(n);
+    case node::checkerboard3:
+        return "p_checkerboard3" + pl(n);
     case node::distance:
+    case node::distance3:
         return "length" + pl(n);
     case node::manhattan:
         return "p_manhattan" + pl(n);
+    case node::manhattan3:
+        return "p_manhattan3" + pl(n);
     case node::perlin:
         return "p_perlin" + pl(n);
+    case node::perlin3:
+        return "p_perlin3" + pl(n);
     case node::simplex:
         return "p_simplex" + pl(n);
+    case node::simplex3:
+        return "p_simplex3" + pl(n);
     case node::x:
         return co(n.input[0]) + ".x";
     case node::y:
         return co(n.input[0]) + ".y";
+    case node::z:
+        return co(n.input[0]) + ".z";
+    case node::xy:
+        return co(n.input[0]) + ".xy";
 
     case node::add:
         return "(" + co(n.input[0]) + "+" + co(n.input[1]) + ")";
@@ -328,8 +389,8 @@ std::string generator_opencl::co(const node& n)
         if (n.input[1].is_const) {
             double exp(std::floor(n.input[1].aux_var));
             if (std::abs(exp - n.input[1].aux_var) < 1e-9)
-                return "pown(" + co(n.input[0]) + "," +
-                       std::to_string((int)exp) + ")";
+                return "pown(" + co(n.input[0]) + ","
+                       + std::to_string((int)exp) + ")";
         }
         return "pow" + pl(n);
     }
@@ -373,8 +434,8 @@ std::string generator_opencl::co(const node& n)
         return "p_is_in_rectangle" + pl(n);
 
     case node::then_else:
-        return "(" + co(n.input[0]) + ")?(" + co(n.input[1]) + "):(" +
-               co(n.input[2]) + ")";
+        return "(" + co(n.input[0]) + ")?(" + co(n.input[1]) + "):("
+               + co(n.input[2]) + ")";
 
     case node::fractal: {
         assert(n.input.size() == 5);
@@ -404,8 +465,40 @@ std::string generator_opencl::co(const node& n)
 
         functions_.emplace_back(func_body.str());
 
-        return func_name + "(" + co(n.input[0]) + "," + co(n.input[3]) + "," +
-               co(n.input[4]) + ")";
+        return func_name + "(" + co(n.input[0]) + "," + co(n.input[3]) + ","
+               + co(n.input[4]) + ")";
+    }
+
+    case node::fractal3: {
+        assert(n.input.size() == 5);
+        if (!n.input[2].is_const)
+            throw std::runtime_error(
+                "fractal octave count must be a constexpr");
+
+        int octaves(std::min<int>(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
+
+        std::string func_name("p_fractal3_" + std::to_string(count_++));
+
+        std::stringstream func_body;
+        func_body
+            << "double " << func_name
+            << " (double3 p, const double lac, const double per) {"
+            << "double result = 0.0; double div = 0.0; double step = 1.0;"
+            << "for(int i = 0; i < " << octaves << "; ++i)"
+            << "{"
+            << "  result += " << co(n.input[1]) << " * step;"
+            << "  div += step;"
+            << "  step *= lac;"
+            << "  p *= per;"
+            << "  p.x += 12345.0;"
+            << "}"
+            << "return result / div;"
+            << "}";
+
+        functions_.emplace_back(func_body.str());
+
+        return func_name + "(" + co(n.input[0]) + "," + co(n.input[3]) + ","
+               + co(n.input[4]) + ")";
     }
 
     case node::lambda_: {

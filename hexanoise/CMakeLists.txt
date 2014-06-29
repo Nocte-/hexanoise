@@ -71,6 +71,10 @@ set_target_properties(${LIBNAME_S} PROPERTIES VERSION ${VERSION})
 
 target_link_libraries(${LIBNAME} ${PNG_LIBRARIES})
 
+if(UNIX)
+  target_link_libraries(${LIBNAME_S} dl)
+endif()
+
 if(BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
   target_link_libraries(${LIBNAME}   -fprofile-arcs -ftest-coverage)
   target_link_libraries(${LIBNAME_S} -fprofile-arcs -ftest-coverage)

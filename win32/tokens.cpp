@@ -1,6 +1,6 @@
-#line 2 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.cpp"
+#line 2 "/ssd/devel/hexanoise-build/hexanoise/tokens.cpp"
 
-#line 4 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.cpp"
+#line 4 "/ssd/devel/hexanoise-build/hexanoise/tokens.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -365,12 +365,12 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static yyconst flex_int16_t yy_accept[35] =
+static yyconst flex_int16_t yy_accept[36] =
     {   0,
         0,    0,    0,    0,   18,   16,    4,    4,   16,   14,
        10,   11,    9,   16,   16,    6,    8,   15,    5,   12,
        13,    3,   17,    3,    7,    0,    6,    1,    6,    6,
-        5,    2,    6,    0
+        5,    5,    2,    6,    0
     } ;
 
 static yyconst flex_int32_t yy_ec[256] =
@@ -380,15 +380,15 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    2,    1,    4,    1,    5,    1,    1,    1,    6,
         7,    8,    1,    9,   10,   11,   12,   13,   13,   13,
-       13,   13,   13,   13,   13,   13,   13,   14,    1,    1,
-        1,    1,    1,   15,   16,   16,   16,   16,   16,   16,
-       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
-       16,   16,   16,   16,   16,   16,   16,   16,   16,   16,
-        1,    1,    1,    1,   17,    1,   17,   17,   17,   17,
+       14,   13,   13,   13,   13,   13,   13,   15,    1,    1,
+        1,    1,    1,   16,   17,   17,   17,   17,   17,   17,
+       17,   17,   17,   17,   17,   17,   17,   17,   17,   17,
+       17,   17,   17,   17,   17,   17,   17,   17,   17,   17,
+        1,    1,    1,    1,   18,    1,   18,   18,   18,   18,
 
-       17,   17,   17,   17,   17,   17,   17,   17,   17,   17,
-       17,   17,   17,   17,   17,   17,   17,   17,   17,   17,
-       17,   17,   18,    1,   19,    1,    1,    1,    1,    1,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   18,   18,   18,   18,   18,   18,   18,   18,
+       18,   18,   19,    1,   20,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -405,48 +405,48 @@ static yyconst flex_int32_t yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static yyconst flex_int32_t yy_meta[20] =
+static yyconst flex_int32_t yy_meta[21] =
     {   0,
         1,    1,    1,    2,    1,    1,    1,    1,    1,    1,
-        2,    2,    2,    1,    1,    2,    2,    1,    1
+        3,    2,    3,    3,    1,    1,    2,    2,    1,    1
     } ;
 
-static yyconst flex_int16_t yy_base[37] =
+static yyconst flex_int16_t yy_base[39] =
     {   0,
-        0,    0,   17,   18,   42,   43,   43,   43,   37,   43,
-       43,   43,   43,   27,   31,   11,   43,   43,   21,   43,
-       43,   43,   43,   25,   43,   32,   16,   43,   22,   17,
-       17,   43,   20,   43,   30,   21
+        0,    0,   18,   19,   47,   48,   48,   48,   42,   48,
+       48,   48,   48,   10,   37,   33,   48,   48,   11,   48,
+       48,   48,   48,   31,   48,   38,   30,   48,   17,    0,
+       48,   14,   48,   20,   48,   34,   36,   37
     } ;
 
-static yyconst flex_int16_t yy_def[37] =
+static yyconst flex_int16_t yy_def[39] =
     {   0,
-       34,    1,   35,   35,   34,   34,   34,   34,   36,   34,
-       34,   34,   34,   34,   34,   34,   34,   34,   34,   34,
-       34,   34,   34,   34,   34,   36,   34,   34,   34,   34,
-       34,   34,   34,    0,   34,   34
+       35,    1,   36,   36,   35,   35,   35,   35,   37,   35,
+       35,   35,   35,   35,   35,   38,   35,   35,   35,   35,
+       35,   35,   35,   35,   35,   37,   38,   35,   35,   27,
+       35,   35,   35,   35,    0,   35,   35,   35
     } ;
 
-static yyconst flex_int16_t yy_nxt[63] =
+static yyconst flex_int16_t yy_nxt[69] =
     {   0,
         6,    7,    8,    9,   10,   11,   12,    6,   13,   14,
-        6,   15,   16,   17,   18,    6,   19,   20,   21,   23,
-       23,   29,   26,   30,   24,   24,   29,   29,   30,   30,
-       22,   22,   33,   31,   33,   25,   32,   31,   28,   27,
-       25,   34,    5,   34,   34,   34,   34,   34,   34,   34,
-       34,   34,   34,   34,   34,   34,   34,   34,   34,   34,
-       34,   34
+        6,   15,   16,   16,   17,   18,    6,   19,   20,   21,
+       23,   23,   27,   27,   31,   24,   24,   31,   32,   34,
+       34,   32,   34,   34,   22,   22,   22,   26,   26,   30,
+       29,   25,   33,   29,   28,   25,   35,    5,   35,   35,
+       35,   35,   35,   35,   35,   35,   35,   35,   35,   35,
+       35,   35,   35,   35,   35,   35,   35,   35
     } ;
 
-static yyconst flex_int16_t yy_chk[63] =
+static yyconst flex_int16_t yy_chk[69] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    3,
-        4,   16,   36,   16,    3,    4,   27,   30,   27,   30,
-       35,   35,   33,   31,   29,   26,   24,   19,   15,   14,
-        9,    5,   34,   34,   34,   34,   34,   34,   34,   34,
-       34,   34,   34,   34,   34,   34,   34,   34,   34,   34,
-       34,   34
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
+        3,    4,   14,   14,   19,    3,    4,   32,   19,   29,
+       29,   32,   34,   34,   36,   36,   36,   37,   37,   38,
+       27,   26,   24,   16,   15,    9,    5,   35,   35,   35,
+       35,   35,   35,   35,   35,   35,   35,   35,   35,   35,
+       35,   35,   35,   35,   35,   35,   35,   35
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -467,7 +467,7 @@ static yyconst flex_int16_t yy_chk[63] =
 #define TOKEN(t) (yylval->token = t)
 
 
-#line 471 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.cpp"
+#line 471 "/ssd/devel/hexanoise-build/hexanoise/tokens.cpp"
 
 #define INITIAL 0
 #define COMMENT 1
@@ -708,7 +708,7 @@ YY_DECL
 
 
 
-#line 712 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.cpp"
+#line 712 "/ssd/devel/hexanoise-build/hexanoise/tokens.cpp"
 
     yylval = yylval_param;
 
@@ -763,13 +763,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 35 )
+				if ( yy_current_state >= 36 )
 					yy_c = yy_meta[(unsigned int) yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
 			++yy_cp;
 			}
-		while ( yy_current_state != 34 );
+		while ( yy_current_state != 35 );
 		yy_cp = yyg->yy_last_accepting_cpos;
 		yy_current_state = yyg->yy_last_accepting_state;
 
@@ -875,7 +875,7 @@ YY_RULE_SETUP
 #line 41 "tokens.l"
 ECHO;
 	YY_BREAK
-#line 879 "/home/unicorn/devel-ssd/hexanoise-build/hexanoise/tokens.cpp"
+#line 879 "/ssd/devel/hexanoise-build/hexanoise/tokens.cpp"
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(COMMENT):
 	yyterminate();
@@ -1171,7 +1171,7 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 35 )
+			if ( yy_current_state >= 36 )
 				yy_c = yy_meta[(unsigned int) yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
@@ -1200,11 +1200,11 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 35 )
+		if ( yy_current_state >= 36 )
 			yy_c = yy_meta[(unsigned int) yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + (unsigned int) yy_c];
-	yy_is_jam = (yy_current_state == 34);
+	yy_is_jam = (yy_current_state == 35);
 
 	return yy_is_jam ? 0 : yy_current_state;
 }
