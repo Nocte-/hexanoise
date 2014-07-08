@@ -69,7 +69,7 @@ public:
     generator_context(const global_variables_i& global_vars);
 
     /** Add a HNDL script. */
-    void set_script(const std::string& name, const std::string& script);
+    const node& set_script(const std::string& name, const std::string& script);
 
     /** Get a compiled version of a script by name.
      * @throw std::runtime_error if \a name was not found */

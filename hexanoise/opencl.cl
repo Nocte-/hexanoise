@@ -259,7 +259,7 @@ double2 p_worley (const double2 p, uint seed)
     return (double2)(f0, f1);
 }
 
-double3 p_worley3 (const double3 p, uint seed)
+double2 p_worley3 (const double3 p, uint seed)
 {
     double3 t = floor(p);
     int3 xyz0 = (int3)((int)t.x, (int)t.y, (int)t.z);

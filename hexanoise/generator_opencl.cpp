@@ -48,48 +48,65 @@ generator_opencl::generator_opencl(const generator_context& ctx,
         main_ += p;
         main_ += "\n\n";
     }
-    main_ += "\n"
-             "__kernel void noisemain(\n"
-             "  __global double* output, const double2 start, const double2 "
-             "step)\n"
-             "{\n"
-             "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-             "    int  sizex = get_global_size(0);\n"
-             "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
-             "    output[coord.y * sizex + coord.x] = ";
+    
+    auto func_type = n.input_type();
+        
+    bool make_2d = func_type == var_t::xy || func_type == var_t::none;
+    bool make_3d = func_type == var_t::xyz || func_type == var_t::none;
+    
+    if (make_3d) {
+        main_ += "\n"
+                 "__kernel void noisemain3(\n"
+                 "  __global double* output, const double startx, "
+                 "const double starty, const double startz, "
+                 "const double stepx, const double stepy, const double stepz)\n"
+                 "{\n"
+                 "    int3 coord = (int3)(get_global_id(0), get_global_id(1), "
+                 "get_global_id(2));\n"
+                 "    int  sizex = get_global_size(0);\n"
+                 "    int  sizey = get_global_size(1);\n"
+                 "    double3 p = mad((double3)(stepx, stepy, stepz), "
+                 "(double3)(coord.x, coord.y, coord.z), "
+                 "(double3)(startx, starty, startz));\n"
+                 "    output[coord.z * sizex * sizey + coord.y * sizex + "
+                 "coord.x] "
+                 "= ";
+    
+        main_ += body;
+        main_ += ";\n}\n";
+    }
+    if (make_2d) {
 
-    main_ += body;
-    main_ += ";\n}\n";
+        main_
+            += "\n"
+               "__kernel void noisemain(\n"
+               "  __global double* output, const double2 start, const double2 "
+               "step)\n"
+               "{\n"
+               "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
+               "    int  sizex = get_global_size(0);\n"
+               "    double2 p = mad(step, (double2)(coord.x, coord.y), "
+               "start);\n"
+               "    output[coord.y * sizex + coord.x] = ";
 
-    main_ += "\n"
-             "__kernel void noisemain3(\n"
-             "  __global double* output, const double3 start, const double3 "
-             "step)\n"
-             "{\n"
-             "    int3 coord = (int3)(get_global_id(0), get_global_id(1), "
-             "get_global_id(2));\n"
-             "    int  sizex = get_global_size(0);\n"
-             "    int  sizey = get_global_size(1);\n"
-             "    double3 p = mad(step, (double3)(coord.x, coord.y, coord.z), "
-             "start);\n"
-             "    output[coord.z * sizex * sizey + coord.y * sizex + coord.x] "
-             "= ";
+        main_ += body;
+        main_ += ";\n}\n";
 
-    main_ += body;
-    main_ += ";\n}\n";
+        main_
+            += "\n"
+               "__kernel void noisemain_int16(\n"
+               "  __global int16* output, const double2 start, const double2 "
+               "step)\n"
+               "{\n"
+               "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
+               "    int  sizex = get_global_size(0);\n"
+               "    double2 p = mad(step, (double2)(coord.x, coord.y), "
+               "start);\n"
+               "    output[coord.y * sizex + coord.x] = (int16)round(";
 
-    main_ += "\n"
-             "__kernel void noisemain_int16(\n"
-             "  __global int16* output, const double2 start, const double2 "
-             "step)\n"
-             "{\n"
-             "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-             "    int  sizex = get_global_size(0);\n"
-             "    double2 p = mad(step, (double2)(coord.x, coord.y), start);\n"
-             "    output[coord.y * sizex + coord.x] = (int16)(";
-
-    main_ += body;
-    main_ += ");\n}\n";
+        main_ += body;
+        main_ += ");\n}\n";
+    }
 
     std::vector<cl::Device> device_vec;
     device_vec.emplace_back(opencl_device);
@@ -106,9 +123,13 @@ generator_opencl::generator_opencl(const generator_context& ctx,
         throw;
     }
 
-    kernel_ = cl::Kernel(program_, "noisemain");
-    kernel3_ = cl::Kernel(program_, "noisemain3");
-    kernel_int16_ = cl::Kernel(program_, "noisemain_int16");
+    if (make_3d) {
+        kernel3_ = cl::Kernel(program_, "noisemain3");
+    }
+    if (make_2d) {
+        kernel_ = cl::Kernel(program_, "noisemain");
+        kernel_int16_ = cl::Kernel(program_, "noisemain_int16");
+    }
 }
 
 std::vector<double> generator_opencl::run(const glm::dvec2& corner,
@@ -174,17 +195,26 @@ std::vector<double> generator_opencl::run(const glm::dvec3& corner,
     cl::Buffer output(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
                       elements * sizeof(double), &result[0]);
 
-    kernel3_.setArg(0, output);
-    kernel3_.setArg(1, sizeof(corner), (void*)&corner);
-    kernel3_.setArg(2, sizeof(step), (void*)&step);
+    try {
+        kernel3_.setArg(0, output);
+        kernel3_.setArg(1, corner.x);
+        kernel3_.setArg(2, corner.y);
+        kernel3_.setArg(3, corner.z);
+        kernel3_.setArg(4, step.x);
+        kernel3_.setArg(5, step.y);
+        kernel3_.setArg(6, step.z);
 
-    queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange, {width, height},
-                                cl::NullRange);
+        queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange,
+                                    {width, height, depth}, cl::NullRange);
 
-    auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
-                                        elements * sizeof(double)));
+        auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                            elements * sizeof(double)));
 
-    queue_.enqueueUnmapMemObject(output, memobj);
+        queue_.enqueueUnmapMemObject(output, memobj);
+    } catch (cl::Error& err) {
+        throw std::runtime_error(std::string("OpenCL error: ") + err.what()
+                                 + " (" + std::to_string(err.err()) + ")");
+    }
 
     return result;
 }
@@ -194,6 +224,21 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec3& corner,
                                                  const glm::ivec3& count)
 {
     throw std::runtime_error("opencl::run_int16 3-D not implemented yet");
+}
+
+std::string type_string(const node& n)
+{
+    switch (n.return_type) {
+    case var_t::var:
+        return "double";
+    case var_t::xy:
+        return "double2";
+    case var_t::xyz:
+        return "double3";
+    default:
+        ;
+    }
+    return "$type error$";
 }
 
 std::string generator_opencl::pl(const node& n)
@@ -236,7 +281,7 @@ std::string generator_opencl::co(const node& n)
         return "p_swap" + pl(n);
 
     case node::map: {
-        std::string func_name("p_map" + std::to_string(count_++));
+        std::string func_name{std::string("p_map") + std::to_string(count_++)};
 
         std::stringstream func_body;
         func_body << "inline double2 " << func_name
@@ -395,8 +440,6 @@ std::string generator_opencl::co(const node& n)
         return "pow" + pl(n);
     }
 
-    case node::range:
-        return "p_range" + pl(n);
     case node::round:
         return "round" + pl(n);
     case node::saw:
@@ -413,7 +456,7 @@ std::string generator_opencl::co(const node& n)
     case node::bor:
         return co(n.input[0]) + "||" + co(n.input[1]);
     case node::bxor:
-        return co(n.input[0]) + "^^" + co(n.input[1]);
+        return "((" + co(n.input[0]) + ")!=(" + co(n.input[1]) + "))";
     case node::bnot:
         return "!" + co(n.input[0]);
 
@@ -503,10 +546,11 @@ std::string generator_opencl::co(const node& n)
 
     case node::lambda_: {
         assert(n.input.size() == 2);
-        std::string func_name("p_lambda_" + std::to_string(count_++));
+        std::string func_name{"p_lambda_" + std::to_string(count_++)};
+        std::string type{type_string(n.input[0])};
 
         std::stringstream func_body;
-        func_body << "double " << func_name << " (double2 p) {"
+        func_body << "double " << func_name << " (" << type << " p) {"
                   << "return " << co(n.input[1]) << ";}" << std::endl;
 
         functions_.emplace_back(func_body.str());

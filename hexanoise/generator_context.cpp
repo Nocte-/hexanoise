@@ -151,7 +151,7 @@ generator_context::generator_context(const global_variables_i& v)
 {
 }
 
-void generator_context::set_script(const std::string& name,
+const node& generator_context::set_script(const std::string& name,
                                    const std::string& script)
 {
     function* func;
@@ -168,8 +168,10 @@ void generator_context::set_script(const std::string& name,
     yy_delete_buffer(state, scanner);
     yylex_destroy(scanner);
 
-    scripts_.emplace(std::make_pair(name, node(func, *this)));
+    auto result = scripts_.emplace(std::make_pair(name, node(func, *this)));
     delete func;
+    
+    return result.first->second;
 }
 
 const node& generator_context::get_script(const std::string& name) const

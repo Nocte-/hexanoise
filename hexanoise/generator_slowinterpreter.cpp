@@ -244,17 +244,17 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
     double n0, n1, n2;
 
     // Skew the input space to determine which simplex cell we're in
-    const double F2(0.5 * (std::sqrt(3.0) - 1.0));
-    const double G2((3.0 - std::sqrt(3.0)) / 6.0);
+    const double F2 = 0.5 * (std::sqrt(3.0) - 1.0);
+    const double G2 = (3.0 - std::sqrt(3.0)) / 6.0;
 
-    double s((xy.x + xy.y) * F2);
-    int i(std::floor(xy.x + s));
-    int j(std::floor(xy.y + s));
+    double s = (xy.x + xy.y) * F2;
+    int i = std::floor(xy.x + s);
+    int j = std::floor(xy.y + s);
 
     // Unskew the cell origin back to (x,y) space
-    double t((i + j) * G2);
-    double X0(i - t);
-    double Y0(j - t);
+    double t = (i + j) * G2;
+    double X0 = i - t;
+    double Y0 = j - t;
 
     // The x,y distances from the cell origin
     double x0 = xy.x - X0;
@@ -262,8 +262,7 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
 
     // For the 2D case, the simplex shape is an equilateral triangle.
     // Determine which simplex we are in.
-    int i1,
-        j1; // Offsets for second (middle) corner of simplex in (i,j) coords
+    int i1, j1; // Offsets for second (middle) corner in (i,j) coords
     if (x0 > y0) {
         i1 = 1; // lower triangle, XY order: (0,0)->(1,0)->(1,1)
         j1 = 0;
@@ -477,7 +476,8 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
     glm::ivec3 p0{(int)t.x, (int)t.y, (int)t.z};
     glm::dvec3 pf = p - t;
 
-    double f0 = 99, f1 = 99;
+    double f0 = std::numeric_limits<double>::max();
+    double f1 = std::numeric_limits<double>::max();
 
     for (int i = -1; i < 2; ++i) {
         for (int j = -1; j < 2; ++j) {
@@ -512,7 +512,7 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
     glm::dvec2 xyf(xy - t);
     glm::dvec2 result;
 
-    double f0 = 99.;
+    double f0 = std::numeric_limits<double>::max();
 
     for (int i = -1; i < 2; ++i) {
         for (int j = -1; j < 2; ++j) {
@@ -622,8 +622,8 @@ std::vector<int16_t> generator_slowinterpreter::run_int16(
     size_t i = 0;
     for (int y = 0; y < count.y; ++y) {
         for (int x = 0; x < count.x; ++x) {
-            result[i++] = static_cast<int16_t>(
-                eval(corner + glm::dvec2(x, y) * step, n_));
+            result[i++] = static_cast<int16_t>(std::floor(0.5 + 
+                eval(corner + glm::dvec2(x, y) * step, n_)));
         }
     }
     return result;
@@ -691,12 +691,12 @@ double generator_slowinterpreter::eval_v(const node& n)
 
     case node::chebyshev: {
         auto p(eval_xy(in));
-        return std::max(p.x, p.y);
+        return std::max(std::abs(p.x), std::abs(p.y));
     }
 
     case node::chebyshev3: {
         auto p = eval_xyz(in);
-        return std::max(std::max(p.x, p.y), p.z);
+        return std::max(std::max(std::abs(p.x), std::abs(p.y)), std::abs(p.z));
     }
 
     case node::checkerboard: {
@@ -773,30 +773,20 @@ double generator_slowinterpreter::eval_v(const node& n)
         return result;
     }
 
-    case node::external_: {
-        auto tmp = p_;
-        p_ = glm::dvec3{eval_xy(in), 0.0};
-        auto result(eval_v(cntx_.get_script(n.aux_string)));
-        p_ = tmp;
-        return result;
-    }
+    case node::external_: 
+        return call_lambda(cntx_.get_script(n.aux_string), in);
 
-    case node::lambda_: {
-        auto tmp = p_;
-        p_ = glm::dvec3{eval_xy(in), 0.0};
-        auto result(eval_v(n.input[1]));
-        p_ = tmp;
-        return result;
-    }
+    case node::lambda_: 
+        return call_lambda(n.input[1], in);
 
     case node::manhattan: {
         auto p = eval_xy(in);
-        return std::max(std::abs(p.x), std::abs(p.y));
+        return std::abs(p.x) + std::abs(p.y);
     }
 
     case node::manhattan3: {
         auto p = eval_xyz(in);
-        return std::max(std::max(std::abs(p.x), std::abs(p.y)), std::abs(p.z));
+        return std::abs(p.x) + std::abs(p.y) + std::abs(p.z);
     }
 
     case node::x:
@@ -892,18 +882,6 @@ double generator_slowinterpreter::eval_v(const node& n)
 
     case node::round:
         return std::round(eval_v(in));
-
-    case node::range: {
-        double x = eval_v(in);
-        double a = eval_v(n.input[1]);
-        double b = eval_v(n.input[2]);
-        double t = (x + 1.0 + a * 0.5) * ((b - a) * 0.5);
-
-        if (a > b)
-            std::swap(a, b);
-
-        return std::min(std::max(t, a), b);
-    }
 
     case node::saw: {
         auto v = eval_v(in);
@@ -1081,12 +1059,12 @@ bool generator_slowinterpreter::eval_bool(const node& n)
         return eval_bool(n.input[0]) ^ eval_bool(n.input[1]);
 
     case node::is_in_circle: {
-        auto p(eval_xy(n.input[0]));
+        auto p = eval_xy(n.input[0]);
         return std::sqrt(p.x * p.x + p.y * p.y) <= eval_v(n.input[1]);
     }
 
     case node::is_in_rectangle: {
-        auto p(eval_xy(n.input[0]));
+        auto p = eval_xy(n.input[0]);
 
         return p.x >= eval_v(n.input[1]) && p.y >= eval_v(n.input[2])
                && p.x <= eval_v(n.input[3]) && p.y <= eval_v(n.input[4]);
@@ -1101,6 +1079,24 @@ glm::dvec3 generator_slowinterpreter::input_vec3(const node& n, int i)
 {
     return glm::dvec3{eval_v(n.input[i]), eval_v(n.input[i + 1]),
                       eval_v(n.input[i + 2])};
+}
+
+double generator_slowinterpreter::call_lambda(const node &func, const node& in)
+{
+    auto type = func.input_type();
+    auto tmp = p_;
+    
+    if (type == var_t::xyz) 
+        p_ = eval_xyz(in);
+    else if (type == var_t::xy) 
+        p_ = glm::dvec3{eval_xy(in), 0.0};
+    else
+        throw std::runtime_error("lambda must take a coordinate type");
+    
+    auto result = eval_v(func);
+    p_ = tmp;
+    
+    return result;
 }
 
 } // namespace noise

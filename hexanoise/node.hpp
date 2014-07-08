@@ -19,6 +19,8 @@ class generator_context;
 
 /** Variable types. */
 typedef enum {
+    /** No value */
+    none,
     /** Scalar value */
     var,
     /** 2-D coordinates */
@@ -29,12 +31,14 @@ typedef enum {
     string,
     /** Boolean value */
     boolean,
-    /** Entry point */
-    entry
+    /** External value (unknown at compile time) */
+    external
 } var_t;
 
 /** A node in the expression tree.
- *  A compiled HDNL script is represented by a node. */
+ *  A compiled HDNL script is represented by a node, which is the root of
+ *  the expression tree.  The root is the last step, the leaves are the
+ *  entry points where the coordinates are taken as input. */
 class node
 {
 public:
@@ -44,6 +48,8 @@ public:
         const_str,
         const_bool,
 
+        function_list,
+        
         funcdef_xy_xy,
 
         rotate,
@@ -85,7 +91,6 @@ public:
         mul,
         neg,
         pow,
-        range,
         round,
         saw,
         sin,
@@ -143,6 +148,7 @@ public:
 
     } func_t;
 
+    /** Defines a control point in an adjustment curve. */
     struct control_point
     {
         double in;
@@ -156,21 +162,35 @@ public:
     };
 
 public:
+    /** The type of this node. */
     func_t type;
+    /** The inputs (or: the child nodes in the tree structure) */
     std::vector<node> input;
+    /** The output type of this node. 
+     *  In a well-formed expression tree, the output types of the child nodes
+     *  should match the input types of the parameters of this node. */
     var_t return_type;
+    /** Flag for const expressions (values, booleans, and strings) */
     bool is_const;
 
+    /** Holds a string constant. */
     std::string aux_string;
+    /** Holds a double constant. */
     double aux_var;
+    /** Holds a boolean constant. */
     bool aux_bool;
 
+    /** Adjustment curve.
+     *  This is basically an interpolated lookup table. */
     std::vector<control_point> curve;
 
 public:
+    /** Compile an expression tree from the Flex/Bison output. */
     node(function* in, const generator_context& ctx);
+    
     node(func_t t, bool c = false, var_t rt = var);
 
+    /** Construct a constant value express. */
     explicit node(double value)
         : type(const_var)
         , return_type(var)
@@ -179,6 +199,7 @@ public:
     {
     }
 
+    /** Construct a constant string expression. */
     explicit node(const std::string& value)
         : type(const_str)
         , return_type(string)
@@ -187,6 +208,7 @@ public:
     {
     }
 
+    /** Construct a constant boolean expression. */    
     explicit node(bool value)
         : type(const_bool)
         , return_type(boolean)
@@ -210,6 +232,17 @@ public:
         , curve(std::move(m.curve))
     {
     }
+
+    /** Get references to all leaves of this expression tree. */
+    std::vector<std::reference_wrapper<node>> entry_points();
+    
+    std::vector<std::reference_wrapper<const node>> entry_points() const;
+    
+    /** Determine the input type of this function.
+     *  This is either var_t::xy or var_t::xyz.  If the endpoints() are
+     *  all of type 'xy', the whole expression is 2-D.  Otherwise, the
+     *  expression expects a 3-D input. */
+    var_t input_type() const;
 };
 
 } // namespace noise

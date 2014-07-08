@@ -52,6 +52,7 @@ private:
     glm::dvec2 eval_xy(const node& n);
     glm::dvec3 eval_xyz(const node& n);
     bool eval_bool(const node& n);
+    double call_lambda(const node& func, const node& in);
 
     glm::dvec3 input_vec3(const node& n, int i);
 

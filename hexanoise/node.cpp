@@ -85,10 +85,10 @@ public:
 };
 
 static const std::unordered_map<std::string, funcdef> functions{
-    {"!entry", {node::entry_point, entry, false, {entry}}},
-    {"!var", {node::const_var, var, true, {xy}}},
-    {"!str", {node::const_str, string, true, {xy}}},
-    {"!bool", {node::const_bool, boolean, true, {xy}}},
+    {"!entry", {node::entry_point, xy, false, {}}},
+    {"!var", {node::const_var, var, true, {}}},
+    {"!str", {node::const_str, string, true, {}}},
+    {"!bool", {node::const_bool, boolean, true, {}}},
     {"rotate", {node::rotate, xy, {xy, {"angle", var}}}},
     {"scale", {node::scale, xy, {xy, {"div", var}}}},
     {"shift", {node::shift, xy, {xy, {"add_x", var}, {"add_y", var}}}},
@@ -106,9 +106,7 @@ static const std::unordered_map<std::string, funcdef> functions{
       {xy,
        {"noise_function", var},
        {"octaves", var, 2},
-       {
-        "lacunarity", var, 0.5,
-       },
+       {"lacunarity", var, 0.5},
        {"persistence", var, 2.0}}}},
     {"perlin", {node::perlin, var, {xy, {"seed", var, 0}}}},
     {"png_lookup", {node::png_lookup, var, {xy, {"filename", string}}}},
@@ -124,11 +122,10 @@ static const std::unordered_map<std::string, funcdef> functions{
     {"abs", {node::abs, var, {var}}},
     {"blend", {node::blend, var, {var, {"a", var}, {"b", var}}}},
     {"cos", {node::cos, var, {var}}},
-    {"min", {node::min, var, {var, {"n", var}}}},
-    {"max", {node::max, var, {var, {"n", var}}}},
+    {"min", {node::min, var, {var, {"n", var, 0.0}}}},
+    {"max", {node::max, var, {var, {"n", var, 0.0}}}},
     {"neg", {node::neg, var, {var}}},
     {"pow", {node::pow, var, {var, {"n", var, 2.0}}}},
-    {"range", {node::range, var, {var, {"low", var}, {"high", var}}}},
     {"round", {node::round, var, {var}}},
     {"saw", {node::saw, var, {var}}},
     {"sin", {node::sin, var, {var}}},
@@ -148,16 +145,19 @@ static const std::unordered_map<std::string, funcdef> functions{
      {node::is_in_rectangle,
       boolean,
       {xy, {"x1", var}, {"y1", var}, {"x2", var}, {"y2", var}}}},
-    {"then_else", {node::then_else, var, {boolean, {"a", var}, {"b", var}}}},
+    {"then_else",
+     {node::then_else, var, {boolean, {"a", var, 1.0}, {"b", var, -1.0}}}},
     {"curve_linear", {node::curve_linear, var, {var}}},
     {"curve_spline", {node::curve_spline, var, {var}}},
 
     {"rotate3", {node::rotate3, xyz, {xyz, {"axis", xyz}, {"angle", var}}}},
     {"scale3", {node::scale3, xyz, {xyz, {"div", var}}}},
     {"shift3",
-     {node::shift,
+     {node::shift3,
       xyz,
       {xyz, {"add_x", var}, {"add_y", var}, {"add_z", var}}}},
+    {"turbulence3",
+     {node::turbulence3, xyz, {xyz, {"x", var}, {"y", var}, {"z", var}}}},
     {"map3", {node::map3, xyz, {xyz, {"x", var}, {"y", var}, {"z", var}}}},
     {"fractal3",
      {node::fractal3,
@@ -165,9 +165,7 @@ static const std::unordered_map<std::string, funcdef> functions{
       {xyz,
        {"noise_function", var},
        {"octaves", var, 2},
-       {
-        "lacunarity", var, 0.5,
-       },
+       {"lacunarity", var, 0.5},
        {"persistence", var, 2.0}}}},
     {"xy", {node::xy, xy, {xyz}}},
     {"z", {node::z, var, {xyz}}},
@@ -185,25 +183,30 @@ bool is_coordinate(var_t v)
 
 bool types_match(var_t lhs, var_t rhs)
 {
-    return lhs == rhs || (lhs == var_t::entry && is_coordinate(rhs));
+    return lhs == rhs || (lhs == var_t::external && is_coordinate(rhs));
 }
 
 node::node(function* in, const generator_context& ctx)
 {
     switch (in->type) {
     case function::func: {
-        auto f(functions.find(in->name));
+        is_const = false;
+
+        auto f = functions.find(in->name);
+
         if (f == functions.end())
             throw std::runtime_error("unknown function " + in->name);
 
-        auto& fdef(f->second);
+        auto& fdef = f->second;
         type = fdef.id;
         return_type = fdef.return_type;
 
-        if (in->input)
-            input.emplace_back(node(in->input, ctx));
-        else
-            input.emplace_back(node(entry_point, false, var_t::entry));
+        if (in->input) {
+            input.emplace_back(in->input, ctx);
+        } else {
+            input.emplace_back(node::entry_point, false,
+                               fdef.parameters.front().type);
+        }
 
         // Special case: curve_linear and curve_spline take a list of
         // const var parameters.
@@ -246,11 +249,11 @@ node::node(function* in, const generator_context& ctx)
                 throw std::runtime_error(in->name + ": too many parameters");
 
             for (auto ptr : *(in->args))
-                input.emplace_back(node(ptr, ctx));
+                input.emplace_back(ptr, ctx);
         }
 
-        auto chk(input.begin());
-        auto ck2(fdef.parameters.begin());
+        auto chk = input.begin();
+        auto ck2 = fdef.parameters.begin();
 
         for (; chk != input.end() && ck2 != fdef.parameters.end();
              ++chk, ++ck2) {
@@ -266,7 +269,6 @@ node::node(function* in, const generator_context& ctx)
             }
             input.emplace_back(node(ck2->default_value));
         }
-
         break;
     }
 
@@ -292,42 +294,50 @@ node::node(function* in, const generator_context& ctx)
         break;
 
     case function::global: {
+        is_const = true;
         if (!ctx.exists_global(in->name))
             throw std::runtime_error("global variable '" + in->name
                                      + "' not defined");
 
-        auto global(ctx.get_global(in->name));
+        auto global = ctx.get_global(in->name);
         *this = boost::apply_visitor(global_visitor(), global);
     } break;
 
-    case function::lambda:
+    case function::lambda: {
+        is_const = false;
         if (!in->args || in->args->size() != 1)
             throw std::runtime_error(
                 "lambda function must take one input parameter");
 
         type = lambda_;
         return_type = var;
-        if (in->input)
-            input.emplace_back(node(in->input, ctx));
-        else
-            input.emplace_back(node(entry_point, false, var_t::entry));
 
-        input.emplace_back(node((*in->args)[0], ctx));
-
-        if (input.back().return_type != var)
+        node lambda{(*in->args)[0], ctx};
+        if (lambda.return_type != var)
             throw std::runtime_error("lambda function must return a scalar");
 
-        break;
+        auto lambda_input_t = lambda.input_type();
+        if (!is_coordinate(lambda_input_t))
+            throw std::runtime_error("lambda function must take a coordinate");
+
+        if (in->input)
+            input.emplace_back(in->input, ctx);
+        else
+            input.emplace_back(entry_point, false, lambda_input_t);
+
+        input.emplace_back(std::move(lambda));
+    } break;
 
     case function::external:
+        is_const = false;
         type = external_;
         return_type = var;
         aux_string = in->name;
 
         if (in->input)
-            input.emplace_back(node(in->input, ctx));
+            input.emplace_back(in->input, ctx);
         else
-            input.emplace_back(node(entry_point, false, var_t::entry));
+            input.emplace_back(entry_point, false, var_t::external);
 
         break;
     }
@@ -338,6 +348,58 @@ node::node(func_t t, bool c, var_t rt)
     , return_type(rt)
     , is_const(c)
 {
+}
+
+std::vector<std::reference_wrapper<const node>> node::entry_points() const
+{
+    std::vector<std::reference_wrapper<const node>> result;
+
+    if (is_const) {
+        return result;
+    }
+
+    if (type == entry_point) {
+        result.emplace_back(*this);
+    } else {
+        for (auto& i : input) {
+            auto additional = i.entry_points();
+            result.insert(result.end(), additional.begin(), additional.end());
+        }
+    }
+    return result;
+}
+
+std::vector<std::reference_wrapper<node>> node::entry_points()
+{
+    std::vector<std::reference_wrapper<node>> result;
+
+    if (is_const) {
+        return result;
+    }
+
+    if (type == entry_point) {
+        result.emplace_back(*this);
+    } else {
+        for (auto& i : input) {
+            auto additional = i.entry_points();
+            result.insert(result.end(), additional.begin(), additional.end());
+        }
+    }
+    return result;
+}
+
+var_t node::input_type() const
+{
+    auto eps = entry_points();
+    if (eps.empty()) {
+        return var_t::none;
+    }
+    for (const node& i : eps) {
+        if (i.return_type == var_t::xyz) {
+            return var_t::xyz;
+        }
+    }
+    return var_t::xy;
 }
 
 } // namespace noise
