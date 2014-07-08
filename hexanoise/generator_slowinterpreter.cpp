@@ -633,12 +633,12 @@ std::vector<double> generator_slowinterpreter::run(const glm::dvec3& corner,
                                                    const glm::dvec3& step,
                                                    const glm::ivec3& count)
 {
-    std::vector<double> result(count.x * count.y);
+    std::vector<double> result(count.x * count.y * count.z);
     size_t i = 0;
     for (int z = 0; z < count.z; ++z) {
         for (int y = 0; y < count.y; ++y) {
             for (int x = 0; x < count.x; ++x) {
-                result[i++] = eval(corner + glm::dvec3(x, y, z) * step, n_);
+                result[i++] = eval(corner + glm::dvec3{x, y, z} * step, n_);
             }
         }
     }
@@ -648,14 +648,13 @@ std::vector<double> generator_slowinterpreter::run(const glm::dvec3& corner,
 std::vector<int16_t> generator_slowinterpreter::run_int16(
     const glm::dvec3& corner, const glm::dvec3& step, const glm::ivec3& count)
 {
-    std::vector<int16_t> result(count.x * count.y);
+    std::vector<int16_t> result(count.x * count.y * count.z);
     size_t i = 0;
     for (int z = 0; z < count.z; ++z) {
         for (int y = 0; y < count.y; ++y) {
-
             for (int x = 0; x < count.x; ++x) {
                 result[i++] = static_cast<int16_t>(
-                    eval(corner + glm::dvec3(x, y, z) * step, n_));
+                    eval(corner + glm::dvec3{x, y, z} * step, n_));
             }
         }
     }
