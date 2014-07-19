@@ -313,7 +313,7 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
 {
     // Skew the input space to determine which simplex cell we're in
     const double F3 = 1.0 / 3.0;
-    float s = (p.x + p.y + p.z) * F3;
+    double s = (p.x + p.y + p.z) * F3;
     int i = std::floor(p.x + s);
     int j = std::floor(p.y + s);
     int k = std::floor(p.z + s);
@@ -328,7 +328,7 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
     // The x,y distances from the cell origin
     double x0 = p.x - X0;
     double y0 = p.y - Y0;
-    double z0 = p.y - Z0;
+    double z0 = p.z - Z0;
 
     // For the 3D case, the simplex shape is a slightly irregular tetrahedron.
     // Determine which simplex we are in.
