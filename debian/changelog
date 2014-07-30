@@ -1,3 +1,9 @@
+hexanoise (0.2.1) raring; urgency=low
+
+  * Small fix for Launchpad builds
+
+ -- Nocte <nocte@outlook.com>  Wed, 30 Jul 2014 20:15:19 +0200
+
 hexanoise (0.2.0) raring; urgency=low
 
   * Added functions for 3D noise

@@ -921,7 +921,7 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
 {
     switch (n.type) {
     case node::entry_point:
-        return glm::dvec2{p_};
+        return glm::dvec2{p_.x, p_.y};
 
     case node::rotate: {
         auto p = eval_xy(n.input[0]);
