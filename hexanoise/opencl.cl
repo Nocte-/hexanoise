@@ -223,6 +223,91 @@ double p_simplex (double2 xy, uint seed)
     return 70.0 * (n0 + n1 + n2);
 }
 
+double p_simplex3 (double3 p, uint seed)
+{
+    double n0, n1, n2;
+
+    // Skew the input space to determine which simplex cell we're in
+    double s = (p.x + p.y + p.z) / 3.0;
+    int i = floor(p.x + s);
+    int j = floor(p.y + s);
+    int k = floor(p.z + s);
+
+    // Unskew the cell origin back to (x,y,z) space
+    double t = (i + j + k) / 6.0;
+    double3 o = (double3)(i - t, j - t, k - t);
+
+    // The x,y,z distances from the cell origin
+    double3 d0 = p - o;
+
+    // For the 3D case, the simplex shape is an irregular tetrahedron.
+    // Determine which simplex we are in.
+    int i1, j1, k1; // Offsets for second (middle) corner of simplex
+    int i2, j2, k2; // Offsets for third corner of simplex
+
+    if (d0.x >= d0.y) {
+        if (d0.y >= d0.z) {
+            i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
+        } else if (d0.x >= d0.z) {
+            i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
+        } else {
+            i1 = 0; j1 = 0; k1 = 1; i2 = 1; j2 = 0; k2 = 1;
+        }
+    } else {
+        if (d0.y < d0.z) {
+            i1 = 0; j1 = 0; k1 = 1; i2 = 0; j2 = 1; k2 = 1;
+        } else if (d0.x < d0.z) {
+            i1 = 0; j1 = 1; k1 = 0; i2 = 0; j2 = 1; k2 = 1;
+        } else {
+            i1 = 0; j1 = 1; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
+        }
+    }
+
+    double2 d1 = (double2)(d0.x - i1 + G2, d0.y - j1 + G2);
+    double2 d2 = (double2)(d0.x - 1.0 + 2.0 * G2, d0.y - 1.0 + 2.0 * G2);
+
+    int ii = (i + seed * 1063) & 0xFF;
+    int jj = j & 0xFF;
+    int gi0 = (P[ii+P[jj]] & G_MASK) * G_VECSIZE;
+    int gi1 = (P[ii+i1+P[jj+j1]] & G_MASK) * G_VECSIZE;
+    int gi2 = (P[ii+1+P[jj+1]] & G_MASK) * G_VECSIZE;
+
+    double t0 = 0.5 - dot(d0,d0);
+    if (t0 < 0)
+    {
+        n0 = 0.0;
+    }
+    else
+    {
+        t0 *= t0;
+        n0 = t0 * t0 * dot((double2)(G[gi0],G[gi0+1]), d0);
+    }
+
+    double t1 = 0.5 - dot(d1,d1);
+    if(t1 < 0)
+    {
+        n1 = 0.0;
+    }
+    else
+    {
+        t1 *= t1;
+        n1 = t1 * t1 * dot((double2)(G[gi1],G[gi1+1]), d1);
+    }
+
+    double t2 = 0.5 - dot(d2,d2);
+    if(t2 < 0)
+    {
+        n2 = 0.0;
+    }
+    else
+    {
+        t2 *= t2;
+        n2 = t2 * t2 * dot((double2)(G[gi2],G[gi2+1]), d2);
+    }
+
+    return 70.0 * (n0 + n1 + n2);
+}
+
 double2 p_worley (const double2 p, uint seed)
 {
     double2 t = floor(p);
