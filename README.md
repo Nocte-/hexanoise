@@ -1,7 +1,7 @@
 HexaNoise
 =========
 
-[![Build status](https://api.travis-ci.org/Nocte-/hexanoise.svg)](https://travis-ci.org/Nocte-/hexanoise) [![Coverage Status](https://coveralls.io/repos/Nocte-/hexanoise/badge.png)](https://coveralls.io/r/Nocte-/hexanoise)
+[![Build status](https://api.travis-ci.org/Nocte-/hexanoise.svg)](https://travis-ci.org/Nocte-/hexanoise) [![Coverage Status](https://coveralls.io/repos/Nocte-/hexanoise/badge.png)](https://coveralls.io/r/Nocte-/hexanoise) (Ubuntu's repositories for Quantal have been taken offline, so Travis can't build it anymore.)
 
 This is a library for generating 2D coherent noise.  It compiles a noise
 definition script to OpenCL, or it can run it through a simple interpreter in
