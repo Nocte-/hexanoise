@@ -17,7 +17,7 @@ functions.  Here's an example that generates billow noise:
 
     scale(100):fractal(perlin:abs,2)
 
-![scale(100):fractal(perlin:abs,2)](http://i1.minus.com/i8fsgPpfFIngP.png)
+![scale(100):fractal(perlin:abs,2)](http://i1.minus.com/i8fsgPpfFIngP.png?1)
 
 First, the noise is scaled so we can see some detail (it's drawn at a
 resolution of 1 pixel per unit).  The base of the billow noise is created by
@@ -35,7 +35,7 @@ some classic Perlin noise:
         scale(100):fractal(perlin,7)
     )
 
-![scale(250):checkerboard:blend(scale(10):distance:sin,scale(100):fractal(perlin,7))](http://i1.minus.com/iSeaHIsY9wI4G.png)
+![scale(250):checkerboard:blend(scale(10):distance:sin,scale(100):fractal(perlin,7))](http://i1.minus.com/iSeaHIsY9wI4G.png?1)
 
 
 Documentation
