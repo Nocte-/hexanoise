@@ -568,14 +568,14 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
 // that the triangular and square facets can be inscribed inside
 // circles of the same radius.
 static const glm::dvec3 gradients3D[] = {
-    {-11, 4, 4},   {-4, 11, 4},   {-4, 4, 11},
-    {11, 4, 4},    {4, 11, 4},    {4, 4, 11},
-    {-11, -4, 4},  {-4, -11, 4},  {-4, -4, 11},
-    {11, -4, 4},   {4, -11, 4},   {4, -4, 11},
-    {-11, 4, -4},  {-4, 11, -4},  {-4, 4, -11},
-    {11, 4, -4},   {4, 11, -4},   {4, 4, -11},
-    {-11, -4, -4}, {-4, -11, -4}, {-4, -4, -11},
-    {11, -4, -4},  {4, -11, -4},  {4, -4, -11}
+    {-11., 4., 4.},   {-4., 11., 4.},   {-4., 4., 11.},
+    {11., 4., 4.},    {4., 11., 4.},    {4., 4., 11.},
+    {-11., -4., 4.},  {-4., -11., 4.},  {-4., -4., 11.},
+    {11., -4., 4.},   {4., -11., 4.},   {4., -4., 11.},
+    {-11., 4., -4.},  {-4., 11., -4.},  {-4., 4., -11.},
+    {11., 4., -4.},   {4., 11., -4.},   {4., 4., -11.},
+    {-11., -4., -4.}, {-4., -11., -4.}, {-4., -4., -11.},
+    {11., -4., -4.},  {4., -11., -4.},  {4., -4., -11.}
 };
 
 inline double extrapolate3(int xsb, int ysb, int zsb, const glm::dvec3& d, uint32_t seed)
@@ -1596,19 +1596,19 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
     case node::xplane: {
         auto p = eval_xy(n.input[0]);
         auto x = eval_v(n.input[1]);
-        return {x, p.y, p.x};
+        return glm::dvec3{x, p.y, p.x};
     }
 
     case node::yplane: {
         auto p = eval_xy(n.input[0]);
         auto y = eval_v(n.input[1]);
-        return {p.x, y, p.y};
+        return glm::dvec3{p.x, y, p.y};
     }
 
     case node::zplane: {
         auto p = eval_xy(n.input[0]);
         auto z = eval_v(n.input[1]);
-        return {p.x, p.y, z};
+        return glm::dvec3{p.x, p.y, z};
     }
 
     case node::rotate3: {
