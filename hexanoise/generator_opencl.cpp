@@ -399,6 +399,10 @@ std::string generator_opencl::co(const node& n)
         return "p_simplex" + pl(n);
     case node::simplex3:
         return "p_simplex3" + pl(n);
+    case node::opensimplex:
+        return "p_opensimplex" + pl(n);
+    case node::opensimplex3:
+        return "p_opensimplex3" + pl(n);
     case node::x:
         return co(n.input[0]) + ".x";
     case node::y:

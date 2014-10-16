@@ -111,6 +111,7 @@ static const std::unordered_map<std::string, funcdef> functions{
     {"perlin", {node::perlin, var, {xy, {"seed", var, 0}}}},
     {"png_lookup", {node::png_lookup, var, {xy, {"filename", string}}}},
     {"simplex", {node::simplex, var, {xy, {"seed", var, 0}}}},
+    {"opensimplex", {node::opensimplex, var, {xy, {"seed", var, 0}}}},
     {"voronoi", {node::voronoi, var, {xy, {"func", var}, {"seed", var, 0}}}},
     {"worley", {node::worley, var, {xy, {"func", var}, {"seed", var, 0}}}},
     {"x", {node::x, var, {xy}}},
@@ -167,6 +168,9 @@ static const std::unordered_map<std::string, funcdef> functions{
        {"octaves", var, 2},
        {"lacunarity", var, 0.5},
        {"persistence", var, 2.0}}}},
+    {"xplane", {node::zplane, xyz, {xy, {"x", var, 0.0}}}},
+    {"yplane", {node::zplane, xyz, {xy, {"y", var, 0.0}}}},
+    {"zplane", {node::zplane, xyz, {xy, {"z", var, 0.0}}}},
     {"xy", {node::xy, xy, {xyz}}},
     {"z", {node::z, var, {xyz}}},
     {"chebyshev3", {node::chebyshev3, var, {xyz}}},
@@ -174,7 +178,9 @@ static const std::unordered_map<std::string, funcdef> functions{
     {"distance3", {node::distance3, var, {xyz}}},
     {"manhattan3", {node::manhattan3, var, {xyz}}},
     {"perlin3", {node::perlin3, var, {xyz, {"seed", var, 0}}}},
-    {"simplex3", {node::simplex3, var, {xyz, {"seed", var, 0}}}}};
+    {"simplex3", {node::simplex3, var, {xyz, {"seed", var, 0}}}},
+    {"opensimplex3", {node::opensimplex3, var, {xyz, {"seed", var, 0}}}}
+};
 
 bool is_coordinate(var_t v)
 {

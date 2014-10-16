@@ -6,6 +6,8 @@
 
 #include "generator_slowinterpreter.hpp"
 
+#define GLM_FORCE_RADIANS
+
 #include <cmath>
 #include <stdexcept>
 #include <glm/gtx/rotate_vector.hpp>
@@ -28,6 +30,7 @@ const double pi = 3.14159265358979323846;
 #define ONE_F1 (1.0)
 #define ZERO_F1 (0.0)
 
+// Ken Perlin's permutation table.
 const int P_MASK = 255;
 const int P_SIZE = 256;
 static const int P[512] = {
@@ -65,7 +68,7 @@ static const int P[512] = {
     51,  145, 235, 249, 14,  239, 107, 49,  192, 214, 31,  181, 199, 106, 157,
     184, 84,  204, 176, 115, 121, 50,  45,  127, 4,   150, 254, 138, 236, 205,
     93,  222, 114, 67,  29,  24,  72,  243, 141, 128, 195, 78,  66,  215, 61,
-    156, 180,
+    156, 180
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -156,6 +159,9 @@ inline uint32_t rng(uint32_t last)
     return (1103515245 * last + 12345) & 0x7FFFFFFF;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Perlin
+
 inline double gradient_noise2d(const glm::dvec2& xy, glm::ivec2 ixy,
                                uint32_t seed)
 {
@@ -238,6 +244,9 @@ double p_perlin3(const glm::dvec3& xyz, uint32_t seed)
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
     */
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Simplex
 
 double p_simplex(const glm::dvec2& xy, uint32_t seed)
 {
@@ -409,36 +418,620 @@ double p_simplex3(const glm::dvec3& p, uint32_t seed)
     if (t0 < 0) {
         n0 = 0.0;
     } else {
-        t0 *= t0;
-        n0 = t0 * t0 * dot(&G[gi0 * G_VECSIZE], x0, y0, z0);
+        n0 = std::pow(t0, 4) * dot(&G[gi0 * G_VECSIZE], x0, y0, z0);
     }
 
     double t1 = 0.6 - x1 * x1 - y1 * y1 - z1 * z1;
     if (t1 < 0) {
         n1 = 0.0;
     } else {
-        t1 *= t1;
-        n1 = t1 * t1 * dot(&G[gi1 * G_VECSIZE], x1, y1, z1);
+        n1 = std::pow(t1, 4) * dot(&G[gi1 * G_VECSIZE], x1, y1, z1);
     }
 
     double t2 = 0.6 - x2 * x2 - y2 * y2 - z2 * z2;
     if (t2 < 0) {
         n2 = 0.0;
     } else {
-        t2 *= t2;
-        n2 = t2 * t2 * dot(&G[gi2 * G_VECSIZE], x2, y2, z2);
+        n2 = std::pow(t2, 4) * dot(&G[gi2 * G_VECSIZE], x2, y2, z2);
     }
 
     double t3 = 0.6 - x3 * x3 - y3 * y3 - z3 * z3;
     if (t3 < 0) {
         n3 = 0.0;
     } else {
-        t3 *= t3;
-        n3 = t3 * t3 * dot(&G[gi3 * G_VECSIZE], x3, y3, z3);
+        n3 = std::pow(t3, 4) * dot(&G[gi3 * G_VECSIZE], x3, y3, z3);
     }
 
     return 32.0 * (n0 + n1 + n2 + n3);
 }
+
+//////////////////////////////////////////////////////////////////////////
+// OpenSimplex
+
+// Gradients for 2D. They approximate the directions to the
+// vertices of an octagon from the center.
+static const int8_t gradients2D[] = {
+    5, 2, 2, 5,
+    -5, 2, -2, 5,
+    5, -2, 2, -5,
+    -5, -2, -2, -5
+};
+
+inline double extrapolate2(int xsb, int ysb, const glm::dvec2& d, uint32_t seed)
+{
+    int index = P[(P[(xsb + seed) & 0xFF] + (ysb + seed * 23)) & 0xFF] & 0x0E;
+    return gradients2D[index] * d.x + gradients2D[index + 1] * d.y;
+}
+
+inline double attn (const glm::dvec2& p)
+{
+    return 2.0 - glm::dot(p, p);
+}
+
+// Implementation of the OpenSimplex algorithm by Kurt Spencer.
+double p_opensimplex(const glm::dvec2& p, uint32_t seed)
+{
+    constexpr double STRETCH_CONSTANT_2D = -0.211324865405187; // (1 / sqrt(2 + 1) - 1 ) / 2;
+    constexpr double SQUISH_CONSTANT_2D = 0.366025403784439; // (sqrt(2 + 1) -1) / 2;
+    constexpr double NORM_CONSTANT_2D = 47.0;
+
+    // Place input coordinates onto grid.
+    double stretchOffset = (p.x + p.y) * STRETCH_CONSTANT_2D;
+    glm::dvec2 s {p + stretchOffset};
+
+    // Floor to get grid coordinates of rhombus (stretched square) super-cell origin.
+    glm::ivec2 sb {glm::floor(s)};
+
+    // Skew out to get actual coordinates of rhombus origin. We'll need these later.
+    double squishOffset = (sb.x + sb.y) * SQUISH_CONSTANT_2D;
+    glm::dvec2 b {glm::dvec2{sb} + squishOffset};
+
+    // Compute grid coordinates relative to rhombus origin.
+    glm::dvec2 ins {s - glm::dvec2{sb}};
+
+    // Sum those together to get a value that determines which region we're in.
+    double inSum = ins.x + ins.y;
+
+    // Positions relative to origin point.
+    glm::dvec2 d0 = p - b;
+
+    // We'll be defining these inside the next block and using them afterwards.
+    glm::dvec2 d_ext;
+    glm::ivec2 sv_ext;
+    double value = 0;
+
+    // Contribution (1,0)
+    glm::dvec2 d1 {(d0 + glm::dvec2{-1,0}) - SQUISH_CONSTANT_2D};
+    double attn1 = attn(d1);
+
+    if (attn1 > 0) {
+        attn1 *= attn1;
+        value += attn1 * attn1 * extrapolate2(sb.x + 1, sb.y + 0, d1, seed);
+    }
+
+    // Contribution (0,1)
+    glm::dvec2 d2 {(d0 + glm::dvec2{0,-1}) - SQUISH_CONSTANT_2D};
+    double attn2 = attn(d2);
+    if (attn2 > 0) {
+        attn2 *= attn2;
+        value += attn2 * attn2 * extrapolate2(sb.x + 0, sb.y + 1, d2, seed);
+    }
+
+    if (inSum <= 1) { // We're inside the triangle (2-Simplex) at (0,0)
+        double zins = 1 - inSum;
+        if (zins > ins.x || zins > ins.y) { // (0,0) is one of the closest two triangular vertices
+            if (ins.x > ins.y) {
+                sv_ext = sb + glm::ivec2{1, -1};
+                d_ext = d0 + glm::dvec2{-1, 1};
+            } else {
+                sv_ext = sb + glm::ivec2{-1, 1};
+                d_ext = d0 + glm::dvec2{1, -1};
+            }
+        } else { // (1,0) and (0,1) are the closest two vertices.
+            sv_ext = sb + glm::ivec2{1, 1};
+            d_ext = (d0 + glm::dvec2{-1, -1}) - 2 * SQUISH_CONSTANT_2D;
+        }
+    } else { // We're inside the triangle (2-Simplex) at (1,1)
+        double zins = 2 - inSum;
+        if (zins < ins.x || zins < ins.y) { // (0,0) is one of the closest two triangular vertices
+            if (ins.x > ins.y) {
+                sv_ext = sb + glm::ivec2{2,0};
+                d_ext = (d0 + glm::dvec2{-2, 0}) - 2 * SQUISH_CONSTANT_2D;
+            } else {
+                sv_ext = sb + glm::ivec2{0, 2};
+                d_ext = (d0 + glm::dvec2{0, -2}) - 2 * SQUISH_CONSTANT_2D;
+            }
+        } else { // (1,0) and (0,1) are the closest two vertices.
+            d_ext = d0;
+            sv_ext = sb;
+        }
+        sb += 1;
+        d0 = d0 - 1.0 - 2 * SQUISH_CONSTANT_2D;
+    }
+
+    // Contribution (0,0) or (1,1)
+    double attn0 = attn(d0);
+    if (attn0 > 0)
+        value += std::pow(attn0, 4) * extrapolate2(sb.x, sb.y, d0, seed);
+
+    // Extra Vertex
+    double attn_ext = attn(d_ext);
+    if (attn_ext > 0)
+        value += std::pow(attn_ext, 4) * extrapolate2(sv_ext.x, sv_ext.y, d_ext, seed);
+
+    return value / NORM_CONSTANT_2D;
+}
+
+
+// Gradients for 3D. They approximate the directions to the
+// vertices of a rhombicuboctahedron from the center, skewed so
+// that the triangular and square facets can be inscribed inside
+// circles of the same radius.
+static const glm::dvec3 gradients3D[] = {
+    {-11, 4, 4},   {-4, 11, 4},   {-4, 4, 11},
+    {11, 4, 4},    {4, 11, 4},    {4, 4, 11},
+    {-11, -4, 4},  {-4, -11, 4},  {-4, -4, 11},
+    {11, -4, 4},   {4, -11, 4},   {4, -4, 11},
+    {-11, 4, -4},  {-4, 11, -4},  {-4, 4, -11},
+    {11, 4, -4},   {4, 11, -4},   {4, 4, -11},
+    {-11, -4, -4}, {-4, -11, -4}, {-4, -4, -11},
+    {11, -4, -4},  {4, -11, -4},  {4, -4, -11}
+};
+
+inline double extrapolate3(int xsb, int ysb, int zsb, const glm::dvec3& d, uint32_t seed)
+{
+    int index = P[(P[(P[(xsb + seed) & 0xFF] + (ysb + seed * 23)) & 0xFF] + (zsb + seed * 27)) & 0xFF] % 24;
+    return glm::dot(gradients3D[index], d);
+}
+
+inline double attn (const glm::dvec3& p)
+{
+    return 2.0 - glm::dot(p, p);
+}
+
+double p_opensimplex3(const glm::dvec3& p, uint32_t seed)
+{
+    constexpr double STRETCH_CONSTANT_3D = -1.0 / 6.0; // (1 / sqrt(3 + 1) - 1) / 3;
+    constexpr double SQUISH_CONSTANT_3D = 1.0 / 3.0; // (sqrt(3+1)-1)/3;
+    constexpr double NORM_CONSTANT_3D = 103.0;
+
+    // Place input coordinates on simplectic honeycomb.
+    double stretchOffset = (p.x + p.y + p.z) * STRETCH_CONSTANT_3D;
+    glm::dvec3 s {p + stretchOffset};
+
+    // Floor to get grid coordinates of rhombohedron (stretched cube) super-cell origin.
+    glm::ivec3 sb {glm::floor(s)};
+
+    // Skew out to get actual coordinates of rhombohedron origin. We'll need these later.
+    double squishOffset = (sb.x + sb.y + sb.z) * SQUISH_CONSTANT_3D;
+    glm::dvec3 b {glm::dvec3{sb} + squishOffset};
+
+    // Compute grid coordinates relative to rhombus origin.
+    glm::dvec3 ins {s - glm::dvec3{sb}};
+
+    // Sum those together to get a value that determines which region we're in.
+    double inSum = ins.x + ins.y + ins.z;
+
+    // Positions relative to origin point.
+    glm::dvec3 d0 = p - b;
+
+    // We'll be defining these inside the next block and using them afterwards.
+    glm::dvec3 d_ext0, d_ext1;
+    glm::ivec3 sv_ext0, sv_ext1;
+    double value = 0;
+
+    if (inSum <= 1) { // We're inside the tetrahedron (3-Simplex) at (0,0,0)
+        // Determine which two of (0,0,1), (0,1,0), (1,0,0) are closest.
+        uint8_t aPoint = 0x01;
+        double aScore = ins.x;
+        uint8_t bPoint = 0x02;
+        double bScore = ins.y;
+        if (aScore >= bScore && ins.z > bScore) {
+            bScore = ins.z;
+            bPoint = 0x04;
+        } else if (aScore < bScore && ins.z > aScore) {
+            aScore = ins.z;
+            aPoint = 0x04;
+        }
+
+        // Now we determine the two lattice points not part of the tetrahedron that may contribute.
+        // This depends on the closest two tetrahedral vertices, including (0,0,0)
+        double wins = 1 - inSum;
+        if (wins > aScore || wins > bScore) { // (0,0,0) is one of the closest two tetrahedral vertices.
+            uint8_t c = (bScore > aScore ? bPoint : aPoint); // Our other closest vertex is the closest out of a and b.
+            if ((c & 0x01) == 0) {
+                sv_ext0.x = sb.x - 1;
+                sv_ext1.x = sb.x;
+                d_ext0.x = d0.x + 1;
+                d_ext1.x = d0.x;
+            } else {
+                sv_ext0.x = sv_ext1.x = sb.x + 1;
+                d_ext0.x = d_ext1.x = d0.x - 1;
+            }
+
+            if ((c & 0x02) == 0) {
+                sv_ext0.y = sv_ext1.y = sb.y;
+                d_ext0.y = d_ext1.y = d0.y;
+                if ((c & 0x01) == 0) {
+                    sv_ext1.y -= 1;
+                    d_ext1.y += 1;
+                } else {
+                    sv_ext0.y -= 1;
+                    d_ext0.y += 1;
+                }
+            } else {
+                sv_ext0.y = sv_ext1.y = sb.y + 1;
+                d_ext0.y = d_ext1.y = d0.y - 1;
+            }
+
+            if ((c & 0x04) == 0) {
+                sv_ext0.z = sb.z;
+                sv_ext1.z = sb.z - 1;
+                d_ext0.z = d0.z;
+                d_ext1.z = d0.z + 1;
+            } else {
+                sv_ext0.z = sv_ext1.z = sb.z + 1;
+                d_ext0.z = d_ext1.z = d0.z - 1;
+            }
+        } else { // (0,0,0) is not one of the closest two tetrahedral vertices.
+            uint8_t c = (aPoint | bPoint); // Our two extra vertices are determined by the closest two.
+            if ((c & 0x01) == 0) {
+                sv_ext0.x = sb.x;
+                sv_ext1.x = sb.x - 1;
+                d_ext0.x = d0.x - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.x = d0.x + 1 - SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.x = sv_ext1.x = sb.x + 1;
+                d_ext0.x = d0.x - 1 - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.x = d0.x - 1 - SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x02) == 0) {
+                sv_ext0.y = sb.y;
+                sv_ext1.y = sb.y - 1;
+                d_ext0.y = d0.y - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.y = d0.y + 1 - SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.y = sv_ext1.y = sb.y + 1;
+                d_ext0.y = d0.y - 1 - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.y = d0.y - 1 - SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x04) == 0) {
+                sv_ext0.z = sb.z;
+                sv_ext1.z = sb.z - 1;
+                d_ext0.z = d0.z - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.z = d0.z + 1 - SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.z = sv_ext1.z = sb.z + 1;
+                d_ext0.z = d0.z - 1 - 2 * SQUISH_CONSTANT_3D;
+                d_ext1.z = d0.z - 1 - SQUISH_CONSTANT_3D;
+            }
+        }
+
+        // Contribution (0,0,0)
+        double attn0 = attn(d0);
+        if (attn0 > 0)
+            value += std::pow(attn0, 4) * extrapolate3(sb.x + 0, sb.y + 0, sb.z + 0, d0, seed);
+
+        // Contribution (1,0,0)
+        glm::dvec3 d1 = (d0 + glm::dvec3{-1,0,0}) - SQUISH_CONSTANT_3D;
+        double attn1 = attn(d1);
+        if (attn1 > 0)
+            value += std::pow(attn1, 4) * extrapolate3(sb.x + 1, sb.y + 0, sb.z + 0, d1, seed);
+
+        // Contribution (0,1,0)
+        glm::dvec3 d2  {d0.x - SQUISH_CONSTANT_3D, d0.y - 1 - SQUISH_CONSTANT_3D, d1.z};
+        double attn2 = attn(d2);
+        if (attn2 > 0)
+            value += std::pow(attn2, 4) * extrapolate3(sb.x + 0, sb.y + 1, sb.z + 0, d2, seed);
+
+        // Contribution (0,0,1)
+        glm::dvec3 d3 {d2.x, d1.y, d0.z - 1 - SQUISH_CONSTANT_3D};
+        double attn3 = attn(d3);
+        if (attn3 > 0)
+            value += std::pow(attn3, 4) * extrapolate3(sb.x + 0, sb.y + 0, sb.z + 1, d3, seed);
+
+    } else if (inSum >= 2) { // We're inside the tetrahedron (3-Simplex) at (1,1,1)
+
+        // Determine which two tetrahedral vertices are the closest, out of (1,1,0), (1,0,1), (0,1,1) but not (1,1,1).
+        uint8_t aPoint = 0x06;
+        double aScore = ins.x;
+        uint8_t bPoint = 0x05;
+        double bScore = ins.y;
+        if (aScore <= bScore && ins.z < bScore) {
+            bScore = ins.z;
+            bPoint = 0x03;
+        } else if (aScore > bScore && ins.z < aScore) {
+            aScore = ins.z;
+            aPoint = 0x03;
+        }
+
+        // Now we determine the two lattice points not part of the tetrahedron that may contribute.
+        // This depends on the closest two tetrahedral vertices, including (1,1,1)
+        double wins = 3 - inSum;
+        if (wins < aScore || wins < bScore) { // (1,1,1) is one of the closest two tetrahedral vertices.
+            uint8_t c = (bScore < aScore ? bPoint : aPoint); // Our other closest vertex is the closest out of a and b.
+            if ((c & 0x01) != 0) {
+                sv_ext0.x = sb.x + 2;
+                sv_ext1.x = sb.x + 1;
+                d_ext0.x = d0.x - 2 - 3 * SQUISH_CONSTANT_3D;
+                d_ext1.x = d0.x - 1 - 3 * SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.x = sv_ext1.x = sb.x;
+                d_ext0.x = d_ext1.x = d0.x - 3 * SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x02) != 0) {
+                sv_ext0.y = sv_ext1.y = sb.y + 1;
+                d_ext0.y = d_ext1.y = d0.y - 1 - 3 * SQUISH_CONSTANT_3D;
+                if ((c & 0x01) != 0) {
+                    sv_ext1.y += 1;
+                    d_ext1.y -= 1;
+                } else {
+                    sv_ext0.y += 1;
+                    d_ext0.y -= 1;
+                }
+            } else {
+                sv_ext0.y = sv_ext1.y = sb.y;
+                d_ext0.y = d_ext1.y = d0.y - 3 * SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x04) != 0) {
+                sv_ext0.z = sb.z + 1;
+                sv_ext1.z = sb.z + 2;
+                d_ext0.z = d0.z - 1 - 3 * SQUISH_CONSTANT_3D;
+                d_ext1.z = d0.z - 2 - 3 * SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.z = sv_ext1.z = sb.z;
+                d_ext0.z = d_ext1.z = d0.z - 3 * SQUISH_CONSTANT_3D;
+            }
+        } else { // (1,1,1) is not one of the closest two tetrahedral vertices.
+
+            uint8_t c = (aPoint & bPoint); // Our two extra vertices are determined by the closest two.
+            if ((c & 0x01) != 0) {
+                sv_ext0.x = sb.x + 1;
+                sv_ext1.x = sb.x + 2;
+                d_ext0.x = d0.x - 1 - SQUISH_CONSTANT_3D;
+                d_ext1.x = d0.x - 2 - 2 * SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.x = sv_ext1.x = sb.x;
+                d_ext0.x = d0.x - SQUISH_CONSTANT_3D;
+                d_ext1.x = d0.x - 2 * SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x02) != 0) {
+                sv_ext0.y = sb.y + 1;
+                sv_ext1.y = sb.y + 2;
+                d_ext0.y = d0.y - 1 - SQUISH_CONSTANT_3D;
+                d_ext1.y = d0.y - 2 - 2 * SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.y = sv_ext1.y = sb.y;
+                d_ext0.y = d0.y - SQUISH_CONSTANT_3D;
+                d_ext1.y = d0.y - 2 * SQUISH_CONSTANT_3D;
+            }
+
+            if ((c & 0x04) != 0) {
+                sv_ext0.z = sb.z + 1;
+                sv_ext1.z = sb.z + 2;
+                d_ext0.z = d0.z - 1 - SQUISH_CONSTANT_3D;
+                d_ext1.z = d0.z - 2 - 2 * SQUISH_CONSTANT_3D;
+            } else {
+                sv_ext0.z = sv_ext1.z = sb.z;
+                d_ext0.z = d0.z - SQUISH_CONSTANT_3D;
+                d_ext1.z = d0.z - 2 * SQUISH_CONSTANT_3D;
+            }
+        }
+
+        // Contribution (1,1,0)
+        glm::dvec3 d3 = (d0 + glm::dvec3{-1,-1,0}) - 2 * SQUISH_CONSTANT_3D;
+        double attn3 = attn(d3);
+        if (attn3 > 0)
+            value += std::pow(attn3,4) * extrapolate3(sb.x + 1, sb.y + 1, sb.z + 0, d3, seed);
+
+        // Contribution (1,0,1)
+        glm::dvec3 d2 {d3.x, d0.y - 0 - 2 * SQUISH_CONSTANT_3D, d0.z - 1 - 2 * SQUISH_CONSTANT_3D};
+        double attn2 = attn(d2);
+        if (attn2 > 0)
+            value += std::pow(attn2, 4) * extrapolate3(sb.x + 1, sb.y + 0, sb.z + 1, d2, seed);
+
+        // Contribution (0,1,1)
+        glm::dvec3 d1 {d0.x - 0 - 2 * SQUISH_CONSTANT_3D, d3.y, d2.z};
+        double attn1 = attn(d1);
+        if (attn1 > 0)
+            value += std::pow(attn1, 4) * extrapolate3(sb.x + 0, sb.y + 1, sb.z + 1, d1, seed);
+
+        // Contribution (1,1,1)
+        d0 -= 1 + 3 * SQUISH_CONSTANT_3D;
+        double attn0 = attn(d0);
+        if (attn0 > 0)
+            value += std::pow(attn0, 4) * extrapolate3(sb.x + 1, sb.y + 1, sb.z + 1, d0, seed);
+
+    } else { // We're inside the octahedron (Rectified 3-Simplex) in between.
+
+        double aScore;
+        uint8_t aPoint;
+        bool aIsFurtherSide;
+        double bScore;
+        uint8_t bPoint;
+        bool bIsFurtherSide;
+
+        // Decide between point (0,0,1) and (1,1,0) as closest
+        double p1 = ins.x + ins.y;
+        if (p1 > 1) {
+            aScore = p1 - 1;
+            aPoint = 0x03;
+            aIsFurtherSide = true;
+        } else {
+            aScore = 1 - p1;
+            aPoint = 0x04;
+            aIsFurtherSide = false;
+        }
+
+        // Decide between point (0,1,0) and (1,0,1) as closest
+        double p2 = ins.x + ins.z;
+        if (p2 > 1) {
+            bScore = p2 - 1;
+            bPoint = 0x05;
+            bIsFurtherSide = true;
+        } else {
+            bScore = 1 - p2;
+            bPoint = 0x02;
+            bIsFurtherSide = false;
+        }
+
+        // The closest out of the two (1,0,0) and (0,1,1) will replace the furthest out of the two decided above, if closer.
+        double p3 = ins.y + ins.z;
+        if (p3 > 1) {
+            double score = p3 - 1;
+            if (aScore <= bScore && aScore < score) {
+                aScore = score;
+                aPoint = 0x06;
+                aIsFurtherSide = true;
+            } else if (aScore > bScore && bScore < score) {
+                bScore = score;
+                bPoint = 0x06;
+                bIsFurtherSide = true;
+            }
+        } else {
+            double score = 1 - p3;
+            if (aScore <= bScore && aScore < score) {
+                aScore = score;
+                aPoint = 0x01;
+                aIsFurtherSide = false;
+            } else if (aScore > bScore && bScore < score) {
+                bScore = score;
+                bPoint = 0x01;
+                bIsFurtherSide = false;
+            }
+        }
+
+        // Where each of the two closest points are determines how the extra two vertices are calculated.
+        if (aIsFurtherSide == bIsFurtherSide) {
+            if (aIsFurtherSide) { // Both closest points on (1,1,1) side
+
+                // One of the two extra points is (1,1,1)
+                d_ext0 = d0 - 1.0 - 3 * SQUISH_CONSTANT_3D;
+                sv_ext0 = sb + 1;
+
+                // Other extra point is based on the shared axis.
+                uint8_t c = (aPoint & bPoint);
+                if ((c & 0x01) != 0) {
+                    d_ext1 = d0 + glm::dvec3{-2,0,0} - 2 * SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{2,0,0};
+                } else if ((c & 0x02) != 0) {
+                    d_ext1 = d0 + glm::dvec3{0,-2,0} - 2 * SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{0,2,0};
+                } else {
+                    d_ext1 = d0 + glm::dvec3{0,0,-2} - 2 * SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{0,0,2};
+                }
+            } else { // Both closest points on (0,0,0) side
+                // One of the two extra points is (0,0,0)
+                d_ext0 = d0;
+                sv_ext0 = sb;
+
+                // Other extra point is based on the omitted axis.
+                uint8_t c = (aPoint | bPoint);
+                if ((c & 0x01) == 0) {
+                    d_ext1 = d0 + glm::dvec3{1,-1,-1} - SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{-1,1,1};
+                } else if ((c & 0x02) == 0) {
+                    d_ext1 = d0 + glm::dvec3{-1,1,-1} - SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{1,-1,1};
+                } else {
+                    d_ext1 = d0 + glm::dvec3{-1,-1,1} - SQUISH_CONSTANT_3D;
+                    sv_ext1 = sb + glm::ivec3{1,1,-1};
+                }
+            }
+        } else { // One point on (0,0,0) side, one point on (1,1,1) side
+            uint8_t c1, c2;
+            if (aIsFurtherSide) {
+                c1 = aPoint;
+                c2 = bPoint;
+            } else {
+                c1 = bPoint;
+                c2 = aPoint;
+            }
+            // One contribution is a permutation of (1,1,-1)
+            if ((c1 & 0x01) == 0) {
+                d_ext0 = d0 + glm::dvec3{1,-1,-1} - SQUISH_CONSTANT_3D;
+                sv_ext0 = sb + glm::ivec3{-1,1,1};
+            } else if ((c1 & 0x02) == 0) {
+                d_ext0 = d0 + glm::dvec3{-1,1,-1} - SQUISH_CONSTANT_3D;
+                sv_ext0 = sb + glm::ivec3{1,-1,1};
+            } else {
+                d_ext0 = d0 + glm::dvec3{-1,-1,1} - SQUISH_CONSTANT_3D;
+                sv_ext0 = sb + glm::ivec3{1,1,-1};
+            }
+
+            // One contribution is a permutation of (0,0,2)
+            d_ext1 = d0 - 2 * SQUISH_CONSTANT_3D;
+            sv_ext1 = sb;
+            if ((c2 & 0x01) != 0) {
+                d_ext1.x -= 2;
+                sv_ext1.x += 2;
+            } else if ((c2 & 0x02) != 0) {
+                d_ext1.y -= 2;
+                sv_ext1.y += 2;
+            } else {
+                d_ext1.z -= 2;
+                sv_ext1.z += 2;
+            }
+        }
+
+        // Contribution (1,0,0)
+        glm::dvec3 d1 = (d0 + glm::dvec3{-1,0,0}) - SQUISH_CONSTANT_3D;
+        double attn1 = attn(d1);
+        if (attn1 > 0)
+            value += std::pow(attn1, 4) * extrapolate3(sb.x + 1, sb.y + 0, sb.z + 0, d1, seed);
+
+        // Contribution (0,1,0)
+        glm::dvec3 d2 {d0.x - SQUISH_CONSTANT_3D, d0.y - 1 - SQUISH_CONSTANT_3D, d1.z};
+        double attn2 = attn(d2);
+        if (attn2 > 0)
+            value += std::pow(attn2, 4)* extrapolate3(sb.x + 0, sb.y + 1, sb.z + 0, d2, seed);
+
+
+        // Contribution (0,0,1)
+        glm::dvec3 d3 {d2.x, d1.y, d0.z - 1 - SQUISH_CONSTANT_3D};
+        double attn3 = attn(d3);
+        if (attn3 > 0)
+            value += std::pow(attn3, 4)* extrapolate3(sb.x + 0, sb.y + 0, sb.z + 1, d3, seed);
+
+        // Contribution (1,1,0)
+        glm::dvec3 d4 = d0 - glm::dvec3{1,1,0} - 2 * SQUISH_CONSTANT_3D;
+        double attn4 = attn(d4);
+        if (attn4 > 0)
+            value += std::pow(attn4, 4)* extrapolate3(sb.x + 1, sb.y + 1, sb.z + 0, d4, seed);
+
+        // Contribution (1,0,1)
+        glm::dvec3 d5 {d4.x, d0.y - 2 * SQUISH_CONSTANT_3D, d0.z - 1 - 2 * SQUISH_CONSTANT_3D};
+        double attn5 = attn(d5);
+        if (attn5 > 0)
+            value += std::pow(attn5, 4)* extrapolate3(sb.x + 1, sb.y + 0, sb.z + 1, d5, seed);
+
+        // Contribution (0,1,1)
+        glm::dvec3 d6 {d0.x - 2 * SQUISH_CONSTANT_3D, d4.y, d5.z};
+        double attn6 = attn(d6);
+        if (attn6 > 0)
+            value += std::pow(attn6, 4) * extrapolate3(sb.x + 0, sb.y + 1, sb.z + 1, d6, seed);
+    }
+    // First extra vertex
+    double attn_ext0 = attn(d_ext0);
+    if (attn_ext0 > 0)
+        value += std::pow(attn_ext0, 4) * extrapolate3(sv_ext0.x, sv_ext0.y, sv_ext0.z, d_ext0, seed);
+
+    // Second extra vertex
+    double attn_ext1 = attn(d_ext1);
+    if (attn_ext1 > 0)
+        value += std::pow(attn_ext1, 4) * extrapolate3(sv_ext1.x, sv_ext1.y, sv_ext1.z, d_ext1, seed);
+
+    return value / NORM_CONSTANT_3D;
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Worley
 
 glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
 {
@@ -505,6 +1098,9 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
     return glm::dvec2(f0, f1);
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Voronoi
+
 glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
 {
     glm::dvec2 t(glm::floor(xy));
@@ -534,6 +1130,8 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
     t += result;
     return glm::dvec3{t.x, t.y, 0.0};
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 double curve_linear(double x, const std::vector<node::control_point>& curve)
 {
@@ -735,10 +1333,22 @@ double generator_slowinterpreter::eval_v(const node& n)
         return p_simplex(p, seed_ + seed);
     }
 
+    case node::opensimplex: {
+        auto p = eval_xy(in);
+        auto seed = eval_v(n.input[1]);
+        return p_opensimplex(p, seed_ + seed);
+    }
+
     case node::simplex3: {
         auto p = eval_xyz(in);
         auto seed = eval_v(n.input[1]);
         return p_simplex3(p, seed_ + seed);
+    }
+
+    case node::opensimplex3: {
+        auto p = eval_xyz(in);
+        auto seed = eval_v(n.input[1]);
+        return p_opensimplex3(p, seed_ + seed);
     }
 
     case node::worley: {
@@ -982,6 +1592,24 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
     switch (n.type) {
     case node::entry_point:
         return p_;
+
+    case node::xplane: {
+        auto p = eval_xy(n.input[0]);
+        auto x = eval_v(n.input[1]);
+        return {x, p.y, p.x};
+    }
+
+    case node::yplane: {
+        auto p = eval_xy(n.input[0]);
+        auto y = eval_v(n.input[1]);
+        return {p.x, y, p.y};
+    }
+
+    case node::zplane: {
+        auto p = eval_xy(n.input[0]);
+        auto z = eval_v(n.input[1]);
+        return {p.x, p.y, z};
+    }
 
     case node::rotate3: {
         auto p = eval_xyz(n.input[0]);

@@ -21,13 +21,14 @@
 #include <hexanoise/generator_context.hpp>
 #include <hexanoise/generator_opencl.hpp>
 #include <hexanoise/generator_slowinterpreter.hpp>
+#include <hexanoise/version.hpp>
 
 #ifdef WIN32
-#define OPENCL_DLL_NAME "OpenCL.dll"
+#  define OPENCL_DLL_NAME "OpenCL.dll"
 #elif defined(MACOSX)
-#define OPENCL_DLL_NAME 0
+#  define OPENCL_DLL_NAME 0
 #else
-#define OPENCL_DLL_NAME "libOpenCL.so"
+#  define OPENCL_DLL_NAME "libOpenCL.so"
 #endif
 
 void write_png_file(const std::vector<uint8_t>& buf, int width, int height,
@@ -142,7 +143,8 @@ int main(int argc, char** argv)
 {
     try {
 
-        bool have_opencl {clewInit(OPENCL_DLL_NAME) >= 0};
+        int clew_err {clewInit(OPENCL_DLL_NAME)};
+        bool have_opencl {clew_err >= 0};
 
         po::variables_map vm;
         po::options_description options;
@@ -191,7 +193,7 @@ int main(int argc, char** argv)
             return EXIT_SUCCESS;
         }
         if (vm.count("version")) {
-            std::cout << "hndl2png " << std::endl;
+            std::cout << "hndl2png " << NOISE_VERSION << std::endl;
             return EXIT_SUCCESS;
         }
         if (vm.count("info")) {
@@ -199,7 +201,8 @@ int main(int argc, char** argv)
                 if (have_opencl)
                     opencl_info();
                 else
-                    std::cout << "OpenCL is not available on this system."
+                    std::cout << "OpenCL is not available on this system. ('"
+                              << clewErrorString(clew_err) << "')"
                               << std::endl;
             } catch (std::exception& e) {
                 std::cout
@@ -285,7 +288,13 @@ int main(int argc, char** argv)
                 std::cout << tmp->opencl_sourcecode() << std::endl;
                 return EXIT_SUCCESS;
             }
-            gen = std::unique_ptr<generator_i>(tmp);
+
+            try {
+                gen = std::unique_ptr<generator_i>(tmp);
+            } catch (std::exception& e) {
+                std::cerr << "Could not set up OpenCL: " << e.what() << "\nFalling back to interpreter." << std::endl;
+                throw;
+            }
         } catch (...) {
             gen = std::unique_ptr<generator_i>(
                 new generator_slowinterpreter(context, n));

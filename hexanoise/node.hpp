@@ -72,6 +72,7 @@ public:
         perlin,
         png_lookup,
         simplex,
+        opensimplex,
         voronoi,
         worley,
         x,
@@ -130,6 +131,12 @@ public:
         map3,
         turbulence3,
 
+        funcdef_xy_xyz,
+
+        xplane,
+        yplane,
+        zplane,
+
         funcdef_xyz_xy,
 
         xy,
@@ -143,6 +150,7 @@ public:
         fractal3,
         perlin3,
         simplex3,
+        opensimplex3,
         worley3,
         z
 

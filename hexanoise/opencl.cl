@@ -107,6 +107,8 @@ inline uint rng (uint last)
     return (1103515245 * last + 12345) & 0x7FFFFFFF;
 }
 
+//////////////////////////////////////////////////////////////////////////
+
 inline double gradient_noise2d (double2 xy, int2 ixy, uint seed)
 {
     ixy.x += seed * 1013;
@@ -144,6 +146,8 @@ double p_perlin (double2 xy, uint seed)
 
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.2;
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 __constant double F2 = 0.366025404; // 0.5 * (sqrt(3.0) - 1.0)
 __constant double G2 = 0.211324865; // (3.0 - sqrt(3.0)) / 6.0
@@ -223,10 +227,10 @@ double p_simplex (double2 xy, uint seed)
     return 70.0 * (n0 + n1 + n2);
 }
 
+__constant double G3 = 0.16666666666666666; // 1.0 / 6.0
+
 double p_simplex3 (double3 p, uint seed)
 {
-    double n0, n1, n2;
-
     // Skew the input space to determine which simplex cell we're in
     double s = (p.x + p.y + p.z) / 3.0;
     int i = floor(p.x + s);
@@ -249,7 +253,7 @@ double p_simplex3 (double3 p, uint seed)
         if (d0.y >= d0.z) {
             i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
         } else if (d0.x >= d0.z) {
-            i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 1; k2 = 0;
+            i1 = 1; j1 = 0; k1 = 0; i2 = 1; j2 = 0; k2 = 1;
         } else {
             i1 = 0; j1 = 0; k1 = 1; i2 = 1; j2 = 0; k2 = 1;
         }
@@ -263,50 +267,162 @@ double p_simplex3 (double3 p, uint seed)
         }
     }
 
-    double2 d1 = (double2)(d0.x - i1 + G2, d0.y - j1 + G2);
-    double2 d2 = (double2)(d0.x - 1.0 + 2.0 * G2, d0.y - 1.0 + 2.0 * G2);
+    double3 d1 = (double3)(d0.x - i1, d0.y - j1, d0.z - k1) + G3;
+    double3 d2 = (double3)(d0.x - i2, d0.y - j2, d0.z - k2) + 2.0 * G3;
+    double3 d3 = d0 - 1.0 + 3.0 * G3;
 
     int ii = (i + seed * 1063) & 0xFF;
     int jj = j & 0xFF;
-    int gi0 = (P[ii+P[jj]] & G_MASK) * G_VECSIZE;
-    int gi1 = (P[ii+i1+P[jj+j1]] & G_MASK) * G_VECSIZE;
-    int gi2 = (P[ii+1+P[jj+1]] & G_MASK) * G_VECSIZE;
+    int kk = k & 0xFF;
+    int gi0 = (P[ii+P[jj+P[kk]]] & G_MASK) * G_VECSIZE;
+    int gi1 = (P[ii+i1+P[jj+j1+P[kk+k1]]] & G_MASK) * G_VECSIZE;
+    int gi2 = (P[ii+i2+P[jj+j2+P[kk+k2]]] & G_MASK) * G_VECSIZE;
+    int gi3 = (P[ii+1+P[jj+1+P[kk+1]]] & G_MASK) * G_VECSIZE;
 
-    double t0 = 0.5 - dot(d0,d0);
-    if (t0 < 0)
-    {
+    double n0, n1, n2, n3;
+    double t0 = 0.6 - dot(d0, d0);
+    if (t0 < 0) {
         n0 = 0.0;
-    }
-    else
-    {
-        t0 *= t0;
-        n0 = t0 * t0 * dot((double2)(G[gi0],G[gi0+1]), d0);
+    } else {
+        n0 = pow(t0, 4) * dot((double3)(G[gi0],G[gi0+1],G[gi0+2]), d0);
     }
 
-    double t1 = 0.5 - dot(d1,d1);
-    if(t1 < 0)
-    {
+    double t1 = 0.6 - dot(d1, d1);
+    if (t1 < 0) {
         n1 = 0.0;
-    }
-    else
-    {
-        t1 *= t1;
-        n1 = t1 * t1 * dot((double2)(G[gi1],G[gi1+1]), d1);
+    } else {
+        n1 = pow(t1, 4) * dot((double3)(G[gi1],G[gi1+1],G[gi1+2]), d1);
     }
 
-    double t2 = 0.5 - dot(d2,d2);
-    if(t2 < 0)
-    {
+    double t2 = 0.6 - dot(d2, d2);
+    if (t2 < 0) {
         n2 = 0.0;
-    }
-    else
-    {
-        t2 *= t2;
-        n2 = t2 * t2 * dot((double2)(G[gi2],G[gi2+1]), d2);
+    } else {
+        n2 = pow(t2, 4) * dot((double3)(G[gi2],G[gi2+1],G[gi2+2]), d2);
     }
 
-    return 70.0 * (n0 + n1 + n2);
+    double t3 = 0.6 - dot(d3, d3);
+    if (t3 < 0) {
+        n3 = 0.0;
+    } else {
+        n3 = pow(t3, 4) * dot((double3)(G[gi3],G[gi3+1],G[gi3+2]), d3);
+    }
+
+    return 32.0 * (n0 + n1 + n2 + n3);
 }
+
+//////////////////////////////////////////////////////////////////////////
+
+// Gradients for 2D. They approximate the directions to the
+// vertices of an octagon from the center.
+__constant int gradients2D[16] = {
+    5, 2, 2, 5,
+    -5, 2, -2, 5,
+    5, -2, 2, -5,
+    -5, -2, -2, -5
+};
+
+inline double extrapolate2(int xsb, int ysb, double2 d, uint seed)
+{
+    int index = P[(P[(xsb + seed) & 0xFF] + (ysb + seed * 23)) & 0xFF] & 0x0E;
+    return gradients2D[index] * d.x + gradients2D[index + 1] * d.y;
+}
+
+double p_opensimplex (double2 p, uint seed)
+{
+    const double STRETCH_CONSTANT_2D = -0.211324865405187; // (1 / sqrt(2 + 1) - 1 ) / 2;
+    const double SQUISH_CONSTANT_2D = 0.366025403784439; // (sqrt(2 + 1) -1) / 2;
+    const double NORM_CONSTANT_2D = 47.0;
+
+    // Place input coordinates onto grid.
+    double stretchOffset = (p.x + p.y) * STRETCH_CONSTANT_2D;
+    double2 s = p + stretchOffset;
+
+    // Floor to get grid coordinates of rhombus (stretched square) super-cell origin.
+    int2 sb = (int2)(floor(s.x), floor(s.y));
+
+    // Skew out to get actual coordinates of rhombus origin. We'll need these later.
+    double squishOffset = (sb.x + sb.y) * SQUISH_CONSTANT_2D;
+    double2 b = (double2)(sb.x, sb.y) + squishOffset;
+
+    // Compute grid coordinates relative to rhombus origin.
+    double2 ins = s - (double2)(sb.x, sb.y);
+
+    // Sum those together to get a value that determines which region we're in.
+    double inSum = ins.x + ins.y;
+
+    // Positions relative to origin point.
+    double2 d0 = p - b;
+
+    // We'll be defining these inside the next block and using them afterwards.
+    double2 d_ext;
+    int2 sv_ext;
+    double value = 0;
+
+    // Contribution (1,0)
+    double2 d1 = d0 + (double2)(-1,0) - SQUISH_CONSTANT_2D;
+    double attn1 = 2.0 - dot(d1, d1);
+    if (attn1 > 0)
+        value += pow(attn1, 4) * extrapolate2(sb.x + 1, sb.y + 0, d1, seed);
+
+    // Contribution (0,1)
+    double2 d2 = d0 + (double2)(0,-1) - SQUISH_CONSTANT_2D;
+    double attn2 = 2.0 - dot(d2, d2);
+    if (attn2 > 0)
+        value += pow(attn2, 4) * extrapolate2(sb.x + 0, sb.y + 1, d2, seed);
+
+    if (inSum <= 1) { // We're inside the triangle (2-Simplex) at (0,0)
+        double zins = 1 - inSum;
+        if (zins > ins.x || zins > ins.y) { // (0,0) is one of the closest two triangular vertices
+            if (ins.x > ins.y) {
+                sv_ext = sb + (int2)(1, -1);
+                d_ext = d0 + (double2)(-1, 1);
+            } else {
+                sv_ext = sb + (int2)(-1, 1);
+                d_ext = d0 + (double2)(1, -1);
+            }
+        } else { // (1,0) and (0,1) are the closest two vertices.
+            sv_ext = sb + (int2)(1, 1);
+            d_ext = d0 + (double2)(-1, -1) - 2 * SQUISH_CONSTANT_2D;
+        }
+    } else { // We're inside the triangle (2-Simplex) at (1,1)
+        double zins = 2 - inSum;
+        if (zins < ins.x || zins < ins.y) { // (0,0) is one of the closest two triangular vertices
+            if (ins.x > ins.y) {
+                sv_ext = sb + (int2)(2,0);
+                d_ext = d0 + (double2)(-2, 0) - 2 * SQUISH_CONSTANT_2D;
+            } else {
+                sv_ext = sb + (int2)(0, 2);
+                d_ext = d0 + (double2)(0, -2) - 2 * SQUISH_CONSTANT_2D;
+            }
+        } else { // (1,0) and (0,1) are the closest two vertices.
+            d_ext = d0;
+            sv_ext = sb;
+        }
+        sb += 1;
+        d0 = d0 - 1.0 - 2 * SQUISH_CONSTANT_2D;
+    }
+
+    // Contribution (0,0) or (1,1)
+    double attn0 = 2.0 - dot(d0, d0);
+    if (attn0 > 0)
+        value += pow(attn0, 4) * extrapolate2(sb.x, sb.y, d0, seed);
+
+    // Extra Vertex
+    double attn_ext = 2.0 - dot(d_ext, d_ext);
+    if (attn_ext > 0)
+        value += pow(attn_ext, 4) * extrapolate2(sv_ext.x, sv_ext.y, d_ext, seed);
+
+    return value / NORM_CONSTANT_2D;
+}
+
+double p_opensimplex3 (double3 p, uint seed)
+{
+    ///\TODO Port the 3D version
+    return p_opensimplex((double2)(p.x, p.y), seed);
+}
+
+//////////////////////////////////////////////////////////////////////////
 
 double2 p_worley (const double2 p, uint seed)
 {
@@ -385,6 +501,8 @@ double2 p_worley3 (const double3 p, uint seed)
     return (double2)(f0, f1);
 }
 
+//////////////////////////////////////////////////////////////////////////
+
 double2 p_voronoi (const double2 p, uint seed)
 {
     double2 t = floor(p);
@@ -416,6 +534,8 @@ double2 p_voronoi (const double2 p, uint seed)
     }
     return t + nearest;
 }
+
+//////////////////////////////////////////////////////////////////////////
 
 inline double2 p_rotate (double2 p, double a)
 {

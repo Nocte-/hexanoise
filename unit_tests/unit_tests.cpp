@@ -20,11 +20,11 @@
 #include <hexanoise/simple_global_variables.hpp>
 
 #ifdef WIN32
-#define OPENCL_DLL_NAME "OpenCL.dll"
+#  define OPENCL_DLL_NAME "OpenCL.dll"
 #elif defined(MACOSX)
-#define OPENCL_DLL_NAME 0
+#  define OPENCL_DLL_NAME 0
 #else
-#define OPENCL_DLL_NAME "libOpenCL.so"
+#  define OPENCL_DLL_NAME "libOpenCL.so"
 #endif
 
 using namespace hexa::noise;
