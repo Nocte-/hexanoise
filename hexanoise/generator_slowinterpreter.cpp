@@ -568,14 +568,14 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
 // that the triangular and square facets can be inscribed inside
 // circles of the same radius.
 static const glm::dvec3 gradients3D[] = {
-    {-11., 4., 4.},   {-4., 11., 4.},   {-4., 4., 11.},
-    {11., 4., 4.},    {4., 11., 4.},    {4., 4., 11.},
-    {-11., -4., 4.},  {-4., -11., 4.},  {-4., -4., 11.},
-    {11., -4., 4.},   {4., -11., 4.},   {4., -4., 11.},
-    {-11., 4., -4.},  {-4., 11., -4.},  {-4., 4., -11.},
-    {11., 4., -4.},   {4., 11., -4.},   {4., 4., -11.},
-    {-11., -4., -4.}, {-4., -11., -4.}, {-4., -4., -11.},
-    {11., -4., -4.},  {4., -11., -4.},  {4., -4., -11.}
+    glm::dvec3(-11., 4., 4.),   glm::dvec3(-4., 11., 4.),   glm::dvec3(-4., 4., 11.),
+    glm::dvec3(11., 4., 4.),    glm::dvec3(4., 11., 4.),    glm::dvec3(4., 4., 11.),
+    glm::dvec3(-11., -4., 4.),  glm::dvec3(-4., -11., 4.),  glm::dvec3(-4., -4., 11.),
+    glm::dvec3(11., -4., 4.),   glm::dvec3(4., -11., 4.),   glm::dvec3(4., -4., 11.),
+    glm::dvec3(-11., 4., -4.),  glm::dvec3(-4., 11., -4.),  glm::dvec3(-4., 4., -11.),
+    glm::dvec3(11., 4., -4.),   glm::dvec3(4., 11., -4.),   glm::dvec3(4., 4., -11.),
+    glm::dvec3(-11., -4., -4.), glm::dvec3(-4., -11., -4.), glm::dvec3(-4., -4., -11.),
+    glm::dvec3(11., -4., -4.),  glm::dvec3(4., -11., -4.),  glm::dvec3(4., -4., -11.)
 };
 
 inline double extrapolate3(int xsb, int ysb, int zsb, const glm::dvec3& d, uint32_t seed)

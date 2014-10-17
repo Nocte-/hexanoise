@@ -1,53 +1,59 @@
+hexanoise (0.3.1) raring; urgency=medium
+
+  * Small fix for Launchpad
+
+ -- Nocte <nocte@hippie.nu> Fri, 17 Oct 2014 10:43:40 +0200
+
 hexanoise (0.3.0) raring; urgency=medium
 
   * Added Open Simplex noise function
 
- -- Nocte <nocte@hippie.nu>  Thu, 16 Oct 2014 18:00:33 +0200
+ -- Nocte <nocte@hippie.nu> Thu, 16 Oct 2014 18:00:33 +0200
 
 hexanoise (0.2.1) raring; urgency=low
 
   * Small fix for Launchpad builds
 
- -- Nocte <nocte@outlook.com>  Wed, 30 Jul 2014 20:15:19 +0200
+ -- Nocte <nocte@outlook.com> Wed, 30 Jul 2014 20:15:19 +0200
 
 hexanoise (0.2.0) raring; urgency=low
 
   * Added functions for 3D noise
 
- -- Nocte <nocte@outlook.com>  Wed, 30 Jul 2014 19:49:30 +0200
+ -- Nocte <nocte@outlook.com> Wed, 30 Jul 2014 19:49:30 +0200
 
 hexanoise (0.1.5) raring; urgency=low
 
-  * Switch to clang-format 
+  * Switch to clang-format
 
- -- Nocte <nocte@outlook.com>  Mon, 02 Jun 2014 00:10:29 +0200
+ -- Nocte <nocte@outlook.com> Mon, 02 Jun 2014 00:10:29 +0200
 
 hexanoise (0.1.4) raring; urgency=low
 
   * Trying to fix the Launchpad builds
 
- -- Nocte <nocte@outlook.com>  Sun, 01 Jun 2014 13:10:47 +0200
+ -- Nocte <nocte@outlook.com> Sun, 01 Jun 2014 13:10:47 +0200
 
 hexanoise (0.1.3) raring; urgency=low
 
-  * Bugfixes for shift() and in_rectangle() 
+  * Bugfixes for shift() and in_rectangle()
 
- -- Nocte <nocte@hippie.nu>  Thu, 08 May 2014 09:21:00 +0200
+ -- Nocte <nocte@hippie.nu> Thu, 08 May 2014 09:21:00 +0200
 
 hexanoise (0.1.2) raring; urgency=low
 
   * Use OpenCL ICL for now, switching to CLEW later.
 
- -- Nocte <nocte@hippie.nu>  Sun, 04 May 2014 16:48:09 +0200
+ -- Nocte <nocte@hippie.nu> Sun, 04 May 2014 16:48:09 +0200
 
 hexanoise (0.1.1) raring; urgency=low
 
   * Added build dependencies.
 
- -- Nocte <nocte@hippie.nu>  Sun, 04 May 2014 14:46:50 +0200
+ -- Nocte <nocte@hippie.nu> Sun, 04 May 2014 14:46:50 +0200
 
 hexanoise (0.1.0) raring; urgency=low
 
-  * Initial release. 
+  * Initial release.
 
- -- Nocte <nocte@hippie.nu>  Sun, 04 May 2014 13:00:03 +0200
+ -- Nocte <nocte@hippie.nu> Sun, 04 May 2014 13:00:03 +0200
