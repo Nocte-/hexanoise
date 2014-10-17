@@ -477,17 +477,17 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
 
     // Place input coordinates onto grid.
     double stretchOffset = (p.x + p.y) * STRETCH_CONSTANT_2D;
-    glm::dvec2 s {p + stretchOffset};
+    glm::dvec2 s (p + stretchOffset);
 
     // Floor to get grid coordinates of rhombus (stretched square) super-cell origin.
-    glm::ivec2 sb {glm::floor(s)};
+    glm::ivec2 sb (glm::floor(s));
 
     // Skew out to get actual coordinates of rhombus origin. We'll need these later.
     double squishOffset = (sb.x + sb.y) * SQUISH_CONSTANT_2D;
-    glm::dvec2 b {glm::dvec2{sb} + squishOffset};
+    glm::dvec2 b (glm::dvec2{sb} + squishOffset);
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec2 ins {s - glm::dvec2{sb}};
+    glm::dvec2 ins (s - glm::dvec2{sb});
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y;
@@ -597,17 +597,17 @@ double p_opensimplex3(const glm::dvec3& p, uint32_t seed)
 
     // Place input coordinates on simplectic honeycomb.
     double stretchOffset = (p.x + p.y + p.z) * STRETCH_CONSTANT_3D;
-    glm::dvec3 s {p + stretchOffset};
+    glm::dvec3 s (p + stretchOffset);
 
     // Floor to get grid coordinates of rhombohedron (stretched cube) super-cell origin.
-    glm::ivec3 sb {glm::floor(s)};
+    glm::ivec3 sb (glm::floor(s));
 
     // Skew out to get actual coordinates of rhombohedron origin. We'll need these later.
     double squishOffset = (sb.x + sb.y + sb.z) * SQUISH_CONSTANT_3D;
-    glm::dvec3 b {glm::dvec3{sb} + squishOffset};
+    glm::dvec3 b (glm::dvec3{sb} + squishOffset);
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec3 ins {s - glm::dvec3{sb}};
+    glm::dvec3 ins (s - glm::dvec3{sb});
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y + ins.z;

@@ -1,3 +1,9 @@
+hexanoise (0.3.2) UNRELEASED; urgency=medium
+
+  * Fix for Launchpad Trusty
+
+ -- Nocte <nocte@hippie.nu>  Sat, 18 Oct 2014 00:12:43 +0200
+
 hexanoise (0.3.1) raring; urgency=medium
 
   * Small fix for Launchpad
