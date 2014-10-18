@@ -484,10 +484,10 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
 
     // Skew out to get actual coordinates of rhombus origin. We'll need these later.
     double squishOffset = (sb.x + sb.y) * SQUISH_CONSTANT_2D;
-    glm::dvec2 b (glm::dvec2{sb} + squishOffset);
+    glm::dvec2 b (glm::dvec2(sb) + squishOffset);
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec2 ins (s - glm::dvec2{sb});
+    glm::dvec2 ins (s - glm::dvec2(sb));
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y;
@@ -501,7 +501,7 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
     double value = 0;
 
     // Contribution (1,0)
-    glm::dvec2 d1 {(d0 + glm::dvec2{-1,0}) - SQUISH_CONSTANT_2D};
+    glm::dvec2 d1 ((d0 + glm::dvec2{-1,0}) - SQUISH_CONSTANT_2D);
     double attn1 = attn(d1);
 
     if (attn1 > 0) {
@@ -510,7 +510,7 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
     }
 
     // Contribution (0,1)
-    glm::dvec2 d2 {(d0 + glm::dvec2{0,-1}) - SQUISH_CONSTANT_2D};
+    glm::dvec2 d2 ((d0 + glm::dvec2(0,-1)) - SQUISH_CONSTANT_2D);
     double attn2 = attn(d2);
     if (attn2 > 0) {
         attn2 *= attn2;
@@ -604,10 +604,10 @@ double p_opensimplex3(const glm::dvec3& p, uint32_t seed)
 
     // Skew out to get actual coordinates of rhombohedron origin. We'll need these later.
     double squishOffset = (sb.x + sb.y + sb.z) * SQUISH_CONSTANT_3D;
-    glm::dvec3 b (glm::dvec3{sb} + squishOffset);
+    glm::dvec3 b (glm::dvec3(sb) + squishOffset);
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec3 ins (s - glm::dvec3{sb});
+    glm::dvec3 ins (s - glm::dvec3(sb));
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y + ins.z;
