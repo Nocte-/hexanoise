@@ -57,6 +57,7 @@ set(HEADER_FILES
     global_variables_i.hpp
     node.hpp
     simple_global_variables.hpp
+    opencl_prelude.hpp
     version.hpp)
 
 

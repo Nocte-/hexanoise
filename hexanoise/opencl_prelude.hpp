@@ -1,3 +1,14 @@
+//---------------------------------------------------------------------------
+// hexanoise/opencl_prelude.hpp
+//
+// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+//---------------------------------------------------------------------------
+
+namespace hexa {
+namespace noise {
+
+const char* opencl_prelude = R"xxxxx(
+
 
 #ifdef cl_khr_fp64
     #pragma OPENCL EXTENSION cl_khr_fp64 : enable
@@ -37,36 +48,36 @@ __constant int P[512] = {151,160,137,91,90,15,
   129,22,39,253, 19,98,108,110,79,113,224,232,178,185, 112,104,218,246,97,228,
   251,34,242,193,238,210,144,12,191,179,162,241, 81,51,145,235,249,14,239,107,
   49,192,214, 31,181,199,106,157,184, 84,204,176,115,121,50,45,127, 4,150,254,
-  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,  
+  138,236,205,93,222,114,67,29,24,72,243,141,128,195,78,66,215,61,156,180,
   };
-  
+
 //////////////////////////////////////////////////////////////////////////
- 
+
 __constant int G_MASK = 15;
 __constant int G_SIZE = 16;
 __constant int G_VECSIZE = 4;
 __constant float G[16*4] = {
-      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1, 
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      +ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
       -ONE_F1,  -ONE_F1, +ZERO_F1, +ZERO_F1,
-      +ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
-      -ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1, 
-      +ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1, 
+      +ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1,
+      -ONE_F1, +ZERO_F1,  +ONE_F1, +ZERO_F1,
+      +ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1,
       -ONE_F1, +ZERO_F1,  -ONE_F1, +ZERO_F1,
-     +ZERO_F1,  +ONE_F1,  +ONE_F1, +ZERO_F1, 
-     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
-     +ZERO_F1,  +ONE_F1,  -ONE_F1, +ZERO_F1, 
+     +ZERO_F1,  +ONE_F1,  +ONE_F1, +ZERO_F1,
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1,
+     +ZERO_F1,  +ONE_F1,  -ONE_F1, +ZERO_F1,
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1,
-      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1, 
-     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1, 
+      +ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+      -ONE_F1,  +ONE_F1, +ZERO_F1, +ZERO_F1,
+     +ZERO_F1,  -ONE_F1,  +ONE_F1, +ZERO_F1,
      +ZERO_F1,  -ONE_F1,  -ONE_F1, +ZERO_F1
-};  
+};
 
 __constant uint OFFSET_BASIS = 2166136261;
 __constant uint FNV_PRIME = 16777619;
- 
+
 inline double lerp (double x, double a, double b)
 {
     return mad(x, b - a, a);
@@ -611,3 +622,8 @@ inline bool p_is_in_rectangle (double2 p, double x1, double y1, double x2, doubl
     return p.x >= x1 && p.y >= y1 && p.x <= x2 && p.y <= y2;
 }
 
+
+)xxxxx";
+
+} // namespace noise
+} // namespace hexa

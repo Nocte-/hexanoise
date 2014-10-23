@@ -11,6 +11,7 @@
 #include <fstream>
 #include <stdexcept>
 #include "node.hpp"
+#include "opencl_prelude.hpp"
 
 #ifndef OPENCL_OCTAVES_LIMIT
 #define OPENCL_OCTAVES_LIMIT 16
@@ -23,25 +24,15 @@ namespace noise
 
 generator_opencl::generator_opencl(const generator_context& ctx,
                                    cl::Context& opencl_context,
-                                   cl::Device& opencl_device, const node& n,
-                                   const std::string& opencl_file)
+                                   cl::Device& opencl_device, const node& n)
     : generator_i(ctx)
     , count_(1)
+    , main_(opencl_prelude)
     , context_(opencl_context)
     , device_(opencl_device)
     , queue_(opencl_context, opencl_device)
 {
     std::string body(co(n));
-
-    std::ifstream file(opencl_file.c_str(), std::ios::binary);
-    if (!file)
-        throw std::runtime_error("cannot open OpenCL file " + opencl_file);
-
-    file.seekg(0, std::ios::end);
-    main_.resize(file.tellg());
-    file.seekg(0, std::ios::beg);
-    file.read(&main_[0], main_.size());
-    file.close();
 
     main_ += "\n";
     for (auto& p : functions_) {
@@ -55,54 +46,50 @@ generator_opencl::generator_opencl(const generator_context& ctx,
     bool make_3d = func_type == var_t::xyz || func_type == var_t::none;
     
     if (make_3d) {
-        main_ += "\n"
-                 "__kernel void noisemain3(\n"
-                 "  __global double* output, const double startx, "
-                 "const double starty, const double startz, "
-                 "const double stepx, const double stepy, const double stepz)\n"
-                 "{\n"
-                 "    int3 coord = (int3)(get_global_id(0), get_global_id(1), "
-                 "get_global_id(2));\n"
-                 "    int  sizex = get_global_size(0);\n"
-                 "    int  sizey = get_global_size(1);\n"
-                 "    double3 p = mad((double3)(stepx, stepy, stepz), "
-                 "(double3)(coord.x, coord.y, coord.z), "
-                 "(double3)(startx, starty, startz));\n"
-                 "    output[coord.z * sizex * sizey + coord.y * sizex + "
-                 "coord.x] "
-                 "= ";
+        main_ += R"xxxxx(
+
+        __kernel void noisemain3(
+            __global double* output, const double startx,
+            const double starty, const double startz,
+            const double stepx, const double stepy, const double stepz)
+        {
+            int3 coord = (int3)(get_global_id(0), get_global_id(1), get_global_id(2));
+            int  sizex = get_global_size(0);
+            int  sizey = get_global_size(1);
+            double3 p = mad((double3)(stepx, stepy, stepz),
+                (double3)(coord.x, coord.y, coord.z),
+                (double3)(startx, starty, startz));
+            output[coord.z * sizex * sizey + coord.y * sizex + coord.x] =
+        )xxxxx";
     
         main_ += body;
         main_ += ";\n}\n";
     }
     if (make_2d) {
+        main_ += R"xxxxx(
 
-        main_
-            += "\n"
-               "__kernel void noisemain(\n"
-               "  __global double* output, const double2 start, const double2 "
-               "step)\n"
-               "{\n"
-               "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-               "    int  sizex = get_global_size(0);\n"
-               "    double2 p = mad(step, (double2)(coord.x, coord.y), "
-               "start);\n"
-               "    output[coord.y * sizex + coord.x] = ";
+        __kernel void noisemain(
+            __global double* output, const double2 start, const double2 step)
+        {
+            int2 coord = (int2)(get_global_id(0), get_global_id(1));
+            int sizex = get_global_size(0);
+            double2 p = mad(step, (double2)(coord.x, coord.y), start);
+            output[coord.y * sizex + coord.x] =
+        )xxxxx";
 
         main_ += body;
         main_ += ";\n}\n";
 
-        main_
-            += "\n"
-               "__kernel void noisemain_int16(\n"
-               "  __global int16* output, const double2 start, const double2 "
-               "step)\n"
-               "{\n"
-               "    int2 coord = (int2)(get_global_id(0), get_global_id(1));\n"
-               "    int  sizex = get_global_size(0);\n"
-               "    double2 p = mad(step, (double2)(coord.x, coord.y), "
-               "start);\n"
-               "    output[coord.y * sizex + coord.x] = (int16)round(";
+        main_ += R"xxxxx(
+
+        __kernel void noisemain_int16(
+            __global int16* output, const double2 start, const double2 step)
+        {
+            int2 coord = (int2)(get_global_id(0), get_global_id(1));
+            int sizex = get_global_size(0);
+            double2 p = mad(step, (double2)(coord.x, coord.y), start);
+            output[coord.y * sizex + coord.x] = (int16)round(
+        )xxxxx";
 
         main_ += body;
         main_ += ");\n}\n";
