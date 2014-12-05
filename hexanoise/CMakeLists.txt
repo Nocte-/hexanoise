@@ -76,10 +76,13 @@ if(UNIX)
   target_link_libraries(${LIBNAME_S} dl)
 endif()
 
-if(BUILD_COVERAGE AND "${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-  target_link_libraries(${LIBNAME}   -fprofile-arcs -ftest-coverage)
-  target_link_libraries(${LIBNAME_S} -fprofile-arcs -ftest-coverage)
+if(BUILD_COVERAGE)
+  if("x${CMAKE_CXX_COMPILER_ID}" STREQUAL "xGNU")
+    target_link_libraries(${LIBNAME}   -fprofile-arcs -ftest-coverage)
+    target_link_libraries(${LIBNAME_S} -fprofile-arcs -ftest-coverage)
+  endif()
 endif()
 
 install(TARGETS ${LIBNAME_S} ${LIBNAME} DESTINATION lib)
 install(FILES ${HEADER_FILES} DESTINATION "include/${LIBNAME}")
+
