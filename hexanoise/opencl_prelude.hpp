@@ -322,6 +322,9 @@ double p_simplex3 (double3 p, uint seed)
     return 32.0 * (n0 + n1 + n2 + n3);
 }
 
+)xxxxx"  /* Split in half so MSVC can handle it */
+R"xxxxy(
+
 //////////////////////////////////////////////////////////////////////////
 
 // Gradients for 2D. They approximate the directions to the
@@ -623,7 +626,7 @@ inline bool p_is_in_rectangle (double2 p, double x1, double y1, double x2, doubl
 }
 
 
-)xxxxx";
+)xxxxy";
 
 } // namespace noise
 } // namespace hexa
