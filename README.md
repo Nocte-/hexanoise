@@ -1,6 +1,8 @@
 HexaNoise
 =========
 
+[![Build status](https://ci.appveyor.com/api/projects/status/q6up82sipx7yjf0k?svg=true)](https://ci.appveyor.com/project/Nocte-/hexanoise)
+
 This is a library for generating 2D and 3D coherent noise.  It compiles a noise
 definition script to OpenCL, or it can run it through a simple interpreter in
 case no OpenCL device is available.  A compiled script can then generate noise
