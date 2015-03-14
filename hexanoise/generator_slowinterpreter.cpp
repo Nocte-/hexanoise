@@ -1037,7 +1037,7 @@ glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
             }
         }
     }
-    return {f0, f1};
+    return glm::dvec2{f0, f1};
 }
 
 glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
@@ -1072,7 +1072,7 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
             }
         }
     }
-    return {f0, f1};
+    return glm::dvec2{f0, f1};
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1105,7 +1105,7 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
         }
     }
     t += result;
-    return {t.x, t.y, 0.0};
+    return glm::dvec3{t.x, t.y, 0.0};
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1157,10 +1157,10 @@ double curve_spline(double x, const std::vector<node::control_point>& curve)
 
 double png(const glm::dvec2& p, const generator_context::image& img)
 {
-    glm::dvec2 fl = glm::floor(p);
-    glm::dvec2 fr = p - fl;
-
+    glm::dvec2 fl{glm::floor(p)};
+    glm::dvec2 fr{p - fl};
     glm::ivec2 i{fr.x * img.width, fr.y * img.height};
+
     return ((double)img.buffer[i.y * img.width + i.x] - 127.5) / 127.5;
 }
 
@@ -1515,20 +1515,20 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
         auto t = eval_v(n.input[1]) * pi;
         auto ct = std::cos(t);
         auto st = std::sin(t);
-        return {p.x * ct - p.y * st, p.x * st + p.y * ct};
+        return glm::dvec2{p.x * ct - p.y * st, p.x * st + p.y * ct};
     }
 
     case node::scale: {
         auto p = eval_xy(n.input[0]);
         auto s = eval_v(n.input[1]);
-        return {p.x / s, p.y / s};
+        return glm::dvec2{p.x / s, p.y / s};
     }
 
     case node::shift: {
         auto p = eval_xy(n.input[0]);
         auto sx = eval_v(n.input[1]);
         auto sy = eval_v(n.input[2]);
-        return {p.x + sx, p.y + sy};
+        return glm::dvec2{p.x + sx, p.y + sy};
     }
 
     case node::map: {
@@ -1537,7 +1537,7 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
         auto x = eval_v(n.input[1]);
         auto y = eval_v(n.input[2]);
         p_ = tmp;
-        return {x, y};
+        return glm::dvec2{x, y};
     }
 
     case node::turbulence: {
@@ -1546,17 +1546,17 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
         auto x = eval_v(n.input[1]);
         auto y = eval_v(n.input[2]);
         p_ = tmp;
-        return {p_.x + x, p_.y + y};
+        return glm::dvec2{p_.x + x, p_.y + y};
     }
 
     case node::swap: {
         auto p = eval_xy(n.input[0]);
-        return {p.y, p.x};
+        return glm::dvec2{p.y, p.x};
     }
 
     case node::xy: {
         auto p = eval_xyz(n.input[0]);
-        return {p.x, p.y};
+        return glm::dvec2{p.x, p.y};
     }
 
     default:
@@ -1573,19 +1573,19 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
     case node::xplane: {
         auto p = eval_xy(n.input[0]);
         auto x = eval_v(n.input[1]);
-        return {x, p.y, p.x};
+        return glm::dvec3{x, p.y, p.x};
     }
 
     case node::yplane: {
         auto p = eval_xy(n.input[0]);
         auto y = eval_v(n.input[1]);
-        return {p.x, y, p.y};
+        return glm::dvec3{p.x, y, p.y};
     }
 
     case node::zplane: {
         auto p = eval_xy(n.input[0]);
         auto z = eval_v(n.input[1]);
-        return {p.x, p.y, z};
+        return glm::dvec3{p.x, p.y, z};
     }
 
     case node::rotate3: {
