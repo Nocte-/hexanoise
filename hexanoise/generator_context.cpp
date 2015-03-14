@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/generator_context.cpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #include "generator_context.hpp"
@@ -34,35 +34,34 @@ generator_context::image png_load(const std::string& file_name)
     if (fp == 0)
         throw std::runtime_error("cannot open file " + file_name);
 
-    auto read(fread(header, 1, 8, fp));
+    auto read = fread(header, 1, 8, fp);
     if (read != 8 || png_sig_cmp(header, 0, 8)) {
         fclose(fp);
         throw std::runtime_error(file_name + " is not a PNG file");
     }
-    png_structp png_ptr
+    auto png_ptr
         = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         fclose(fp);
         throw std::runtime_error("png_create_read_struct failed");
     }
 
-    png_infop info_ptr = png_create_info_struct(png_ptr);
+    auto info_ptr = png_create_info_struct(png_ptr);
     if (!info_ptr) {
         png_destroy_read_struct(&png_ptr, (png_infopp)NULL, (png_infopp)NULL);
         fclose(fp);
         throw std::runtime_error("png_create_info_struct failed");
     }
 
-    png_infop end_info = png_create_info_struct(png_ptr);
+    auto end_info = png_create_info_struct(png_ptr);
     if (!end_info) {
         png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
         fclose(fp);
         throw std::runtime_error("png_create_info_struct failed");
     }
 
-    // the code in this if statement gets called if libpng encounters an error
+    // The code in this if statement gets called if libpng encounters an error.
     if (setjmp(png_jmpbuf(png_ptr))) {
-        fprintf(stderr, "error from libpng\n");
         png_destroy_read_struct(&png_ptr, &info_ptr, &end_info);
         throw std::runtime_error("setjmp failed");
     }
@@ -87,7 +86,7 @@ generator_context::image png_load(const std::string& file_name)
     result.bitdepth = bit_depth;
     result.buffer.resize(rowbytes * temp_height);
 
-    png_byte* image_data(&result.buffer[0]);
+    png_byte* image_data = &result.buffer[0];
 
     png_bytep* row_pointers
         = (png_bytep*)malloc(temp_height * sizeof(png_bytep));
@@ -98,7 +97,7 @@ generator_context::image png_load(const std::string& file_name)
         throw std::runtime_error("out of memory");
     }
 
-    for (unsigned int i(0); i < temp_height; ++i)
+    for (unsigned int i = 0; i < temp_height; ++i)
         row_pointers[i] = image_data + i * rowbytes;
 
     png_read_image(png_ptr, row_pointers);
@@ -176,7 +175,7 @@ const node& generator_context::set_script(const std::string& name,
 
 const node& generator_context::get_script(const std::string& name) const
 {
-    auto found(scripts_.find(name));
+    auto found = scripts_.find(name);
     if (found == scripts_.end())
         throw std::runtime_error("script '" + name + "'' not found");
 
@@ -208,7 +207,7 @@ void generator_context::load_png_image(const std::string& name,
 const generator_context::image&
 generator_context::get_image(const std::string& name) const
 {
-    auto found(images_.find(name));
+    auto found = images_.find(name);
     if (found == images_.end())
         throw std::runtime_error("image " + name + " not found");
 

@@ -2,7 +2,7 @@
 /// \file   hexanoise/analysis.hpp
 /// \brief  Analyse scripts
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 #pragma once
 

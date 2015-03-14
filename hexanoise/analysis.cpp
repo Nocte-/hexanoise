@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/analysis.cpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #include "analysis.hpp"
@@ -21,7 +21,7 @@ size_t fractal_depth(const node& n)
 
 size_t weight(const node& n)
 {
-    size_t result;
+    size_t result = 0;
 
     switch (n.type) {
     case node::entry_point:
@@ -31,17 +31,29 @@ size_t weight(const node& n)
         return 0;
 
     case node::fractal:
+    case node::fractal3:
         return n.input[2].aux_var * weight(n.input[1]) + weight(n.input[0]);
 
     case node::then_else:
         return weight(n.input[0])
                + std::max(weight(n.input[1]), weight(n.input[2]));
 
-    case node::perlin:
     case node::worley:
+    case node::worley3:
     case node::voronoi:
+        result = 15;
+        break;
+
+    case node::perlin:
+    case node::perlin3:
     case node::simplex:
+    case node::simplex3:
         result = 5;
+        break;
+
+    case node::opensimplex:
+    case node::opensimplex3:
+        result = 25;
         break;
 
     default:

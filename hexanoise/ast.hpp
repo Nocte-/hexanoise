@@ -2,7 +2,7 @@
 /// \file   hexanoise/ast.hpp
 /// \brief  Abstract tree built by parser.y
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #pragma once

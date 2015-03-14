@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8.3)
 
 set(VERSION_SO    "1")
 set(VERSION_MAJOR "0")
-set(VERSION_MINOR "3")
+set(VERSION_MINOR "4")
 set(VERSION_PATCH "1")
 set(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
@@ -21,6 +21,14 @@ set(BUILD_UTILITIES 0 CACHE BOOL "Build utilities (hndl2png)")
 set(BUILD_DOCUMENTATION 0 CACHE BOOL "Generate Doxygen documentation")
 
 set(REQUIRED_BOOST_VERSION 1.48)
+
+
+# Prevent problems with RPATH on mac
+#
+if(POLICY CMP0042)
+    cmake_policy(SET CMP0042 NEW)
+endif()
+set(CMAKE_MACOSX_RPATH ON)
 
 # Set up the compiler
 #

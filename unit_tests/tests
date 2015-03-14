@@ -457,5 +457,12 @@ x:sub(5)
 
 # Combined
 
+fractal(1,5)
+0,0
+1
+
+scale(40):fractal(fractal(worley(x),2),2)
+5.2,6.2
+0.310042
 
 

@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/opencl_prelude.hpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 namespace hexa {

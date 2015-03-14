@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/generator_opencl.cpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #include "generator_opencl.hpp"
@@ -25,14 +25,14 @@ namespace noise
 generator_opencl::generator_opencl(const generator_context& ctx,
                                    cl::Context& opencl_context,
                                    cl::Device& opencl_device, const node& n)
-    : generator_i(ctx)
-    , count_(1)
-    , main_(opencl_prelude)
-    , context_(opencl_context)
-    , device_(opencl_device)
-    , queue_(opencl_context, opencl_device)
+    : generator_i{ctx}
+    , count_{1}
+    , main_{opencl_prelude}
+    , context_{opencl_context}
+    , device_{opencl_device}
+    , queue_{opencl_context, opencl_device}
 {
-    std::string body(co(n));
+    std::string body{co(n)};
 
     main_ += "\n";
     for (auto& p : functions_) {
@@ -98,7 +98,7 @@ generator_opencl::generator_opencl(const generator_context& ctx,
     std::vector<cl::Device> device_vec;
     device_vec.emplace_back(opencl_device);
 
-    cl::Program::Sources sources(1, {main_.c_str(), main_.size()});
+    cl::Program::Sources sources{1, {main_.c_str(), main_.size()}};
     program_ = cl::Program(opencl_context, sources);
     try {
         program_.build(device_vec,
@@ -123,8 +123,9 @@ std::vector<double> generator_opencl::run(const glm::dvec2& corner,
                                           const glm::dvec2& step,
                                           const glm::ivec2& count)
 {
-    unsigned int width(count.x), height(count.y);
-    unsigned int elements(width * height);
+    unsigned int width = count.x;
+    unsigned int height = count.y;
+    unsigned int elements = width * height;
 
     std::vector<double> result(elements);
     cl::Buffer output(context_, CL_MEM_WRITE_ONLY | CL_MEM_USE_HOST_PTR,
@@ -137,8 +138,8 @@ std::vector<double> generator_opencl::run(const glm::dvec2& corner,
     queue_.enqueueNDRangeKernel(kernel_, cl::NullRange, {width, height},
                                 cl::NullRange);
 
-    auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
-                                        elements * sizeof(double)));
+    auto memobj = queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                          elements * sizeof(double));
 
     queue_.enqueueUnmapMemObject(output, memobj);
 
@@ -149,7 +150,8 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec2& corner,
                                                  const glm::dvec2& step,
                                                  const glm::ivec2& count)
 {
-    unsigned int width = count.x, height = count.y;
+    unsigned int width = count.x;
+    unsigned int height = count.y;
     unsigned int elements = width * height;
 
     std::vector<int16_t> result(elements);
@@ -163,8 +165,8 @@ std::vector<int16_t> generator_opencl::run_int16(const glm::dvec2& corner,
     queue_.enqueueNDRangeKernel(kernel_int16_, cl::NullRange, {width, height},
                                 cl::NullRange);
 
-    auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
-                                        elements * sizeof(int16_t)));
+    auto memobj = queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                          elements * sizeof(int16_t));
 
     queue_.enqueueUnmapMemObject(output, memobj);
 
@@ -175,7 +177,9 @@ std::vector<double> generator_opencl::run(const glm::dvec3& corner,
                                           const glm::dvec3& step,
                                           const glm::ivec3& count)
 {
-    unsigned int width = count.x, height = count.y, depth = count.z;
+    unsigned int width = count.x;
+    unsigned int height = count.y;
+    unsigned int depth = count.z;
     unsigned int elements = width * height * depth;
 
     std::vector<double> result(elements);
@@ -194,8 +198,8 @@ std::vector<double> generator_opencl::run(const glm::dvec3& corner,
         queue_.enqueueNDRangeKernel(kernel3_, cl::NullRange,
                                     {width, height, depth}, cl::NullRange);
 
-        auto memobj(queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
-                                            elements * sizeof(double)));
+        auto memobj= queue_.enqueueMapBuffer(output, true, CL_MAP_WRITE, 0,
+                                             elements * sizeof(double));
 
         queue_.enqueueUnmapMemObject(output, memobj);
     } catch (cl::Error& err) {
@@ -268,7 +272,7 @@ std::string generator_opencl::co(const node& n)
         return "p_swap" + pl(n);
 
     case node::map: {
-        std::string func_name{std::string("p_map") + std::to_string(count_++)};
+        std::string func_name{std::string("ip_map") + std::to_string(count_++)};
 
         std::stringstream func_body;
         func_body << "inline double2 " << func_name
@@ -280,7 +284,7 @@ std::string generator_opencl::co(const node& n)
         return func_name + "(" + co(n.input[0]) + ")";
     }
     case node::map3: {
-        std::string func_name("p_map3" + std::to_string(count_++));
+        std::string func_name{"ip_map3" + std::to_string(count_++)};
 
         std::stringstream func_body;
         func_body << "inline double3 " << func_name
@@ -294,7 +298,7 @@ std::string generator_opencl::co(const node& n)
     }
 
     case node::turbulence: {
-        std::string func_name("p_turb" + std::to_string(count_++));
+        std::string func_name("ip_turb" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double2 " << func_name
@@ -308,7 +312,7 @@ std::string generator_opencl::co(const node& n)
     }
 
     case node::turbulence3: {
-        std::string func_name("p_turb3" + std::to_string(count_++));
+        std::string func_name("ip_turb3" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double3 " << func_name
@@ -323,7 +327,7 @@ std::string generator_opencl::co(const node& n)
     }
 
     case node::worley: {
-        std::string func_name("p_worley" + std::to_string(count_++));
+        std::string func_name("ip_worley" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double " << func_name
@@ -336,7 +340,7 @@ std::string generator_opencl::co(const node& n)
     }
 
     case node::worley3: {
-        std::string func_name("p_worley3" + std::to_string(count_++));
+        std::string func_name("ip_worley3" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double " << func_name
@@ -349,7 +353,7 @@ std::string generator_opencl::co(const node& n)
     }
 
     case node::voronoi: {
-        std::string func_name("p_voronoi" + std::to_string(count_++));
+        std::string func_name("ip_voronoi" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body << "inline double " << func_name
@@ -479,7 +483,7 @@ std::string generator_opencl::co(const node& n)
 
         int octaves(std::min<int>(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
 
-        std::string func_name("p_fractal_" + std::to_string(count_++));
+        std::string func_name("ip_fractal_" + std::to_string(count_++));
 
         std::stringstream func_body;
         func_body
@@ -490,8 +494,8 @@ std::string generator_opencl::co(const node& n)
             << "{"
             << "  result += " << co(n.input[1]) << " * step;"
             << "  div += step;"
-            << "  step *= lac;"
-            << "  p *= per;"
+            << "  step *= per;"
+            << "  p *= lac;"
             << "  p.x += 12345.0;"
             << "}"
             << "return result / div;"
@@ -509,9 +513,9 @@ std::string generator_opencl::co(const node& n)
             throw std::runtime_error(
                 "fractal octave count must be a constexpr");
 
-        int octaves(std::min<int>(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT));
+        int octaves = std::min<int>(n.input[2].aux_var, OPENCL_OCTAVES_LIMIT);
 
-        std::string func_name("p_fractal3_" + std::to_string(count_++));
+        std::string func_name{"ip_fractal3_" + std::to_string(count_++)};
 
         std::stringstream func_body;
         func_body
@@ -522,8 +526,8 @@ std::string generator_opencl::co(const node& n)
             << "{"
             << "  result += " << co(n.input[1]) << " * step;"
             << "  div += step;"
-            << "  step *= lac;"
-            << "  p *= per;"
+            << "  step *= per;"
+            << "  p *= lac;"
             << "  p.x += 12345.0;"
             << "}"
             << "return result / div;"
@@ -537,7 +541,7 @@ std::string generator_opencl::co(const node& n)
 
     case node::lambda_: {
         assert(n.input.size() == 2);
-        std::string func_name{"p_lambda_" + std::to_string(count_++)};
+        std::string func_name{"ip_lambda_" + std::to_string(count_++)};
         std::string type{type_string(n.input[0])};
 
         std::stringstream func_body;

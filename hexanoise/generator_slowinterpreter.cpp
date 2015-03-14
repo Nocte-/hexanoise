@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/generator_slowinterpreter.cpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #include "generator_slowinterpreter.hpp"
@@ -117,9 +117,9 @@ inline double blend5(const double a)
 inline double interp_cubic(double v0, double v1, double v2, double v3,
                            double a)
 {
-    const double x(v3 - v2 - v0 + v1);
-    const double a2(a * a);
-    const double a3(a2 * a);
+    const double x = v3 - v2 - v0 + v1;
+    const double a2 = a * a;
+    const double a3 = a2 * a;
     return x * a3 + (v0 - v1 - x) * a2 + (v2 - v0) * a + v1;
 }
 
@@ -169,8 +169,8 @@ inline double gradient_noise2d(const glm::dvec2& xy, glm::ivec2 ixy,
     ixy.y += seed * 1619;
     ixy &= P_MASK;
 
-    int index((P[ixy.x + P[ixy.y]] & G_MASK) * G_VECSIZE);
-    glm::dvec2 g(G[index], G[index + 1]);
+    int index = (P[ixy.x + P[ixy.y]] & G_MASK) * G_VECSIZE;
+    glm::dvec2 g{G[index], G[index + 1]};
 
     return glm::dot(xy, g);
 }
@@ -183,7 +183,7 @@ inline double gradient_noise3d(const glm::dvec3& xyz, glm::ivec3 ixyz,
     ixyz.z += seed * 3691;
     ixyz &= P_MASK;
 
-    int index((P[ixyz.x + P[ixyz.y + P[ixyz.z]]] & G_MASK) * G_VECSIZE);
+    int index = (P[ixyz.x + P[ixyz.y + P[ixyz.z]]] & G_MASK) * G_VECSIZE;
     glm::dvec3 g{G[index], G[index + 1], G[index + 2]};
 
     return glm::dot(xyz, g);
@@ -191,25 +191,25 @@ inline double gradient_noise3d(const glm::dvec3& xyz, glm::ivec3 ixyz,
 
 double p_perlin(const glm::dvec2& xy, uint32_t seed)
 {
-    glm::dvec2 t(glm::floor(xy));
-    glm::ivec2 xy0((int)t.x, (int)t.y);
-    glm::dvec2 xyf(xy - t);
+    glm::dvec2 t{glm::floor(xy)};
+    glm::ivec2 xy0{(int)t.x, (int)t.y};
+    glm::dvec2 xyf{xy - t};
 
-    const glm::ivec2 I01(0, 1);
-    const glm::ivec2 I10(1, 0);
-    const glm::ivec2 I11(1, 1);
+    const glm::ivec2 I01{0, 1};
+    const glm::ivec2 I10{1, 0};
+    const glm::ivec2 I11{1, 1};
 
-    const glm::dvec2 F01(0.0, 1.0);
-    const glm::dvec2 F10(1.0, 0.0);
-    const glm::dvec2 F11(1.0, 1.0);
+    const glm::dvec2 F01{0.0, 1.0};
+    const glm::dvec2 F10{1.0, 0.0};
+    const glm::dvec2 F11{1.0, 1.0};
 
     const double n00 = gradient_noise2d(xyf, xy0, seed);
     const double n10 = gradient_noise2d(xyf - F10, xy0 + I10, seed);
     const double n01 = gradient_noise2d(xyf - F01, xy0 + I01, seed);
     const double n11 = gradient_noise2d(xyf - F11, xy0 + I11, seed);
 
-    const glm::dvec2 n0001(n00, n01);
-    const glm::dvec2 n1011(n10, n11);
+    const glm::dvec2 n0001{n00, n01};
+    const glm::dvec2 n1011{n10, n11};
     const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
     return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
@@ -217,32 +217,8 @@ double p_perlin(const glm::dvec2& xy, uint32_t seed)
 
 double p_perlin3(const glm::dvec3& xyz, uint32_t seed)
 {
+    ///\todo Implement 3D Perlin
     return 0.0;
-
-    /*
-    glm::dvec3 t = glm::floor(xyz);
-    glm::ivec3 xyz0 {(int)t.x, (int)t.y, (int)t.z};
-    glm::dvec3 xyzf = xyz - t;
-
-    const glm::ivec3 I01{0, 1, 0};
-    const glm::ivec3 I10{1, 0, 0};
-    const glm::ivec3 I11{1, 1, 0};
-
-    const glm::dvec3 F01{0.0, 1.0, 0.0};
-    const glm::dvec3 F10{1.0, 0.0, 0.0};
-    const glm::dvec3 F11{1.0, 1.0, 0.0};
-
-    const double n00 = gradient_noise3d(xyzf, xyz0, seed);
-    const double n10 = gradient_noise3d(xyzf - F10, xyz0 + I10, seed);
-    const double n01 = gradient_noise3d(xyzf - F01, xyz0 + I01, seed);
-    const double n11 = gradient_noise3d(xyzf - F11, xyz0 + I11, seed);
-
-    const glm::dvec2 n0001(n00, n01);
-    const glm::dvec2 n1011(n10, n11);
-    const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
-
-    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
-    */
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -280,18 +256,18 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
         j1 = 1;
     }
 
-    double x1(x0 - i1 + G2);
-    double y1(y0 - j1 + G2);
-    double x2(x0 - 1.0 + 2.0 * G2);
-    double y2(y0 - 1.0 + 2.0 * G2);
+    double x1 = x0 - i1 + G2;
+    double y1 = y0 - j1 + G2;
+    double x2 = x0 - 1.0 + 2.0 * G2;
+    double y2 = y0 - 1.0 + 2.0 * G2;
 
-    int ii((i + seed * 1063) & 0xFF);
-    int jj(j & 0xFF);
-    int gi0(P[ii + P[jj]] & G_MASK);
-    int gi1(P[ii + i1 + P[jj + j1]] & G_MASK);
-    int gi2(P[ii + 1 + P[jj + 1]] & G_MASK);
+    int ii = (i + seed * 1063) & 0xFF;
+    int jj = j & 0xFF;
+    int gi0 = P[ii + P[jj]] & G_MASK;
+    int gi1 = P[ii + i1 + P[jj + j1]] & G_MASK;
+    int gi2 = P[ii + 1 + P[jj + 1]] & G_MASK;
 
-    double t0(0.5 - x0 * x0 - y0 * y0);
+    double t0 = 0.5 - x0 * x0 - y0 * y0;
     if (t0 < 0) {
         n0 = 0.0;
     } else {
@@ -299,7 +275,7 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
         n0 = t0 * t0 * dot(&G[gi0 * G_VECSIZE], x0, y0);
     }
 
-    double t1(0.5 - x1 * x1 - y1 * y1);
+    double t1 = 0.5 - x1 * x1 - y1 * y1;
     if (t1 < 0) {
         n1 = 0.0;
     } else {
@@ -307,7 +283,7 @@ double p_simplex(const glm::dvec2& xy, uint32_t seed)
         n1 = t1 * t1 * dot(&G[gi1 * G_VECSIZE], x1, y1);
     }
 
-    double t2(0.5 - x2 * x2 - y2 * y2);
+    double t2 = 0.5 - x2 * x2 - y2 * y2;
     if (t2 < 0) {
         n2 = 0.0;
     } else {
@@ -477,23 +453,23 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
 
     // Place input coordinates onto grid.
     double stretchOffset = (p.x + p.y) * STRETCH_CONSTANT_2D;
-    glm::dvec2 s (p + stretchOffset);
+    glm::dvec2 s {p + stretchOffset};
 
     // Floor to get grid coordinates of rhombus (stretched square) super-cell origin.
-    glm::ivec2 sb (glm::floor(s));
+    glm::ivec2 sb {glm::floor(s)};
 
     // Skew out to get actual coordinates of rhombus origin. We'll need these later.
     double squishOffset = (sb.x + sb.y) * SQUISH_CONSTANT_2D;
-    glm::dvec2 b (glm::dvec2(sb) + squishOffset);
+    glm::dvec2 b {glm::dvec2{sb} + squishOffset};
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec2 ins (s - glm::dvec2(sb));
+    glm::dvec2 ins {s - glm::dvec2{sb}};
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y;
 
     // Positions relative to origin point.
-    glm::dvec2 d0 = p - b;
+    glm::dvec2 d0 {p - b};
 
     // We'll be defining these inside the next block and using them afterwards.
     glm::dvec2 d_ext;
@@ -501,7 +477,7 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
     double value = 0;
 
     // Contribution (1,0)
-    glm::dvec2 d1 ((d0 + glm::dvec2{-1,0}) - SQUISH_CONSTANT_2D);
+    glm::dvec2 d1 {(d0 + glm::dvec2{-1,0}) - SQUISH_CONSTANT_2D};
     double attn1 = attn(d1);
 
     if (attn1 > 0) {
@@ -510,7 +486,7 @@ double p_opensimplex(const glm::dvec2& p, uint32_t seed)
     }
 
     // Contribution (0,1)
-    glm::dvec2 d2 ((d0 + glm::dvec2(0,-1)) - SQUISH_CONSTANT_2D);
+    glm::dvec2 d2 {(d0 + glm::dvec2(0,-1)) - SQUISH_CONSTANT_2D};
     double attn2 = attn(d2);
     if (attn2 > 0) {
         attn2 *= attn2;
@@ -597,17 +573,17 @@ double p_opensimplex3(const glm::dvec3& p, uint32_t seed)
 
     // Place input coordinates on simplectic honeycomb.
     double stretchOffset = (p.x + p.y + p.z) * STRETCH_CONSTANT_3D;
-    glm::dvec3 s (p + stretchOffset);
+    glm::dvec3 s {p + stretchOffset};
 
     // Floor to get grid coordinates of rhombohedron (stretched cube) super-cell origin.
-    glm::ivec3 sb (glm::floor(s));
+    glm::ivec3 sb {glm::floor(s)};
 
     // Skew out to get actual coordinates of rhombohedron origin. We'll need these later.
     double squishOffset = (sb.x + sb.y + sb.z) * SQUISH_CONSTANT_3D;
-    glm::dvec3 b (glm::dvec3(sb) + squishOffset);
+    glm::dvec3 b {glm::dvec3{sb} + squishOffset};
 
     // Compute grid coordinates relative to rhombus origin.
-    glm::dvec3 ins (s - glm::dvec3(sb));
+    glm::dvec3 ins {s - glm::dvec3{sb}};
 
     // Sum those together to get a value that determines which region we're in.
     double inSum = ins.x + ins.y + ins.z;
@@ -1035,23 +1011,24 @@ double p_opensimplex3(const glm::dvec3& p, uint32_t seed)
 
 glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
 {
-    glm::dvec2 t(glm::floor(xy));
-    glm::ivec2 xy0((int)t.x, (int)t.y);
-    glm::dvec2 xyf(xy - t);
+    glm::dvec2 t{glm::floor(xy)};
+    glm::ivec2 xy0{(int)t.x, (int)t.y};
+    glm::dvec2 xyf{xy - t};
 
-    double f0(99), f1(99);
+    double f0 = 99.0;
+    double f1 = 99.0;
 
-    for (int i(-1); i < 2; ++i) {
-        for (int j(-1); j < 2; ++j) {
-            glm::ivec2 square(xy0 + glm::ivec2(i, j));
-            auto rnglast(rng(hash(square.x + seed, square.y)));
+    for (int i = -1; i < 2; ++i) {
+        for (int j = -1; j < 2; ++j) {
+            glm::ivec2 square{xy0 + glm::ivec2{i, j}};
+            auto rnglast = rng(hash(square.x + seed, square.y));
 
             glm::dvec2 rnd_pt;
             rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
             rnglast = rng(rnglast);
             rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
 
-            double dist(glm::distance(xyf, rnd_pt));
+            auto dist = glm::distance(xyf, rnd_pt);
             if (dist < f0) {
                 f1 = f0;
                 f0 = dist;
@@ -1060,22 +1037,22 @@ glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
             }
         }
     }
-    return glm::dvec2(f0, f1);
+    return {f0, f1};
 }
 
 glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
 {
-    glm::dvec3 t = glm::floor(p);
-    glm::ivec3 p0{(int)t.x, (int)t.y, (int)t.z};
-    glm::dvec3 pf = p - t;
+    glm::dvec3 t {glm::floor(p)};
+    glm::ivec3 p0 {(int)t.x, (int)t.y, (int)t.z};
+    glm::dvec3 pf {p - t};
 
-    double f0 = std::numeric_limits<double>::max();
-    double f1 = std::numeric_limits<double>::max();
+    auto f0 = std::numeric_limits<double>::max();
+    auto f1 = std::numeric_limits<double>::max();
 
     for (int i = -1; i < 2; ++i) {
         for (int j = -1; j < 2; ++j) {
             for (int k = -1; k < 2; ++k) {
-                glm::ivec3 square = p0 + glm::ivec3(i, j, k);
+                glm::ivec3 square = p0 + glm::ivec3{i, j, k};
                 auto rnglast = rng(hash(square.x + seed, square.y, square.z));
 
                 glm::dvec3 rnd_pt;
@@ -1085,7 +1062,7 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
                 rnglast = rng(rnglast);
                 rnd_pt.z = k + (double)rnglast / (double)0x7FFFFFFF;
 
-                double dist = glm::distance(pf, rnd_pt);
+                auto dist = glm::distance(pf, rnd_pt);
                 if (dist < f0) {
                     f1 = f0;
                     f0 = dist;
@@ -1095,7 +1072,7 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
             }
         }
     }
-    return glm::dvec2(f0, f1);
+    return {f0, f1};
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1103,12 +1080,12 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
 
 glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
 {
-    glm::dvec2 t(glm::floor(xy));
-    glm::ivec2 xy0((int)t.x, (int)t.y);
-    glm::dvec2 xyf(xy - t);
+    glm::dvec2 t{glm::floor(xy)};
+    glm::ivec2 xy0{(int)t.x, (int)t.y};
+    glm::dvec2 xyf{xy - t};
     glm::dvec2 result;
 
-    double f0 = std::numeric_limits<double>::max();
+    auto f0 = std::numeric_limits<double>::max();
 
     for (int i = -1; i < 2; ++i) {
         for (int j = -1; j < 2; ++j) {
@@ -1120,7 +1097,7 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
             rnglast = rng(rnglast);
             rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
 
-            double dist = glm::distance(xyf, rnd_pt);
+            auto dist = glm::distance(xyf, rnd_pt);
             if (dist < f0) {
                 f0 = dist;
                 result = rnd_pt;
@@ -1128,21 +1105,21 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
         }
     }
     t += result;
-    return glm::dvec3{t.x, t.y, 0.0};
+    return {t.x, t.y, 0.0};
 }
 
 //////////////////////////////////////////////////////////////////////////
 
 double curve_linear(double x, const std::vector<node::control_point>& curve)
 {
-    auto i(curve.begin());
+    auto i = curve.begin();
     if (x < i->in)
         return i->out;
 
     for (; i != curve.end(); ++i) {
         if (x < i->in) {
             --i;
-            double deltax((i + 1)->in - i->in);
+            double deltax = (i + 1)->in - i->in;
             return lerp((x - i->in) / deltax, i->out, (i + 1)->out);
         }
     }
@@ -1208,7 +1185,7 @@ std::vector<double> generator_slowinterpreter::run(const glm::dvec2& corner,
     size_t i = 0;
     for (int y = 0; y < count.y; ++y)
         for (int x = 0; x < count.x; ++x)
-            result[i++] = eval(corner + glm::dvec2(x, y) * step, n_);
+            result[i++] = eval(corner + glm::dvec2{x, y} * step, n_);
 
     return result;
 }
@@ -1221,7 +1198,7 @@ std::vector<int16_t> generator_slowinterpreter::run_int16(
     for (int y = 0; y < count.y; ++y) {
         for (int x = 0; x < count.x; ++x) {
             result[i++] = static_cast<int16_t>(std::floor(0.5 + 
-                eval(corner + glm::dvec2(x, y) * step, n_)));
+                eval(corner + glm::dvec2{x, y} * step, n_)));
         }
     }
     return result;
@@ -1287,7 +1264,7 @@ double generator_slowinterpreter::eval_v(const node& n)
     }
 
     case node::chebyshev: {
-        auto p(eval_xy(in));
+        auto p = eval_xy(in);
         return std::max(std::abs(p.x), std::abs(p.y));
     }
 
@@ -1423,8 +1400,8 @@ double generator_slowinterpreter::eval_v(const node& n)
         for (int i = 0; i < octaves; ++i) {
             result += eval_v(f) * mul;
             div += mul;
-            mul *= lacunarity;
-            p_ *= persistence;
+            mul *= persistence;
+            p_ *= lacunarity;
             p_.x += 12345;
         }
         p_ = tmp;
@@ -1447,8 +1424,8 @@ double generator_slowinterpreter::eval_v(const node& n)
         for (int i = 0; i < octaves; ++i) {
             result += eval_v(f) * mul;
             div += mul;
-            mul *= lacunarity;
-            p_ *= persistence;
+            mul *= persistence;
+            p_ *= lacunarity;
             p_.x += 12345;
         }
         p_ = tmp;
@@ -1538,48 +1515,48 @@ glm::dvec2 generator_slowinterpreter::eval_xy(const node& n)
         auto t = eval_v(n.input[1]) * pi;
         auto ct = std::cos(t);
         auto st = std::sin(t);
-        return glm::dvec2{p.x * ct - p.y * st, p.x * st + p.y * ct};
+        return {p.x * ct - p.y * st, p.x * st + p.y * ct};
     }
 
     case node::scale: {
         auto p = eval_xy(n.input[0]);
         auto s = eval_v(n.input[1]);
-        return glm::dvec2{p.x / s, p.y / s};
+        return {p.x / s, p.y / s};
     }
 
     case node::shift: {
         auto p = eval_xy(n.input[0]);
         auto sx = eval_v(n.input[1]);
         auto sy = eval_v(n.input[2]);
-        return glm::dvec2{p.x + sx, p.y + sy};
+        return {p.x + sx, p.y + sy};
     }
 
     case node::map: {
         auto tmp(p_);
-        p_ = glm::dvec3(eval_xy(n.input[0]), 0.0);
+        p_ = glm::dvec3{eval_xy(n.input[0]), 0.0};
         auto x = eval_v(n.input[1]);
         auto y = eval_v(n.input[2]);
         p_ = tmp;
-        return glm::dvec2{x, y};
+        return {x, y};
     }
 
     case node::turbulence: {
         auto tmp(p_);
-        p_ = glm::dvec3(eval_xy(n.input[0]), 0.0);
+        p_ = glm::dvec3{eval_xy(n.input[0]), 0.0};
         auto x = eval_v(n.input[1]);
         auto y = eval_v(n.input[2]);
         p_ = tmp;
-        return glm::dvec2{p_.x + x, p_.y + y};
+        return {p_.x + x, p_.y + y};
     }
 
     case node::swap: {
         auto p = eval_xy(n.input[0]);
-        return glm::dvec2{p.y, p.x};
+        return {p.y, p.x};
     }
 
     case node::xy: {
         auto p = eval_xyz(n.input[0]);
-        return glm::dvec2{p.x, p.y};
+        return {p.x, p.y};
     }
 
     default:
@@ -1596,19 +1573,19 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
     case node::xplane: {
         auto p = eval_xy(n.input[0]);
         auto x = eval_v(n.input[1]);
-        return glm::dvec3{x, p.y, p.x};
+        return {x, p.y, p.x};
     }
 
     case node::yplane: {
         auto p = eval_xy(n.input[0]);
         auto y = eval_v(n.input[1]);
-        return glm::dvec3{p.x, y, p.y};
+        return {p.x, y, p.y};
     }
 
     case node::zplane: {
         auto p = eval_xy(n.input[0]);
         auto z = eval_v(n.input[1]);
-        return glm::dvec3{p.x, p.y, z};
+        return {p.x, p.y, z};
     }
 
     case node::rotate3: {

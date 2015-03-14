@@ -2,7 +2,7 @@
 /// \file   hexanoise/generator_slowinterpreter.hpp
 /// \brief  Interprets a compiled HNDL script
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 #pragma once
 
@@ -61,5 +61,6 @@ private:
     glm::dvec3 p_;
     uint32_t seed_;
 };
-}
-}
+
+} // namespace noise
+} // namespace hexa

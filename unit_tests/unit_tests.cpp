@@ -1,7 +1,7 @@
 //---------------------------------------------------------------------------
 // hexanoise/unit_tests/unit_test.cpp
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #define BOOST_TEST_MODULE hexanoise_unittests test
@@ -107,13 +107,14 @@ BOOST_AUTO_TEST_CASE(test_full)
                 throw std::runtime_error(input + " is not a valid position");
             }
             
-            bool succ1 {std::abs(result1 - expected) < 0.0001};
-            bool succ2 {std::abs(result2 - expected) < 0.0001};
+            bool succ1 = std::abs(result1 - expected) < 0.0001;
+            bool succ2 = std::abs(result2 - expected) < 0.0001;
             if (!succ1 || !succ2) {
                 std::cerr << "Failed function: " << line 
                           << "\nExpected: " << expected << "\nResult: "
                           << result1 << " / " << result2 << std::endl;
             }
+
             BOOST_CHECK(succ1 && succ2);
         }
     }

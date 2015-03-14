@@ -3,7 +3,7 @@
 /// \brief  Tiny commandline utility that renders a PNG image of a
 ///         given HNDL script
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 
 #include <algorithm>
@@ -32,7 +32,7 @@
 #endif
 
 void write_png_file(const std::vector<uint8_t>& buf, int width, int height,
-                    const std::string& file_name)
+                    const std::string& file_name, const std::string& hndl)
 {
     FILE* fp = 0;
     if (file_name.empty())
@@ -62,6 +62,12 @@ void write_png_file(const std::vector<uint8_t>& buf, int width, int height,
     png_set_IHDR(png_ptr, info_ptr, width, height, 8, PNG_COLOR_TYPE_GRAY,
                  PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_BASE,
                  PNG_FILTER_TYPE_BASE);
+
+    png_text txt;
+    txt.compression = PNG_TEXT_COMPRESSION_NONE;
+    txt.key = (png_charp)"HNDL";
+    txt.text = (png_charp)hndl.c_str();
+    png_set_text(png_ptr, info_ptr, &txt, 1);
 
     png_write_info(png_ptr, info_ptr);
 
@@ -176,6 +182,8 @@ int main(int argc, char** argv)
 
             ("use-interpreter", "disable OpenCL and use the interpreter")
 
+            ("use-opencl", "disable the interpreter, always use OpenCL")
+
             ("direct", "do not normalize the values")
 
             ("time", po::value<unsigned int>()->default_value(1),
@@ -251,12 +259,12 @@ int main(int argc, char** argv)
         std::unique_ptr<generator_i> gen;
         try {
             if (!have_opencl || vm.count("use-interpreter"))
-                throw 0; // Fake an error so the interpreter is used
+                throw std::runtime_error("No OpenCL available");
 
             std::vector<cl::Platform> platform_list;
             cl::Platform::get(&platform_list);
             if (platform_list.empty())
-                throw 0; // Fake an error so the interpreter is used
+                throw std::runtime_error("No OpenCL platforms available");
 
             auto platform_index(vm["platform"].as<unsigned int>());
             if (platform_index >= platform_list.size()) {
@@ -295,7 +303,12 @@ int main(int argc, char** argv)
                 std::cerr << "Could not set up OpenCL: " << e.what() << "\nFalling back to interpreter." << std::endl;
                 throw;
             }
-        } catch (...) {
+        } catch (std::exception& e) {
+            if (vm.count("use-interpreter") > 0) {
+                std::cerr << "Forced to use OpenCL, but cannot initialize: " << e.what() << std::endl;
+                exit(-1);
+            }
+
             gen = std::unique_ptr<generator_i>(
                 new generator_slowinterpreter(context, n));
         }
@@ -334,7 +347,7 @@ int main(int argc, char** argv)
                     127.0 + 127.0 * std::min(1.0, std::max(-1.0, i)));
             });
         }       
-        write_png_file(pixmap, width, height, vm["output"].as<std::string>());        
+        write_png_file(pixmap, width, height, vm["output"].as<std::string>(), script);
     } catch (cl::Error& e) {
         std::cerr << "Error in " << e.what() << ", code " << e.err()
                   << std::endl;

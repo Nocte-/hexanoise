@@ -2,7 +2,7 @@
 /// \file   hexanoise/simple_global_variables.hpp
 /// \brief  Very basic implementation of global variables
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 #pragma once
 

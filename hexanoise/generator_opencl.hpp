@@ -2,7 +2,7 @@
 /// \file   hexanoise/generator_opencl.hpp
 /// \brief  Builds and executes an OpenCL kernel from a compiled HNDL script
 //
-// Copyright 2014, nocte@hippie.nu            Released under the MIT License.
+// Copyright 2014-2015, nocte@hippie.nu       Released under the MIT License.
 //---------------------------------------------------------------------------
 #pragma once
 
@@ -70,5 +70,6 @@ private:
     cl::Kernel kernel_int16_;
     cl::Kernel kernel3_;
 };
+
 }
 }
