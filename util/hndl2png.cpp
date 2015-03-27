@@ -304,7 +304,7 @@ int main(int argc, char** argv)
                 throw;
             }
         } catch (std::exception& e) {
-            if (vm.count("use-interpreter") > 0) {
+            if (vm.count("use-opencl") > 0) {
                 std::cerr << "Forced to use OpenCL, but cannot initialize: " << e.what() << std::endl;
                 exit(-1);
             }

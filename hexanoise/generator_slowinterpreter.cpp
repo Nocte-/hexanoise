@@ -98,20 +98,9 @@ inline double lerp(double x, double a, double b)
     return a + x * (b - a);
 }
 
-/*
-inline double blend3 (const double a)
-{
-    return a * a * (3.0 - 2.0 * a);
-}
-*/
-
 inline double blend5(const double a)
 {
-    const double a3 = a * a * a;
-    const double a4 = a3 * a;
-    const double a5 = a4 * a;
-
-    return 10.0 * a3 - 15.0 * a4 + 6.0 * a5;
+    return a * a * a * (a * (a * 6.0 - 15.0) + 10.0);
 }
 
 inline double interp_cubic(double v0, double v1, double v2, double v3,
@@ -129,6 +118,12 @@ inline glm::dvec2 lerp2d(const double x, const glm::dvec2& a,
     return a + x * (b - a);
 }
 
+inline glm::dvec4 lerp4d(const double x, const glm::dvec4& a,
+                         const glm::dvec4& b)
+{
+    return a + x * (b - a);
+}
+
 inline double dot(const double* p, double x, double y)
 {
     return p[0] * x + p[1] * y;
@@ -139,19 +134,17 @@ inline double dot(const double* p, double x, double y, double z)
     return p[0] * x + p[1] * y + p[2] * z;
 }
 
-#define OFFSET_BASIS 2166136261
-#define FNV_PRIME 16777619
-
-// FNV hash: http://isthe.com/chongo/tech/comp/fnv/#FNV-source
-inline uint32_t hash(uint32_t i, uint32_t j, uint32_t k)
+inline uint32_t hash(uint32_t x, uint32_t y)
 {
-    return (uint32_t)((((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME)
-                       ^ k) * FNV_PRIME);
+    return ((uint)x * 2120969693) ^ ((uint)y * 915488749) ^ ((uint)(x + 1103515245) * (uint)(y + 1234567));
 }
 
-inline uint32_t hash(uint32_t i, uint32_t j)
+inline uint32_t hash(uint32_t x, uint32_t y, uint32_t z)
 {
-    return (uint32_t)((((OFFSET_BASIS ^ i) * FNV_PRIME) ^ j) * FNV_PRIME);
+    return ((uint)x * 2120969693)
+            ^ ((uint)y * 915488749)
+            ^ ((uint)z * 22695477)
+            ^ ((uint)(x + 1103515245) * (uint)(y + 1234567) * (uint)(z + 134775813));
 }
 
 inline uint32_t rng(uint32_t last)
@@ -173,20 +166,6 @@ inline double gradient_noise2d(const glm::dvec2& xy, glm::ivec2 ixy,
     glm::dvec2 g{G[index], G[index + 1]};
 
     return glm::dot(xy, g);
-}
-
-inline double gradient_noise3d(const glm::dvec3& xyz, glm::ivec3 ixyz,
-                               uint32_t seed)
-{
-    ixyz.x += seed * 1013;
-    ixyz.y += seed * 1619;
-    ixyz.z += seed * 3691;
-    ixyz &= P_MASK;
-
-    int index = (P[ixyz.x + P[ixyz.y + P[ixyz.z]]] & G_MASK) * G_VECSIZE;
-    glm::dvec3 g{G[index], G[index + 1], G[index + 2]};
-
-    return glm::dot(xyz, g);
 }
 
 double p_perlin(const glm::dvec2& xy, uint32_t seed)
@@ -212,13 +191,62 @@ double p_perlin(const glm::dvec2& xy, uint32_t seed)
     const glm::dvec2 n1011{n10, n11};
     const glm::dvec2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
-    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.1;
+    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.227;
+}
+
+inline double gradient_noise3d(glm::ivec3 ixyz, const glm::dvec3& xyz,
+                               uint32_t seed)
+{
+    ixyz.x += seed * 1013;
+    ixyz.y += seed * 1619;
+    ixyz.z += seed * 997;
+    ixyz &= P_MASK;
+
+    int index = (P[ixyz.x + P[ixyz.y + P[ixyz.z]]] & G_MASK) * G_VECSIZE;
+    glm::dvec3 g{G[index], G[index + 1], G[index + 2]};
+
+    return glm::dot(xyz, g);
 }
 
 double p_perlin3(const glm::dvec3& xyz, uint32_t seed)
 {
-    ///\todo Implement 3D Perlin
-    return 0.0;
+    glm::dvec3 t {glm::floor(xyz)};
+    glm::ivec3 xyz0 {(int)t.x, (int)t.y, (int)t.z};
+    glm::dvec3 xyzf {xyz - t};
+
+    const glm::ivec3 I001 {0, 0, 1};
+    const glm::ivec3 I010 {0, 1, 0};
+    const glm::ivec3 I011 {0, 1, 1};
+    const glm::ivec3 I100 {1, 0, 0};
+    const glm::ivec3 I101 {1, 0, 1};
+    const glm::ivec3 I110 {1, 1, 0};
+    const glm::ivec3 I111 {1, 1, 1};
+
+    const glm::dvec3 F001 {0.0, 0.0, 1.0};
+    const glm::dvec3 F010 {0.0, 1.0, 0.0};
+    const glm::dvec3 F011 {0.0, 1.0, 1.0};
+    const glm::dvec3 F100 {1.0, 0.0, 0.0};
+    const glm::dvec3 F101 {1.0, 0.0, 1.0};
+    const glm::dvec3 F110 {1.0, 1.0, 0.0};
+    const glm::dvec3 F111 {1.0, 1.0, 1.0};
+
+    const double n000 = gradient_noise3d(xyz0       , xyzf       , seed);
+    const double n001 = gradient_noise3d(xyz0 + I001, xyzf - F001, seed);
+    const double n010 = gradient_noise3d(xyz0 + I010, xyzf - F010, seed);
+    const double n011 = gradient_noise3d(xyz0 + I011, xyzf - F011, seed);
+    const double n100 = gradient_noise3d(xyz0 + I100, xyzf - F100, seed);
+    const double n101 = gradient_noise3d(xyz0 + I101, xyzf - F101, seed);
+    const double n110 = gradient_noise3d(xyz0 + I110, xyzf - F110, seed);
+    const double n111 = gradient_noise3d(xyz0 + I111, xyzf - F111, seed);
+
+    glm::dvec4 n40 {n000, n001, n010, n011};
+    glm::dvec4 n41 {n100, n101, n110, n111};
+
+    auto n4 = lerp4d(blend5(xyzf.x), n40, n41);
+    auto n2 = lerp2d(blend5(xyzf.y), {n4.x, n4.y}, {n4.z, n4.w});
+    auto n1 = lerp(blend5(xyzf.z), n2.x, n2.y);
+
+    return n1 * 1.216;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1024,9 +1052,9 @@ glm::dvec2 p_worley(const glm::dvec2& xy, uint32_t seed)
             auto rnglast = rng(hash(square.x + seed, square.y));
 
             glm::dvec2 rnd_pt;
-            rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.x = i + (double)(rnglast & 0xFFFF) / (double)0x10000;
             rnglast = rng(rnglast);
-            rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.y = j + (double)(rnglast & 0xFFFF) / (double)0x10000;
 
             auto dist = glm::distance(xyf, rnd_pt);
             if (dist < f0) {
@@ -1056,11 +1084,11 @@ glm::dvec2 p_worley3(const glm::dvec3& p, uint32_t seed)
                 auto rnglast = rng(hash(square.x + seed, square.y, square.z));
 
                 glm::dvec3 rnd_pt;
-                rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+                rnd_pt.x = i + (double)(rnglast & 0xFFFF) / (double)0x10000;;
                 rnglast = rng(rnglast);
-                rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+                rnd_pt.y = j + (double)(rnglast & 0xFFFF) / (double)0x10000;;
                 rnglast = rng(rnglast);
-                rnd_pt.z = k + (double)rnglast / (double)0x7FFFFFFF;
+                rnd_pt.z = k + (double)(rnglast & 0xFFFF) / (double)0x10000;;
 
                 auto dist = glm::distance(pf, rnd_pt);
                 if (dist < f0) {
@@ -1093,9 +1121,9 @@ glm::dvec3 p_voronoi(const glm::dvec2& xy, uint32_t seed)
             auto rnglast = rng(hash(square.x + seed, square.y));
 
             glm::dvec2 rnd_pt;
-            rnd_pt.x = i + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.x = i + (double)(rnglast & 0xFFFF) / (double)0x10000;;
             rnglast = rng(rnglast);
-            rnd_pt.y = j + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.y = j + (double)(rnglast & 0xFFFF) / (double)0x10000;;
 
             auto dist = glm::distance(xyf, rnd_pt);
             if (dist < f0) {
@@ -1590,10 +1618,12 @@ glm::dvec3 generator_slowinterpreter::eval_xyz(const node& n)
 
     case node::rotate3: {
         auto p = eval_xyz(n.input[0]);
-        auto axis = eval_xyz(n.input[1]);
-        auto angle = eval_v(n.input[2]) * pi;
+        auto ax = eval_v(n.input[1]);
+        auto ay = eval_v(n.input[2]);
+        auto az = eval_v(n.input[3]);
+        auto angle = eval_v(n.input[4]) * pi;
 
-        return glm::rotate(axis, angle, p);
+        return glm::rotate(p, angle, glm::dvec3(ax, ay, az));
     }
 
     case node::scale3: {

@@ -83,6 +83,16 @@ inline double lerp (double x, double a, double b)
     return mad(x, b - a, a);
 }
 
+inline double2 lerp2d (const double x, const double2 a, const double2 b)
+{
+    return mad(x, b - a, a);
+}
+
+inline double4 lerp4d (const double x, const double4 a, const double4 b)
+{
+    return mad(x, b - a, a);
+}
+
 inline double blend3 (const double a)
 {
     return a * a * (3.0 - 2.0 * a);
@@ -90,27 +100,21 @@ inline double blend3 (const double a)
 
 inline double blend5 (const double a)
 {
-    const double a3 = a * a * a;
-    const double a4 = a3 * a;
-    const double a5 = a4 * a;
-
-    return 10.0 * a3 - 15.0 * a4 + 6.0 * a5;
+    return a * a * a * (a * (a * 6.0 - 15.0) + 10.0);
 }
 
-inline double2 lerp2d (const double x, const double2 a, const double2 b)
-{
-    return mad(x, b - a, a);
-}
 
-/* FNV hash: http://isthe.com/chongo/tech/comp/fnv/#FNV-source */
 inline uint hash (int x, int y)
 {
-  return (uint)((((OFFSET_BASIS ^ (uint)x) * FNV_PRIME) ^ (uint)y) * FNV_PRIME);
+    return ((uint)x * 2120969693) ^ ((uint)y * 915488749) ^ ((uint)(x + 1103515245) * (uint)(y + 1234567));
 }
 
 inline uint hash3 (int x, int y, int z)
 {
-  return (uint)((((((OFFSET_BASIS ^ (uint)x) * FNV_PRIME) ^ (uint)y) * FNV_PRIME) ^ (uint)z) * FNV_PRIME);
+    return ((uint)x * 2120969693)
+            ^ ((uint)y * 915488749)
+            ^ ((uint)z * 22695477)
+            ^ ((uint)(x + 1103515245) * (uint)(y + 1234567) * (uint)(z + 134775813));
 }
 
 inline uint rng (uint last)
@@ -155,7 +159,61 @@ double p_perlin (double2 xy, uint seed)
     const double2 n1011 = (double2)(n10, n11);
     const double2 n2 = lerp2d(blend5(xyf.x), n0001, n1011);
 
-    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.2;
+    return lerp(blend5(xyf.y), n2.x, n2.y) * 1.227;
+}
+
+inline double gradient_noise3d (int3 ixyz, double3 xyz, uint seed)
+{
+    ixyz.x += seed * 1013;
+    ixyz.y += seed * 1619;
+    ixyz.z += seed * 997;
+    ixyz &= P_MASK;
+
+    int index = (P[ixyz.x+P[ixyz.y+P[ixyz.z]]] & G_MASK) * G_VECSIZE;
+    double3 g = (double3)(G[index], G[index+1], G[index+2]);
+
+    return dot(xyz, g);
+}
+
+double p_perlin3 (double3 xyz, uint seed)
+{
+    double3 t = floor(xyz);
+    int3 xyz0 = (int3)((int)t.x, (int)t.y, (int)t.z);
+    double3 xyzf = xyz - t;
+
+    const int3 I001 = (int3)(0, 0, 1);
+    const int3 I010 = (int3)(0, 1, 0);
+    const int3 I011 = (int3)(0, 1, 1);
+    const int3 I100 = (int3)(1, 0, 0);
+    const int3 I101 = (int3)(1, 0, 1);
+    const int3 I110 = (int3)(1, 1, 0);
+    const int3 I111 = (int3)(1, 1, 1);
+
+    const double3 F001 = (double3)(0.0, 0.0, 1.0);
+    const double3 F010 = (double3)(0.0, 1.0, 0.0);
+    const double3 F011 = (double3)(0.0, 1.0, 1.0);
+    const double3 F100 = (double3)(1.0, 0.0, 0.0);
+    const double3 F101 = (double3)(1.0, 0.0, 1.0);
+    const double3 F110 = (double3)(1.0, 1.0, 0.0);
+    const double3 F111 = (double3)(1.0, 1.0, 1.0);
+
+    const double n000 = gradient_noise3d(xyz0       , xyzf       , seed);
+    const double n001 = gradient_noise3d(xyz0 + I001, xyzf - F001, seed);
+    const double n010 = gradient_noise3d(xyz0 + I010, xyzf - F010, seed);
+    const double n011 = gradient_noise3d(xyz0 + I011, xyzf - F011, seed);
+    const double n100 = gradient_noise3d(xyz0 + I100, xyzf - F100, seed);
+    const double n101 = gradient_noise3d(xyz0 + I101, xyzf - F101, seed);
+    const double n110 = gradient_noise3d(xyz0 + I110, xyzf - F110, seed);
+    const double n111 = gradient_noise3d(xyz0 + I111, xyzf - F111, seed);
+
+    double4 n40 = (double4)(n000, n001, n010, n011);
+    double4 n41 = (double4)(n100, n101, n110, n111);
+
+    double4 n4 = lerp4d(blend5(xyzf.x), n40, n41);
+    double2 n2 = lerp2d(blend5(xyzf.y), n4.xy, n4.zw);
+    double n = lerp(blend5(xyzf.z), n2.x, n2.y);
+
+    return n * 1.216;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -427,7 +485,7 @@ double p_opensimplex (double2 p, uint seed)
     if (attn_ext > 0)
         value += pow(attn_ext, 4) * extrapolate2(sv_ext.x, sv_ext.y, d_ext, seed);
 
-    return value / NORM_CONSTANT_2D;
+    return (value / NORM_CONSTANT_2D) * 1.152;
 }
 
 double p_opensimplex3 (double3 p, uint seed)
@@ -452,12 +510,12 @@ double2 p_worley (const double2 p, uint seed)
         for (int j = -1; j < 2; ++j)
         {
             int2 square = xy0 + (int2)(i,j);
-            uint rnglast = rng(hash(square.x + seed, square.y));
+            uint h = rng(hash(square.x + seed, square.y));
 
             double2 rnd_pt;
-            rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
-            rnglast = rng(rnglast);
-            rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.x = (double)i + ((double)(h & 0xFFFF) / (double)0x10000);
+            h = rng(h);
+            rnd_pt.y = (double)j + ((double)(h & 0xFFFF) / (double)0x10000);
 
             double dist = distance(xyf, rnd_pt);
             if (dist < f0)
@@ -490,14 +548,14 @@ double2 p_worley3 (const double3 p, uint seed)
             for (int k = -1; k < 2; ++k)
             {
                 int3 square = xyz0 + (int3)(i,j,k);
-                uint rnglast = rng(hash3(square.x + seed, square.y, square.z));
+                uint h = rng(hash3(square.x + seed, square.y, square.z));
 
                 double3 rnd_pt;
-                rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
-                rnglast = rng(rnglast);
-                rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
-                rnglast = rng(rnglast);
-                rnd_pt.z = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+                rnd_pt.x = (double)i + ((double)(h & 0xFFFF) / (double)0x10000);
+                h = rng(h);
+                rnd_pt.y = (double)j + ((double)(h & 0xFFFF) / (double)0x10000);
+                h = rng(h);
+                rnd_pt.z = (double)k + ((double)(h & 0xFFFF) / (double)0x10000);
 
                 double dist = distance(xyzf, rnd_pt);
                 if (dist < f0)
@@ -531,12 +589,12 @@ double2 p_voronoi (const double2 p, uint seed)
         for (int j = -1; j < 2; ++j)
         {
             int2 square = xy0 + (int2)(i,j);
-            uint rnglast = rng(hash(square.x + seed, square.y));
+            uint h = rng(hash(square.x + seed, square.y));
 
             double2 rnd_pt;
-            rnd_pt.x = (double)i + (double)rnglast / (double)0x7FFFFFFF;
-            rnglast = rng(rnglast);
-            rnd_pt.y = (double)j + (double)rnglast / (double)0x7FFFFFFF;
+            rnd_pt.x = (double)i + ((double)(h & 0xFFFF) / (double)0x10000);
+            h = rng(h);
+            rnd_pt.y = (double)j + ((double)(h & 0xFFFF) / (double)0x10000);
 
             double dist = distance(xyf, rnd_pt);
             if (dist < f0)
@@ -555,6 +613,48 @@ inline double2 p_rotate (double2 p, double a)
 {
     double t = a * M_PI;
     return (double2)(p.x * cos(t) - p.y * sin(t), p.x * sin(t) + p.y * cos(t));
+}
+
+inline double16 rotMatrix(double3 a, double angle)
+{
+    const double u2 = a.x * a.x;
+    const double v2 = a.y * a.y;
+    const double w2 = a.z * a.z;
+    const double l = u2 + v2 + w2;
+    const double sl = sqrt(l);
+    const double sa = sin(angle);
+    const double ca = cos(angle);
+
+    return (double16)(
+
+    (u2 + (v2 + w2) * ca) / l,
+    (a.x * a.y * (1.0 - ca) - a.z * sl * sa) / l,
+    (a.x * a.z * (1.0 - ca) + a.y * sl * sa) / l,
+    0.0,
+
+    (a.x * a.y * (1.0 - ca) + a.z * sl * sa) / l,
+    (v2 + (u2 + w2) * ca) / l,
+    (a.y * a.z * (1.0 - ca) - a.x * sl * sa) / l,
+    0.0,
+
+    (a.x * a.z * (1.0 - ca) - a.y * sl * sa) / l,
+    (a.y * a.z * (1.0 - ca) + a.x * sl * sa) / l,
+    (w2 + (u2 + v2) * ca) / l,
+    0.0,
+
+    0.0, 0.0, 0.0, 1.0
+    );
+}
+
+inline double3 p_rotate3 (double3 p, double3 axis, double a)
+{
+    double4 h = (double4)(p, 1);
+    double16 m = rotMatrix(axis, a * M_PI);
+    return (double3)(
+                dot(m.s048C, h),
+                dot(m.s159D, h),
+                dot(m.s26AE, h)
+                );
 }
 
 inline double2 p_swap (double2 p)

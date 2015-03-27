@@ -259,6 +259,8 @@ std::string generator_opencl::co(const node& n)
 
     case node::rotate:
         return "p_rotate" + pl(n);
+    case node::rotate3:
+        return "p_rotate3(" + co(n.input[0]) + ", (double3)(" + co(n.input[1]) + "," + co(n.input[2]) + "," + co(n.input[3]) + "), " + co(n.input[4]) + ")";
     case node::scale:
     case node::scale3:
         return "(" + co(n.input[0]) + "/" + co(n.input[1]) + ")";
@@ -402,6 +404,8 @@ std::string generator_opencl::co(const node& n)
         return co(n.input[0]) + ".z";
     case node::xy:
         return co(n.input[0]) + ".xy";
+    case node::zplane:
+        return "(double3)(" + co(n.input[0]) + "," + co(n.input[1]) + ")";
 
     case node::add:
         return "(" + co(n.input[0]) + "+" + co(n.input[1]) + ")";
