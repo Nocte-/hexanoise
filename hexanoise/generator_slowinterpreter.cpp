@@ -136,15 +136,15 @@ inline double dot(const double* p, double x, double y, double z)
 
 inline uint32_t hash(uint32_t x, uint32_t y)
 {
-    return ((uint)x * 2120969693) ^ ((uint)y * 915488749) ^ ((uint)(x + 1103515245) * (uint)(y + 1234567));
+    return ((uint32_t)x * 2120969693) ^ ((uint32_t)y * 915488749) ^ ((uint32_t)(x + 1103515245) * (uint32_t)(y + 1234567));
 }
 
 inline uint32_t hash(uint32_t x, uint32_t y, uint32_t z)
 {
-    return ((uint)x * 2120969693)
-            ^ ((uint)y * 915488749)
-            ^ ((uint)z * 22695477)
-            ^ ((uint)(x + 1103515245) * (uint)(y + 1234567) * (uint)(z + 134775813));
+    return ((uint32_t)x * 2120969693)
+            ^ ((uint32_t)y * 915488749)
+            ^ ((uint32_t)z * 22695477)
+            ^ ((uint32_t)(x + 1103515245) * (uint32_t)(y + 1234567) * (uint32_t)(z + 134775813));
 }
 
 inline uint32_t rng(uint32_t last)

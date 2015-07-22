@@ -778,7 +778,8 @@ double p_opensimplex3 (double3 p, uint seed)
         double bScore;
         uchar bPoint;
         bool bIsFurtherSide;
-
+)xxxxy"  /* Split in half so MSVC can handle it */
+R"xxxxz(
         // Decide between point (0,0,1) and (1,1,0) as closest
         double p1 = ins.x + ins.y;
         if (p1 > 1) {
@@ -1185,7 +1186,7 @@ inline bool p_is_in_rectangle (double2 p, double x1, double y1, double x2, doubl
 }
 
 
-)xxxxy";
+)xxxxz";
 
 } // namespace noise
 } // namespace hexa
